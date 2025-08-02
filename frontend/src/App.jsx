@@ -2,8 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
 import { store } from './store';
-import Navbar from './components/layout/Navbar';
-import Footer from './components/layout/Footer';
+import ConditionalNavbar from './components/layout/ConditionalNavbar';
+import ConditionalFooter from './components/layout/ConditionalFooter';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -21,6 +21,7 @@ import Contact from './pages/Contact';
 // Admin Pages
 import AdminDashboard from './pages/Admin/Dashboard';
 import ProductManagement from './pages/Admin/ProductManagement';
+import CategoryManagement from './pages/Admin/CategoryManagement';
 import OrderManagement from './pages/Admin/OrderManagement';
 import AdvertisementManagement from './pages/Admin/AdvertisementManagement';
 import FinanceManagement from './pages/Admin/FinanceManagement';
@@ -32,7 +33,7 @@ function App() {
     <Provider store={store}>
       <Router>
         <div className="App">
-          <Navbar />
+          <ConditionalNavbar />
           <main className="min-h-screen">
             <Routes>
               {/* Public Routes */}
@@ -53,6 +54,7 @@ function App() {
               {/* Admin Routes */}
               <Route path="/admin" element={<AdminDashboard />} />
               <Route path="/admin/products" element={<ProductManagement />} />
+              <Route path="/admin/categories" element={<CategoryManagement />} />
               <Route path="/admin/orders" element={<OrderManagement />} />
               <Route path="/admin/advertisements" element={<AdvertisementManagement />} />
               <Route path="/admin/finance" element={<FinanceManagement />} />
@@ -65,7 +67,7 @@ function App() {
               <Route path="/admin/settings" element={<div className="p-6 text-center">System Settings - Coming Soon</div>} />
             </Routes>
           </main>
-          <Footer />
+          <ConditionalFooter />
           <Toaster 
             position="top-right"
             toastOptions={{

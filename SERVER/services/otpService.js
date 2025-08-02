@@ -1,64 +1,80 @@
-const twilio = require('twilio');
-const speakeasy = require('speakeasy');
+// Try to import Twilio and Speakeasy, with fallbacks if not available
+let twilio = null;
+let speakeasy = null;
 
-// Initialize Twilio client
-const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
-);
+try {
+  twilio = require('twilio');
+} catch (error) {
+  console.log('Twilio not available, using mock SMS service');
+}
 
-// Mock OTP service for development (when Twilio credentials are not available)
+try {
+  speakeasy = require('speakeasy');
+} catch (error) {
+  console.log('Speakeasy not available, using simple OTP generation');
+}
+
+// Mock OTP Service for development
 class MockOTPService {
   static async sendOTP(phoneNumber, otp) {
-    console.log(`📱 Mock SMS sent to ${phoneNumber}: Your OTP is ${otp}`);
-    console.log(`🔐 For development, you can use this OTP: ${otp}`);
+    console.log(`📱 [MOCK SMS] OTP ${otp} sent to ${phoneNumber}`);
+    console.log(`🔐 For development: Use this OTP to login`);
     return { success: true, message: 'OTP sent successfully (mock)' };
   }
 }
 
-// Real OTP service using Twilio
+// Twilio OTP Service for production
 class TwilioOTPService {
   static async sendOTP(phoneNumber, otp) {
+    if (!twilio) {
+      throw new Error('Twilio not available');
+    }
+
+    const client = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+
     try {
-      const message = await twilioClient.messages.create({
+      const message = await client.messages.create({
         body: `Your Uthraa Naturals verification code is: ${otp}. Valid for 10 minutes.`,
         from: process.env.TWILIO_PHONE_NUMBER,
         to: phoneNumber
       });
-      
-      console.log(`📱 SMS sent to ${phoneNumber}, SID: ${message.sid}`);
-      return { success: true, message: 'OTP sent successfully' };
+
+      return { success: true, message: 'OTP sent successfully', sid: message.sid };
     } catch (error) {
       console.error('Twilio SMS error:', error);
-      throw new Error('Failed to send OTP');
+      throw new Error('Failed to send SMS');
     }
   }
 }
 
-// OTP generation utility
+// OTP Generator
 class OTPGenerator {
-  static generateOTP() {
-    return speakeasy.totp({
-      secret: speakeasy.generateSecret().base32,
-      digits: 6,
-      step: 600 // 10 minutes
-    });
-  }
-
   static generateSimpleOTP() {
     return Math.floor(100000 + Math.random() * 900000).toString();
   }
+
+  static generateSecureOTP() {
+    if (speakeasy) {
+      return speakeasy.totp({
+        secret: speakeasy.generateSecret().base32,
+        digits: 6
+      });
+    }
+    return this.generateSimpleOTP();
+  }
 }
 
-// Main OTP service that chooses between mock and real service
+// Main OTP Service
 class OTPService {
   static async sendOTP(phoneNumber, otp) {
-    // Check if Twilio credentials are available
     const hasTwilioCredentials = process.env.TWILIO_ACCOUNT_SID && 
                                 process.env.TWILIO_AUTH_TOKEN && 
                                 process.env.TWILIO_PHONE_NUMBER;
-
-    if (hasTwilioCredentials) {
+    
+    if (hasTwilioCredentials && twilio) {
       return await TwilioOTPService.sendOTP(phoneNumber, otp);
     } else {
       return await MockOTPService.sendOTP(phoneNumber, otp);
@@ -66,7 +82,7 @@ class OTPService {
   }
 
   static generateOTP() {
-    return OTPGenerator.generateSimpleOTP();
+    return OTPGenerator.generateSecureOTP();
   }
 }
 

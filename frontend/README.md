@@ -1,186 +1,153 @@
-# Uthraa Naturals Frontend
+# Uthraa Naturals - Frontend Application
 
 A modern, responsive e-commerce frontend for Uthraa Naturals built with React, Vite, and Tailwind CSS.
 
-## Features
+## 🛍️ Customer Application (Main Store)
+**Access URL**: `http://localhost:5173/`
 
-- **Modern UI/UX**: Beautiful, responsive design with smooth animations
-- **Product Catalog**: Browse products with advanced filtering and search
-- **Shopping Cart**: Add/remove items with real-time updates
-- **User Authentication**: Secure login and registration system
-- **Product Details**: Detailed product pages with reviews and ratings
-- **Responsive Design**: Works perfectly on all devices
-- **State Management**: Redux Toolkit for efficient state management
-- **Real-time Updates**: Live cart updates and notifications
+The main customer-facing e-commerce application with:
+- Product browsing and search
+- Shopping cart functionality
+- User authentication (login/register)
+- Order management
+- Customer profile
 
-## Tech Stack
+## 🔧 Admin Application (Admin Panel)
+**Access URL**: `http://localhost:5173/admin`
 
-- **Framework**: React 18 with Vite
-- **Styling**: Tailwind CSS
-- **State Management**: Redux Toolkit
-- **Routing**: React Router DOM
-- **Animations**: Framer Motion
-- **Icons**: Lucide React
-- **Notifications**: React Hot Toast
-- **HTTP Client**: Axios
+The integrated admin panel for managing:
+- Product management
+- Category management
+- Order management
+- User management
+- Finance management
+- Stock management
+- Advertisement management
+- Delivery management
+- Reports & Analytics
+- System settings
 
-## Getting Started
+## 🚀 Development
+
+### Running the Application
+```bash
+# Start the development server
+npm run dev
+
+# The customer app will be available at:
+# http://localhost:5173/
+
+# The admin app will be available at:
+# http://localhost:5173/admin
+```
+
+### Building for Production
+```bash
+# Build the application
+npm run build
+```
+
+## 📁 Project Structure
+
+```
+frontend/
+├── src/
+│   ├── App.jsx              # Main application with both customer and admin routes
+│   ├── pages/
+│   │   ├── Home.jsx         # Customer pages
+│   │   ├── Products.jsx     # Customer pages
+│   │   └── Admin/           # Admin pages
+│   │       ├── Dashboard.jsx
+│   │       ├── ProductManagement.jsx
+│   │       └── CategoryManagement.jsx
+│   └── components/
+│       ├── layout/
+│       │   ├── Navbar.jsx   # Customer navbar
+│   │   ├── Footer.jsx   # Customer footer
+│   │   └── AdminLayout.jsx  # Admin layout (no navbar/footer)
+├── index.html               # Main HTML file
+└── vite.config.js           # Vite configuration
+```
+
+## 🔐 Admin Access
+
+The admin panel currently has authentication bypassed for development. In production, you should:
+1. Enable proper authentication
+2. Add role-based access control
+3. Secure admin routes
+4. Implement proper session management
+
+## 🎨 Features
+
+### Customer App Features:
+- ✅ Responsive design for all devices
+- ✅ Modern UI with animations
+- ✅ Product catalog with search
+- ✅ Shopping cart functionality
+- ✅ User authentication
+- ✅ Order management
+
+### Admin App Features:
+- ✅ Integrated admin interface
+- ✅ No customer navbar/footer in admin pages
+- ✅ Desktop-optimized responsive design
+- ✅ Product management
+- ✅ Category management
+- ✅ Order management
+- ✅ User management
+- ✅ Finance management
+- ✅ Stock management
+- ✅ Advertisement management
+- ✅ Delivery management
+- ✅ Reports & Analytics
+- ✅ System settings
+
+## 🛠️ Technology Stack
+
+- **React 19** - UI framework
+- **Vite** - Build tool and dev server
+- **Tailwind CSS** - Styling
+- **Redux Toolkit** - State management
+- **React Router** - Routing
+- **Framer Motion** - Animations
+- **Lucide React** - Icons
+- **React Hot Toast** - Notifications
+
+## 🚀 Getting Started
 
 ### Prerequisites
-
 - Node.js (v18 or higher)
 - npm or yarn
 
 ### Installation
-
 1. Clone the repository
 2. Navigate to the frontend directory:
    ```bash
    cd frontend
    ```
-
 3. Install dependencies:
    ```bash
    npm install
    ```
-
 4. Start the development server:
    ```bash
    npm run dev
    ```
+5. Open your browser and visit:
+   - Customer app: `http://localhost:5173/`
+   - Admin panel: `http://localhost:5173/admin`
 
-5. Open your browser and visit `http://localhost:5173`
+## 📱 Responsive Design
 
-## Project Structure
+The application is fully responsive with:
+- **Mobile-first approach** for customer pages
+- **Desktop-optimized** admin interface
+- **Smooth animations** and transitions
+- **Touch-friendly** interactions
 
-```
-src/
-├── components/          # Reusable UI components
-│   ├── layout/         # Layout components (Navbar, Footer)
-│   ├── products/       # Product-related components
-│   └── categories/     # Category-related components
-├── pages/              # Page components
-├── store/              # Redux store configuration
-│   └── slices/         # Redux slices
-├── assets/             # Static assets
-└── App.jsx             # Main App component
-```
-
-## Available Scripts
+## 🔧 Available Scripts
 
 - `npm run dev` - Start development server
 - `npm run build` - Build for production
 - `npm run preview` - Preview production build
 - `npm run lint` - Run ESLint
-
-## Key Components
-
-### Navbar
-- Responsive navigation with mobile menu
-- Search functionality
-- User authentication status
-- Shopping cart indicator
-
-### Home Page
-- Hero section with call-to-action
-- Featured products showcase
-- Category browsing
-- Customer testimonials
-
-### Products Page
-- Advanced filtering and search
-- Grid/List view toggle
-- Pagination
-- Price range filtering
-- Category filtering
-
-### Product Cards
-- Product images with hover effects
-- Price and discount display
-- Quick add to cart
-- Wishlist functionality
-- Rating display
-
-## State Management
-
-The app uses Redux Toolkit for state management with the following slices:
-
-- **authSlice**: User authentication and profile
-- **cartSlice**: Shopping cart functionality
-- **productSlice**: Product data and filtering
-- **categorySlice**: Category management
-- **orderSlice**: Order management
-
-## Styling
-
-The project uses Tailwind CSS for styling with:
-
-- Custom color scheme (green theme)
-- Responsive design utilities
-- Custom animations and transitions
-- Component-based styling approach
-
-## API Integration
-
-The frontend connects to the backend API at `http://localhost:5000/api` with endpoints for:
-
-- Authentication (`/auth`)
-- Products (`/products`)
-- Categories (`/categories`)
-- Orders (`/orders`)
-- Users (`/users`)
-
-## Environment Variables
-
-Create a `.env` file in the frontend directory:
-
-```env
-VITE_API_URL=http://localhost:5000/api
-```
-
-## Deployment
-
-### Build for Production
-
-```bash
-npm run build
-```
-
-The build files will be created in the `dist` directory.
-
-### Deploy to Vercel
-
-1. Install Vercel CLI:
-   ```bash
-   npm i -g vercel
-   ```
-
-2. Deploy:
-   ```bash
-   vercel
-   ```
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
-
-## Features to Implement
-
-- [ ] Complete shopping cart functionality
-- [ ] Checkout process
-- [ ] Order tracking
-- [ ] User profile management
-- [ ] Product reviews and ratings
-- [ ] Wishlist functionality
-- [ ] Payment integration
-- [ ] Admin dashboard
-- [ ] Email notifications
-- [ ] Advanced search filters
-
-## License
-
-This project is licensed under the MIT License.

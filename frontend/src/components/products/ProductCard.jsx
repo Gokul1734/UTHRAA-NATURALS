@@ -10,6 +10,34 @@ const ProductCard = ({ product, index }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const dispatch = useDispatch();
 
+  // Helper function to get proper image URL
+  const getImageSrc = (imageUrl) => {
+    if (!imageUrl) return '/placeholder-product.jpg';
+    
+    // If it's already a complete URL (starts with http), use as is
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
+    }
+    
+    // If it starts with /uploads, it's our uploaded file - prepend server URL
+    if (imageUrl.startsWith('/uploads')) {
+      return `http://localhost:5000${imageUrl}`;
+    }
+    
+    // If it's just a filename, assume it's in the uploads folder
+    if (!imageUrl.includes('/') && !imageUrl.includes('\\')) {
+      return `http://localhost:5000/uploads/${imageUrl}`;
+    }
+    
+    // For product images, try the products subfolder
+    if (!imageUrl.startsWith('/uploads/products')) {
+      return `http://localhost:5000/uploads/products/${imageUrl}`;
+    }
+    
+    // Otherwise assume it's a relative path and prepend server URL
+    return `http://localhost:5000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+  };
+
   const handleAddToCart = () => {
     dispatch(addToCart({
       _id: product._id,
@@ -38,9 +66,12 @@ const ProductCard = ({ product, index }) => {
       <div className="relative overflow-hidden">
         <Link to={`/product/${product._id}`}>
           <img
-            src={product.images[0] || 'https://via.placeholder.com/300x300?text=Product'}
+            src={getImageSrc(product.images[0])}
             alt={product.name}
             className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              e.target.src = '/placeholder-product.jpg';
+            }}
           />
         </Link>
         

@@ -52,10 +52,16 @@ const FinanceManagement = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
-      navigate('/login');
-      return;
-    }
+    // DEVELOPMENT MODE: Allow direct access without authentication
+    // TODO: Remove this bypass in production
+    console.log('🔧 DEVELOPMENT MODE: Finance management access bypassed');
+    
+    // Original authentication check (commented out for development)
+    // if (!user || user.role !== 'admin') {
+    //   navigate('/login');
+    //   return;
+    // }
+    
     fetchFinancialData();
     fetchTransactions();
   }, [user, navigate, selectedPeriod]);

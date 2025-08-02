@@ -2,6 +2,34 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
 const CategoryCard = ({ category, index }) => {
+  // Helper function to get proper image URL
+  const getImageSrc = (imageUrl) => {
+    if (!imageUrl) return '/placeholder-category.jpg';
+    
+    // If it's already a complete URL (starts with http), use as is
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
+    }
+    
+    // If it starts with /uploads, it's our uploaded file - prepend server URL
+    if (imageUrl.startsWith('/uploads')) {
+      return `http://localhost:5000${imageUrl}`;
+    }
+    
+    // If it's just a filename, assume it's in the uploads folder
+    if (!imageUrl.includes('/') && !imageUrl.includes('\\')) {
+      return `http://localhost:5000/uploads/${imageUrl}`;
+    }
+    
+    // For category images, try the categories subfolder
+    if (!imageUrl.startsWith('/uploads/categories')) {
+      return `http://localhost:5000/uploads/categories/${imageUrl}`;
+    }
+    
+    // Otherwise assume it's a relative path and prepend server URL
+    return `http://localhost:5000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -14,9 +42,12 @@ const CategoryCard = ({ category, index }) => {
           {/* Category Image */}
           <div className="relative h-48 overflow-hidden">
             <img
-              src={category.image}
+              src={getImageSrc(category.image)}
               alt={category.name}
               className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+              onError={(e) => {
+                e.target.src = '/placeholder-category.jpg';
+              }}
             />
             
             {/* Overlay */}

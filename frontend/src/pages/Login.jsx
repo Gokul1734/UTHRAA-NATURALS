@@ -61,207 +61,204 @@ const Login = () => {
   };
 
   return (
-    <div className="pt-16 min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="pt-14 sm:pt-16 lg:pt-18 min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50 flex items-center justify-center py-6 sm:py-8 lg:py-12 px-3 sm:px-4 lg:px-6 relative overflow-hidden">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-green-200 to-emerald-300 rounded-full opacity-20 blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-teal-200 to-cyan-300 rounded-full opacity-20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-r from-emerald-200 to-green-300 rounded-full opacity-10 blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+        <div className="absolute -top-20 sm:-top-40 -right-20 sm:-right-40 w-40 h-40 sm:w-80 sm:h-80 bg-gradient-to-br from-green-200 to-emerald-300 rounded-full opacity-20 blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-20 sm:-bottom-40 -left-20 sm:-left-40 w-40 h-40 sm:w-80 sm:h-80 bg-gradient-to-tr from-teal-200 to-cyan-300 rounded-full opacity-20 blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-96 sm:h-96 bg-gradient-to-r from-emerald-200 to-green-300 rounded-full opacity-10 blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
       </div>
 
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="relative bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8 w-full max-w-md border border-white/20"
+        className="relative bg-white/90 backdrop-blur-xl rounded-2xl sm:rounded-3xl shadow-2xl p-6 sm:p-8 lg:p-10 w-full max-w-sm sm:max-w-md lg:max-w-lg border border-white/20"
       >
         <motion.div variants={itemVariants}>
           <motion.div 
-            className="flex items-center justify-center mb-6"
+            className="flex items-center justify-center mb-6 sm:mb-8"
             whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
             <div className="relative">
-              <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-4 rounded-2xl shadow-lg">
-                <User className="w-8 h-8 text-white" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <Shield className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </div>
-              <div className="absolute -top-2 -right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
-                <Shield className="w-3 h-3 text-white" />
-              </div>
+              <div className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-green-400 rounded-full border-2 border-white"></div>
             </div>
           </motion.div>
-          
-          <motion.h2 
-            variants={itemVariants}
-            className="text-center text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-3"
-          >
-            Sign in to your account
-          </motion.h2>
-          
-          <motion.p 
-            variants={itemVariants}
-            className="text-center text-sm text-gray-600 mb-8"
-          >
-            Or{' '}
-            <Link
-              to="/register"
-              className="font-semibold text-green-600 hover:text-green-700 transition-colors"
-            >
-              create a new account
-            </Link>
-          </motion.p>
         </motion.div>
 
-        <motion.form 
-          variants={containerVariants}
-          className="space-y-6" 
-          onSubmit={handleSubmit}
-        >
+        <motion.div variants={itemVariants} className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-3">
+            Welcome Back
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600">
+            Sign in to your account to continue
+          </p>
+        </motion.div>
+
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
           <motion.div variants={itemVariants}>
-            <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-3">
-              Email address
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Email Address
             </label>
             <div className="relative">
-              <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
               <input
-                id="email"
-                name="email"
                 type="email"
-                autoComplete="email"
-                required
+                name="email"
                 value={formData.email}
                 onChange={handleChange}
                 onFocus={() => setFocusedInput('email')}
                 onBlur={() => setFocusedInput('')}
-                className={`appearance-none relative block w-full pl-12 pr-4 py-4 border-2 rounded-xl text-lg font-medium transition-all duration-300 ${
-                  focusedInput === 'email' 
-                    ? 'border-green-500 bg-green-50 shadow-lg shadow-green-100' 
+                className={`w-full pl-10 sm:pl-12 pr-4 py-3 sm:py-4 border-2 rounded-xl transition-all duration-300 text-sm sm:text-base ${
+                  focusedInput === 'email'
+                    ? 'border-green-500 bg-green-50 shadow-lg shadow-green-100'
                     : 'border-gray-200 hover:border-gray-300 focus:border-green-500 focus:bg-green-50'
                 } focus:outline-none focus:ring-4 focus:ring-green-100`}
                 placeholder="Enter your email"
+                required
               />
+              <Mail className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
             </div>
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
               Password
             </label>
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
               <input
-                id="password"
-                name="password"
                 type={showPassword ? 'text' : 'password'}
-                autoComplete="current-password"
-                required
+                name="password"
                 value={formData.password}
                 onChange={handleChange}
                 onFocus={() => setFocusedInput('password')}
                 onBlur={() => setFocusedInput('')}
-                className={`appearance-none relative block w-full pl-12 pr-12 py-4 border-2 rounded-xl text-lg font-medium transition-all duration-300 ${
-                  focusedInput === 'password' 
-                    ? 'border-green-500 bg-green-50 shadow-lg shadow-green-100' 
+                className={`w-full pl-10 sm:pl-12 pr-12 sm:pr-14 py-3 sm:py-4 border-2 rounded-xl transition-all duration-300 text-sm sm:text-base ${
+                  focusedInput === 'password'
+                    ? 'border-green-500 bg-green-50 shadow-lg shadow-green-100'
                     : 'border-gray-200 hover:border-gray-300 focus:border-green-500 focus:bg-green-50'
                 } focus:outline-none focus:ring-4 focus:ring-green-100`}
                 placeholder="Enter your password"
+                required
               />
-              <motion.button
+              <Lock className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+              <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-10"
-                whileHover={{ scale: 1.1 }}
-                whileTap={{ scale: 0.9 }}
+                className="absolute right-3 sm:right-4 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
               >
-                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-              </motion.button>
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                ) : (
+                  <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                )}
+              </button>
             </div>
           </motion.div>
 
-          <motion.div 
-            variants={itemVariants}
-            className="flex items-center justify-between"
-          >
+          <motion.div variants={itemVariants} className="flex items-center justify-between text-sm">
             <div className="flex items-center">
               <input
                 id="remember-me"
                 name="remember-me"
                 type="checkbox"
-                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded touch-manipulation"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+              <label htmlFor="remember-me" className="ml-2 block text-gray-600">
                 Remember me
               </label>
             </div>
-
-            <div className="text-sm">
-              <a href="#" className="font-semibold text-green-600 hover:text-green-700 transition-colors">
-                Forgot your password?
-              </a>
-            </div>
+            <Link
+              to="/forgot-password"
+              className="text-green-600 hover:text-green-500 transition-colors font-medium"
+            >
+              Forgot password?
+            </Link>
           </motion.div>
 
-          <motion.button
-            variants={itemVariants}
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-green-600 hover:to-emerald-700 focus:ring-4 focus:ring-green-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-xl"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            {isLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                Signing in...
-              </div>
-            ) : (
-              'Sign in'
-            )}
-          </motion.button>
-
-          {isError && (
-            <motion.div 
-              variants={itemVariants}
-              className="text-red-600 text-sm text-center bg-red-50 p-3 rounded-lg border border-red-200"
-            >
-              {message}
-            </motion.div>
-          )}
-        </motion.form>
-
-        {/* Alternative Login Options */}
-        <motion.div 
-          variants={itemVariants}
-          className="mt-8 pt-6 border-t border-gray-200"
-        >
-          <p className="text-center text-sm text-gray-600 mb-4">
-            Or continue with
-          </p>
-          <div className="space-y-3">
-            <motion.div
+          <motion.div variants={itemVariants}>
+            <motion.button
+              type="submit"
+              disabled={isLoading}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-3 sm:py-4 px-4 rounded-xl hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-4 focus:ring-green-100 transition-all duration-300 font-semibold shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed text-sm sm:text-base touch-manipulation"
             >
-              <Link
-                to="/phone-login"
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 border-2 border-gray-200 rounded-xl text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 font-medium"
-              >
-                <Phone className="w-5 h-5" />
-                Phone Number Login
-              </Link>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Link
-                to="/register"
-                className="w-full flex items-center justify-center py-3 px-4 border-2 border-gray-200 rounded-xl text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 font-medium"
-              >
-                Create New Account
-              </Link>
-            </motion.div>
+              {isLoading ? (
+                <div className="flex items-center justify-center">
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Signing in...
+                </div>
+              ) : (
+                'Sign In'
+              )}
+            </motion.button>
+          </motion.div>
+        </form>
+
+        <motion.div variants={itemVariants} className="mt-6 sm:mt-8">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-300"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-white text-gray-500">Or continue with</span>
+            </div>
           </div>
+
+          <div className="mt-4 sm:mt-6 grid grid-cols-1 gap-3">
+            <Link
+              to="/phone-login"
+              className="w-full inline-flex justify-center items-center px-4 py-3 sm:py-4 border border-gray-300 rounded-xl shadow-sm bg-white hover:bg-gray-50 transition-all duration-300 text-sm sm:text-base font-medium text-gray-700 touch-manipulation"
+            >
+              <Phone className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-green-600" />
+              Continue with Phone
+            </Link>
+          </div>
+        </motion.div>
+
+        <motion.div variants={itemVariants} className="mt-6 sm:mt-8 text-center">
+          <p className="text-sm sm:text-base text-gray-600">
+            Don't have an account?{' '}
+            <Link
+              to="/register"
+              className="text-green-600 hover:text-green-500 transition-colors font-semibold"
+            >
+              Sign up here
+            </Link>
+          </p>
+        </motion.div>
+
+        {/* Quick Access Info */}
+        <motion.div variants={itemVariants} className="mt-6 sm:mt-8 p-3 sm:p-4 bg-green-50 rounded-xl border border-green-100">
+          <div className="flex items-start space-x-3">
+            <User className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="text-xs sm:text-sm font-medium text-green-800 mb-1">
+                New to Uthraa Naturals?
+              </h4>
+              <p className="text-xs sm:text-sm text-green-700 leading-relaxed">
+                Create an account to track orders, save favorites, and get personalized recommendations.
+              </p>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Security Notice */}
+        <motion.div variants={itemVariants} className="mt-4 text-center">
+          <p className="text-xs text-gray-500 leading-relaxed">
+            By signing in, you agree to our{' '}
+            <Link to="/terms" className="text-green-600 hover:underline">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="text-green-600 hover:underline">
+              Privacy Policy
+            </Link>
+          </p>
         </motion.div>
       </motion.div>
     </div>
