@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../../config/environment';
 
 const initialState = {
   categories: [],
@@ -16,7 +15,7 @@ export const getCategories = createAsyncThunk(
   'categories/getAll',
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${API_URL}/categories`);
+      const response = await axios.get(`${API_BASE_URL}/categories`);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;

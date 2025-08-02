@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../../config/environment';
 
 const initialState = {
   products: [],
@@ -21,7 +20,7 @@ export const getProducts = createAsyncThunk(
   'products/getAll',
   async (params, thunkAPI) => {
     try {
-      const response = await axios.get(`${API_URL}/products`, { params });
+      const response = await axios.get(`${API_BASE_URL}/products`, { params });
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;
@@ -35,7 +34,7 @@ export const getFeaturedProducts = createAsyncThunk(
   'products/getFeatured',
   async (_, thunkAPI) => {
     try {
-      const response = await axios.get(`${API_URL}/products/featured`);
+      const response = await axios.get(`${API_BASE_URL}/products/featured`);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;
@@ -49,7 +48,7 @@ export const getProduct = createAsyncThunk(
   'products/getOne',
   async (id, thunkAPI) => {
     try {
-      const response = await axios.get(`${API_URL}/products/${id}`);
+      const response = await axios.get(`${API_BASE_URL}/products/${id}`);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;
@@ -63,7 +62,7 @@ export const getProductBySlug = createAsyncThunk(
   'products/getBySlug',
   async (slug, thunkAPI) => {
     try {
-      const response = await axios.get(`${API_URL}/products/slug/${slug}`);
+      const response = await axios.get(`${API_BASE_URL}/products/slug/${slug}`);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;

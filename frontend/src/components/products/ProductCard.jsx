@@ -5,6 +5,7 @@ import { addToCart, calculateTotals } from '../../store/slices/cartSlice';
 import { Heart, ShoppingCart, Star } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
+import { UPLOAD_URL } from '../../config/environment';
 
 const ProductCard = ({ product, index }) => {
   const [isWishlisted, setIsWishlisted] = useState(false);
@@ -21,21 +22,21 @@ const ProductCard = ({ product, index }) => {
     
     // If it starts with /uploads, it's our uploaded file - prepend server URL
     if (imageUrl.startsWith('/uploads')) {
-      return `http://localhost:5000${imageUrl}`;
+      return `${UPLOAD_URL}${imageUrl}`;
     }
     
     // If it's just a filename, assume it's in the uploads folder
     if (!imageUrl.includes('/') && !imageUrl.includes('\\')) {
-      return `http://localhost:5000/uploads/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/${imageUrl}`;
     }
     
     // For product images, try the products subfolder
     if (!imageUrl.startsWith('/uploads/products')) {
-      return `http://localhost:5000/uploads/products/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/products/${imageUrl}`;
     }
     
     // Otherwise assume it's a relative path and prepend server URL
-    return `http://localhost:5000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+    return `${UPLOAD_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
   };
 
   const handleAddToCart = () => {

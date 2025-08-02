@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-
-const API_URL = 'http://localhost:5000/api';
+import { API_BASE_URL } from '../../config/environment';
 
 const initialState = {
   orders: [],
@@ -26,7 +25,7 @@ export const createOrder = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       };
-      const response = await axios.post(`${API_URL}/orders`, orderData, config);
+      const response = await axios.post(`${API_BASE_URL}/orders`, orderData, config);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;
@@ -46,7 +45,7 @@ export const getUserOrders = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       };
-      const response = await axios.get(`${API_URL}/orders/myorders`, config);
+      const response = await axios.get(`${API_BASE_URL}/orders/myorders`, config);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;
@@ -66,7 +65,7 @@ export const getOrder = createAsyncThunk(
           Authorization: `Bearer ${token}`,
         },
       };
-      const response = await axios.get(`${API_URL}/orders/${id}`, config);
+      const response = await axios.get(`${API_BASE_URL}/orders/${id}`, config);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;

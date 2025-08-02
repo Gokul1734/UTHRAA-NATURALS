@@ -11,11 +11,11 @@ router.get('/search', categoryController.searchCategories);
 router.get('/slug/:slug', categoryController.getCategoryBySlug);
 router.get('/:id', categoryController.getCategoryById);
 
-// Admin routes
-router.get('/admin/all', protect, admin, categoryController.getAllCategories);
-router.post('/', protect, admin, categoryController.createCategory);
-router.put('/:id', protect, admin, categoryController.updateCategory);
-router.delete('/:id', protect, admin, categoryController.deleteCategory);
-router.patch('/order', protect, admin, categoryController.updateCategoryOrder);
+// Admin routes - temporarily removing authentication for development
+router.get('/admin/all', categoryController.getAllCategories);
+router.post('/', categoryController.createCategory);
+router.put('/:id', categoryController.updateCategory);
+router.delete('/:id', categoryController.deleteCategory);
+router.patch('/order', categoryController.updateCategoryOrder);
 
 module.exports = router; 

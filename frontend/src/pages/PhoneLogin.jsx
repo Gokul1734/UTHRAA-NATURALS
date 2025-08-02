@@ -6,6 +6,7 @@ import { Phone, ArrowLeft, RefreshCw, CheckCircle, Shield, Smartphone, Mail } fr
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { login } from '../store/slices/authSlice';
+import { API_BASE_URL } from '../config/environment';
 
 const PhoneLogin = () => {
   const navigate = useNavigate();
@@ -55,7 +56,7 @@ const PhoneLogin = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/send-otp', {
+      const response = await axios.post(`${API_BASE_URL}/auth/send-otp`, {
         phone: `+1${phone.replace(/\D/g, '')}` // Add country code
       });
 
@@ -83,7 +84,7 @@ const PhoneLogin = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/verify-otp', {
+      const response = await axios.post(`${API_BASE_URL}/auth/verify-otp`, {
         phone: `+1${phone.replace(/\D/g, '')}`,
         otp
       });
@@ -107,7 +108,7 @@ const PhoneLogin = () => {
   const handleResendOTP = async () => {
     setResendLoading(true);
     try {
-      const response = await axios.post('http://localhost:5000/api/auth/resend-otp', {
+      const response = await axios.post(`${API_BASE_URL}/auth/resend-otp`, {
         phone: `+1${phone.replace(/\D/g, '')}`
       });
 

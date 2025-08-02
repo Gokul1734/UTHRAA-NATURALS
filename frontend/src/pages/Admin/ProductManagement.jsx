@@ -1,23 +1,13 @@
 import { useState, useEffect } from 'react';
-import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  Search, 
-  Filter,
-  Eye,
-  Loader2,
-  AlertCircle,
-  CheckCircle,
-  Package
-} from 'lucide-react';
 import { motion } from 'framer-motion';
+import { Plus, Edit, Trash2, Search, Filter, Eye, EyeOff, Loader2, AlertCircle, CheckCircle, Package } from 'lucide-react';
 import AdminLayout from '../../components/layout/AdminLayout';
 import ImageUpload from '../../components/common/ImageUpload';
+import { API_BASE_URL, UPLOAD_URL } from '../../config/environment';
 
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
+  const [categories, setCategories] = useState([]); // Initialize as empty array
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
@@ -51,8 +41,6 @@ const ProductManagement = () => {
   });
   const [formLoading, setFormLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-
-  const API_BASE_URL = 'http://localhost:5000/api/admin';
 
   useEffect(() => {
     fetchProducts();
@@ -93,12 +81,13 @@ const ProductManagement = () => {
       }
 
       const data = await response.json();
-      setProducts(data.products);
-      setTotalPages(data.totalPages);
-      setTotalProducts(data.total);
+      setProducts(data.products || []); // Ensure products is always an array
+      setTotalPages(data.totalPages || 1);
+      setTotalProducts(data.total || 0);
     } catch (error) {
       console.error('Error fetching products:', error);
       setError('Failed to load products. Please try again.');
+      setProducts([]); // Set empty array on error
     } finally {
       setLoading(false);
     }
@@ -106,19 +95,42 @@ const ProductManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/categories?limit=100`, {
+      console.log('Fetching categories from:', `${API_BASE_URL}/categories`);
+      const response = await fetch(`${API_BASE_URL}/categories`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
+      console.log('Categories response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
-        setCategories(data.categories);
+        console.log('Categories response data:', data);
+        console.log('Categories data type:', typeof data);
+        console.log('Is array:', Array.isArray(data));
+        
+        // Handle different response formats
+        if (Array.isArray(data)) {
+          // Direct array response (from getActiveCategories)
+          console.log('Setting categories as direct array, length:', data.length);
+          setCategories(data);
+        } else if (data.categories && Array.isArray(data.categories)) {
+          // Wrapped in categories property
+          console.log('Setting categories from data.categories, length:', data.categories.length);
+          setCategories(data.categories);
+        } else {
+          console.log('No valid categories found, setting empty array');
+          setCategories([]);
+        }
+      } else {
+        console.error('Error fetching categories:', response.status);
+        setCategories([]); // Set empty array on error
       }
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setCategories([]); // Set empty array on error
     }
   };
 
@@ -401,12 +413,16 @@ const ProductManagement = () => {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="">All Categories</option>
-                {categories.map((category) => (
-                  <option key={category._id} value={category._id}>
-                    {category.name}
-                  </option>
-                ))}
+                <option value="">All Categories ({categories.length} available)</option>
+                {categories && categories.length > 0 ? (
+                  categories.map((category) => (
+                    <option key={category._id} value={category._id}>
+                      {category.name}
+                    </option>
+                  ))
+                ) : (
+                  <option value="" disabled>No categories available</option>
+                )}
               </select>
 
               {/* Stock Status Filter */}
@@ -460,69 +476,88 @@ const ProductManagement = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {products.map((product) => (
-                  <motion.tr
-                    key={product._id}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="hover:bg-gray-50"
-                  >
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <img
-                          src={
-                            product.images[0]?.startsWith('http') 
-                              ? product.images[0]
-                              : product.images[0] 
-                                ? `http://localhost:5000${product.images[0]}`
-                                : '/placeholder-product.jpg'
-                          }
-                          alt={product.name}
-                          className="h-10 w-10 rounded-lg object-cover mr-3"
-                        />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">{product.name}</div>
-                          <div className="text-sm text-gray-500 truncate max-w-xs">
-                            {product.description}
+                {products && products.length > 0 ? (
+                  products.map((product) => (
+                    <motion.tr
+                      key={product._id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="hover:bg-gray-50"
+                    >
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <img
+                            src={
+                              product.images[0]?.startsWith('http') 
+                                ? product.images[0]
+                                : product.images[0] 
+                                  ? `${UPLOAD_URL}${product.images[0]}`
+                                  : '/placeholder-product.jpg'
+                            }
+                            alt={product.name}
+                            className="h-10 w-10 rounded-lg object-cover mr-3"
+                          />
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                            <div className="text-sm text-gray-500 truncate max-w-xs">
+                              {product.description}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {product.category?.name || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ₹{product.price}
-                      {product.originalPrice && (
-                        <span className="text-gray-500 line-through ml-2">₹{product.originalPrice}</span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {product.category?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        ₹{product.price}
+                        {product.originalPrice && (
+                          <span className="text-gray-500 line-through ml-2">₹{product.originalPrice}</span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {product.stock}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStockStatus(product.stock).color}`}>
+                          {getStockStatus(product.stock).text}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => openEditModal(product)}
+                            className="text-blue-600 hover:text-blue-900"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteProduct(product._id)}
+                            className="text-red-600 hover:text-red-900"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                      {loading ? (
+                        <div className="flex items-center justify-center">
+                          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                          Loading products...
+                        </div>
+                      ) : (
+                        <div>
+                          <Package className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                          <p className="text-lg font-medium">No products found</p>
+                          <p className="text-sm">Get started by adding your first product.</p>
+                        </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {product.stock}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStockStatus(product.stock).color}`}>
-                        {getStockStatus(product.stock).text}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => openEditModal(product)}
-                          className="text-blue-600 hover:text-blue-900"
-                        >
-                          <Edit className="h-4 w-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteProduct(product._id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </motion.tr>
-                ))}
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -659,11 +694,15 @@ const ProductManagement = () => {
                           className="mt-1 block w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         >
                           <option value="">Select Category</option>
-                          {categories.map((category) => (
-                            <option key={category._id} value={category._id}>
-                              {category.name}
-                            </option>
-                          ))}
+                          {categories && categories.length > 0 ? (
+                            categories.map((category) => (
+                              <option key={category._id} value={category._id}>
+                                {category.name}
+                              </option>
+                            ))
+                          ) : (
+                            <option value="" disabled>No categories available</option>
+                          )}
                         </select>
                       </div>
                     </div>

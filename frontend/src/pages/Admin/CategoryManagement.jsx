@@ -13,6 +13,7 @@ import {
 import { motion } from 'framer-motion';
 import AdminLayout from '../../components/layout/AdminLayout';
 import ImageUpload from '../../components/common/ImageUpload';
+import { API_BASE_URL, UPLOAD_URL } from '../../config/environment';
 
 const CategoryManagement = () => {
   const [categories, setCategories] = useState([]);
@@ -38,8 +39,6 @@ const CategoryManagement = () => {
   const [formLoading, setFormLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  const API_BASE_URL = 'http://localhost:5000/api/admin';
-
   // Helper function to get proper image URL for categories
   const getCategoryImageSrc = (imageUrl) => {
     if (!imageUrl) return '/placeholder-category.jpg';
@@ -51,21 +50,21 @@ const CategoryManagement = () => {
     
     // If it starts with /uploads, it's our uploaded file - prepend server URL
     if (imageUrl.startsWith('/uploads')) {
-      return `http://localhost:5000${imageUrl}`;
+      return `${UPLOAD_URL}${imageUrl}`;
     }
     
     // If it's just a filename, assume it's in the uploads folder
     if (!imageUrl.includes('/') && !imageUrl.includes('\\')) {
-      return `http://localhost:5000/uploads/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/${imageUrl}`;
     }
     
     // For category images, try the categories subfolder
     if (!imageUrl.startsWith('/uploads/categories')) {
-      return `http://localhost:5000/uploads/categories/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/categories/${imageUrl}`;
     }
     
     // Otherwise assume it's a relative path and prepend server URL
-    return `http://localhost:5000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+    return `${UPLOAD_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
   };
 
   useEffect(() => {
@@ -88,7 +87,7 @@ const CategoryManagement = () => {
         params.append('search', searchTerm);
       }
 
-      const response = await fetch(`${API_BASE_URL}/categories?${params}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/categories?${params}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +121,7 @@ const CategoryManagement = () => {
       setFormLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/categories`, {
+      const response = await fetch(`${API_BASE_URL}/admin/categories`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -154,7 +153,7 @@ const CategoryManagement = () => {
       setFormLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/categories/${selectedCategory._id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/categories/${selectedCategory._id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -188,7 +187,7 @@ const CategoryManagement = () => {
     try {
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/categories/${categoryId}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/categories/${categoryId}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',

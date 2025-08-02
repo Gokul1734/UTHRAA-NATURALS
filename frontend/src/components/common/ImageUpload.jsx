@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { UPLOAD_URL } from '../../config/environment';
 
 const ImageUpload = ({ 
   onImageUploaded, 
@@ -27,7 +28,7 @@ const ImageUpload = ({
         });
 
         console.log('Uploading to product-images endpoint');
-        const response = await fetch('http://localhost:5000/api/upload/product-images', {
+        const response = await fetch(`${UPLOAD_URL}/api/upload/product-images`, {
           method: 'POST',
           body: formData,
         });
@@ -50,8 +51,8 @@ const ImageUpload = ({
         formData.append('image', files[0]);
 
         const endpoint = uploadType === 'category' 
-          ? 'http://localhost:5000/api/upload/category-image'
-          : 'http://localhost:5000/api/upload/image';
+          ? `${UPLOAD_URL}/api/upload/category-image`
+          : `${UPLOAD_URL}/api/upload/image`;
 
         // Use different field name for category images
         if (uploadType === 'category') {
@@ -156,26 +157,26 @@ const ImageUpload = ({
     
     // If it starts with /uploads, it's our uploaded file - prepend server URL
     if (imageUrl.startsWith('/uploads')) {
-      return `http://localhost:5000${imageUrl}`;
+      return `${UPLOAD_URL}${imageUrl}`;
     }
     
     // If it's just a filename, assume it's in the uploads folder
     if (!imageUrl.includes('/') && !imageUrl.includes('\\')) {
-      return `http://localhost:5000/uploads/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/${imageUrl}`;
     }
     
     // For category images, try the categories subfolder
     if (uploadType === 'category' && !imageUrl.startsWith('/uploads/categories')) {
-      return `http://localhost:5000/uploads/categories/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/categories/${imageUrl}`;
     }
     
     // For product images, try the products subfolder
     if (uploadType === 'product' && !imageUrl.startsWith('/uploads/products')) {
-      return `http://localhost:5000/uploads/products/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/products/${imageUrl}`;
     }
     
     // Otherwise assume it's a relative path and prepend server URL
-    return `http://localhost:5000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+    return `${UPLOAD_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
   };
 
   return (

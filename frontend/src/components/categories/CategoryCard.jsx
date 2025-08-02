@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { UPLOAD_URL } from '../../config/environment';
 
 const CategoryCard = ({ category, index }) => {
   // Helper function to get proper image URL
@@ -13,21 +14,21 @@ const CategoryCard = ({ category, index }) => {
     
     // If it starts with /uploads, it's our uploaded file - prepend server URL
     if (imageUrl.startsWith('/uploads')) {
-      return `http://localhost:5000${imageUrl}`;
+      return `${UPLOAD_URL}${imageUrl}`;
     }
     
     // If it's just a filename, assume it's in the uploads folder
     if (!imageUrl.includes('/') && !imageUrl.includes('\\')) {
-      return `http://localhost:5000/uploads/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/${imageUrl}`;
     }
     
     // For category images, try the categories subfolder
     if (!imageUrl.startsWith('/uploads/categories')) {
-      return `http://localhost:5000/uploads/categories/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/categories/${imageUrl}`;
     }
     
     // Otherwise assume it's a relative path and prepend server URL
-    return `http://localhost:5000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+    return `${UPLOAD_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
   };
 
   return (

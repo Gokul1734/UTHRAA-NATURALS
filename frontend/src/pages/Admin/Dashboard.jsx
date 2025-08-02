@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { API_BASE_URL, UPLOAD_URL } from '../../config/environment';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -50,21 +51,21 @@ const Dashboard = () => {
     
     // If it starts with /uploads, it's our uploaded file - prepend server URL
     if (imageUrl.startsWith('/uploads')) {
-      return `http://localhost:5000${imageUrl}`;
+      return `${UPLOAD_URL}${imageUrl}`;
     }
     
     // If it's just a filename, assume it's in the uploads folder
     if (!imageUrl.includes('/') && !imageUrl.includes('\\')) {
-      return `http://localhost:5000/uploads/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/${imageUrl}`;
     }
     
     // For category images, try the categories subfolder
     if (!imageUrl.startsWith('/uploads/categories')) {
-      return `http://localhost:5000/uploads/categories/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/categories/${imageUrl}`;
     }
     
     // Otherwise assume it's a relative path and prepend server URL
-    return `http://localhost:5000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+    return `${UPLOAD_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
   };
 
   // Helper function to get proper image URL for products
@@ -78,21 +79,21 @@ const Dashboard = () => {
     
     // If it starts with /uploads, it's our uploaded file - prepend server URL
     if (imageUrl.startsWith('/uploads')) {
-      return `http://localhost:5000${imageUrl}`;
+      return `${UPLOAD_URL}${imageUrl}`;
     }
     
     // If it's just a filename, assume it's in the uploads folder
     if (!imageUrl.includes('/') && !imageUrl.includes('\\')) {
-      return `http://localhost:5000/uploads/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/${imageUrl}`;
     }
     
     // For product images, try the products subfolder
     if (!imageUrl.startsWith('/uploads/products')) {
-      return `http://localhost:5000/uploads/products/${imageUrl}`;
+      return `${UPLOAD_URL}/uploads/products/${imageUrl}`;
     }
     
     // Otherwise assume it's a relative path and prepend server URL
-    return `http://localhost:5000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+    return `${UPLOAD_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
   };
 
   useEffect(() => {
@@ -115,7 +116,7 @@ const Dashboard = () => {
       setLoading(true);
       setError(null);
       
-      const response = await fetch(`http://localhost:5000/api/dashboard/stats`, {
+      const response = await fetch(`${API_BASE_URL}/dashboard/stats`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -415,49 +416,57 @@ const Dashboard = () => {
               </button>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-              {recentProducts.map((product, index) => (
-                <motion.div
-                  key={product._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * index }}
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
-                >
-                  <div className="aspect-w-16 aspect-h-9 bg-gray-200">
-                    <img
-                      src={getProductImageSrc(product.images[0])}
-                      alt={product.name}
-                      className="w-full h-32 sm:h-40 lg:h-48 object-cover"
-                    />
-                  </div>
-                  <div className="p-3 sm:p-4">
-                    <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">{product.name}</h3>
-                    <p className="text-xs sm:text-sm text-gray-600 mb-2">{product.category?.name}</p>
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm sm:text-lg font-bold text-gray-900">₹{product.price}</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStockStatus(product.stock).color}`}>
-                        {getStockStatus(product.stock).text}
-                      </span>
+              {recentProducts && recentProducts.length > 0 ? (
+                recentProducts.map((product, index) => (
+                  <motion.div
+                    key={product._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * index }}
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
+                  >
+                    <div className="aspect-w-16 aspect-h-9 bg-gray-200">
+                      <img
+                        src={getProductImageSrc(product.images[0])}
+                        alt={product.name}
+                        className="w-full h-32 sm:h-40 lg:h-48 object-cover"
+                      />
                     </div>
-                    <div className="flex space-x-2">
-                      <button
-                        onClick={() => navigate(`/admin/products/${product._id}`)}
-                        className="flex-1 flex items-center justify-center px-2 sm:px-3 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-700 transition-colors touch-manipulation"
-                      >
-                        <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                        View
-                      </button>
-                      <button
-                        onClick={() => navigate(`/admin/products/${product._id}/edit`)}
-                        className="flex-1 flex items-center justify-center px-2 sm:px-3 py-2 bg-gray-600 text-white text-xs sm:text-sm rounded-lg hover:bg-gray-700 transition-colors touch-manipulation"
-                      >
-                        <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                        Edit
-                      </button>
+                    <div className="p-3 sm:p-4">
+                      <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">{product.name}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600 mb-2">{product.category?.name}</p>
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm sm:text-lg font-bold text-gray-900">₹{product.price}</span>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStockStatus(product.stock).color}`}>
+                          {getStockStatus(product.stock).text}
+                        </span>
+                      </div>
+                      <div className="flex space-x-2">
+                        <button
+                          onClick={() => navigate(`/admin/products/${product._id}`)}
+                          className="flex-1 flex items-center justify-center px-2 sm:px-3 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-700 transition-colors touch-manipulation"
+                        >
+                          <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          View
+                        </button>
+                        <button
+                          onClick={() => navigate(`/admin/products/${product._id}/edit`)}
+                          className="flex-1 flex items-center justify-center px-2 sm:px-3 py-2 bg-gray-600 text-white text-xs sm:text-sm rounded-lg hover:bg-gray-700 transition-colors touch-manipulation"
+                        >
+                          <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          Edit
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-8 text-gray-500">
+                  <Package className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-lg font-medium">No recent products</p>
+                  <p className="text-sm">Products will appear here once added.</p>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -472,56 +481,64 @@ const Dashboard = () => {
           >
             <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6">Products by Category</h2>
             <div className="space-y-4 sm:space-y-6">
-              {productsByCategory.map((category, categoryIndex) => (
-                <motion.div
-                  key={category._id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 * categoryIndex }}
-                  className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center">
-                      <img
-                        src={getCategoryImageSrc(category.image)}
-                        alt={category.name}
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover mr-3"
-                      />
-                      <div>
-                        <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{category.name}</h3>
-                        <p className="text-xs sm:text-sm text-gray-600">{category.productCount} products</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => navigate(`/admin/categories/${category._id}`)}
-                      className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium touch-manipulation"
-                    >
-                      View Category
-                    </button>
-                  </div>
-                  {category.products && category.products.length > 0 && (
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                      {category.products.map((product, productIndex) => (
-                        <div
-                          key={product._id}
-                          className="border border-gray-200 rounded-lg p-2 sm:p-3 hover:shadow-md transition-shadow"
-                        >
-                          <img
-                            src={getProductImageSrc(product.images[0])}
-                            alt={product.name}
-                            className="w-full h-16 sm:h-20 lg:h-24 object-cover rounded-md mb-2"
-                          />
-                          <h4 className="font-medium text-gray-900 text-xs sm:text-sm truncate">{product.name}</h4>
-                          <p className="text-xs sm:text-sm text-gray-600">₹{product.price}</p>
-                          <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${getStockStatus(product.stock).color}`}>
-                            {getStockStatus(product.stock).text}
-                          </span>
+              {productsByCategory && productsByCategory.length > 0 ? (
+                productsByCategory.map((category, categoryIndex) => (
+                  <motion.div
+                    key={category._id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.1 * categoryIndex }}
+                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6"
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center">
+                        <img
+                          src={getCategoryImageSrc(category.image)}
+                          alt={category.name}
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover mr-3"
+                        />
+                        <div>
+                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{category.name}</h3>
+                          <p className="text-xs sm:text-sm text-gray-600">{category.productCount} products</p>
                         </div>
-                      ))}
+                      </div>
+                      <button
+                        onClick={() => navigate(`/admin/categories/${category._id}`)}
+                        className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium touch-manipulation"
+                      >
+                        View Category
+                      </button>
                     </div>
-                  )}
-                </motion.div>
-              ))}
+                    {category.products && category.products.length > 0 && (
+                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+                        {category.products.map((product, productIndex) => (
+                          <div
+                            key={product._id}
+                            className="border border-gray-200 rounded-lg p-2 sm:p-3 hover:shadow-md transition-shadow"
+                          >
+                            <img
+                              src={getProductImageSrc(product.images[0])}
+                              alt={product.name}
+                              className="w-full h-16 sm:h-20 lg:h-24 object-cover rounded-md mb-2"
+                            />
+                            <h4 className="font-medium text-gray-900 text-xs sm:text-sm truncate">{product.name}</h4>
+                            <p className="text-xs sm:text-sm text-gray-600">₹{product.price}</p>
+                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${getStockStatus(product.stock).color}`}>
+                              {getStockStatus(product.stock).text}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <Folder className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                  <p className="text-lg font-medium">No categories with products</p>
+                  <p className="text-sm">Categories with products will appear here.</p>
+                </div>
+              )}
             </div>
           </motion.div>
         )}
