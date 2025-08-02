@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { logout } from '../../store/slices/authSlice';
 import { calculateTotals } from '../../store/slices/cartSlice';
 import { ShoppingCart, User, Menu, X, Search, Heart, Phone, LogOut, Settings, Package } from 'lucide-react';
+import Logo from '../common/Logo';
 import toast from 'react-hot-toast';
 
 const Navbar = () => {
@@ -115,26 +116,7 @@ const Navbar = () => {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
           <div className="flex justify-between items-center h-14 sm:h-16 lg:h-18">
             {/* Logo */}
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="flex-shrink-0"
-            >
-              <Link to="/" className="flex items-center space-x-2 sm:space-x-3">
-                <div className="relative">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-bold text-sm sm:text-lg">U</span>
-                  </div>
-                  <div className="absolute -top-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-green-400 rounded-full border-2 border-white"></div>
-                </div>
-                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent hidden xs:block">
-                  Uthraa Naturals
-                </span>
-                <span className="text-lg font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent xs:hidden">
-                  Uthraa
-                </span>
-              </Link>
-            </motion.div>
+            <Logo size="default" />
 
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">

@@ -7,6 +7,8 @@ import { getFeaturedProducts } from '../store/slices/productSlice';
 import { getCategories } from '../store/slices/categorySlice';
 import ProductCard from '../components/products/ProductCard';
 import CategoryCard from '../components/categories/CategoryCard';
+import Logo from '../components/common/Logo';
+import { getBrandName, getBrandTagline, getBrandDescription } from '../utils/brandUtils';
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -45,7 +47,7 @@ const Home = () => {
     {
       name: 'Priya Sharma',
       role: 'Wellness Coach',
-      content: 'Uthraa Naturals has transformed my skincare routine. Their products are truly amazing!',
+      content: `${getBrandName()} has transformed my skincare routine. Their products are truly amazing!`,
       rating: 5,
       image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
     },
@@ -80,16 +82,24 @@ const Home = () => {
               className="space-y-6 sm:space-y-8 text-center lg:text-left"
             >
               <div className="space-y-4 sm:space-y-6">
+                {/* Logo and Brand Name */}
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.2 }}
+                  className="flex justify-center lg:justify-start"
+                >
+                  <Logo size="large" showText={true} />
+                </motion.div>
+
                 <span className="inline-block px-3 py-2 sm:px-4 sm:py-2 bg-green-100 text-green-800 rounded-full text-xs sm:text-sm font-medium">
                   🌿 100% Natural & Organic
                 </span>
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
-                  Discover the Power of{' '}
-                  <span className="text-green-600">Nature</span>
+                  {getBrandTagline()}
                 </h1>
                 <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                  Experience the pure essence of nature with our handcrafted organic products. 
-                  From skincare to wellness, we bring you the finest natural ingredients.
+                  {getBrandDescription()}
                 </p>
               </div>
               
@@ -161,7 +171,7 @@ const Home = () => {
             className="text-center mb-12 sm:mb-16"
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose Uthraa Naturals?
+              Why Choose {getBrandName()}?
             </h2>
             <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
               We are committed to bringing you the finest natural products with uncompromising quality and care.
