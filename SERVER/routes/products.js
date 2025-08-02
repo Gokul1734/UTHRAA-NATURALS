@@ -10,8 +10,8 @@ router.get('/featured', productController.getFeaturedProducts);
 router.get('/category/:categoryId', productController.getProductsByCategory);
 router.get('/:id', productController.getProductById);
 
-// Protected routes (require authentication)
-router.post('/:id/review', protect, productController.addReview);
+// Review route - temporarily removing authentication for development
+router.post('/:id/review', productController.addReview);
 
 // Admin routes - temporarily removing authentication for development
 router.post('/', productController.createProduct);

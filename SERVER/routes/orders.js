@@ -3,11 +3,11 @@ const router = express.Router();
 const orderController = require('../controllers/orderController');
 const { protect, admin } = require('../middleware/auth');
 
-// User routes (protected)
-router.post('/', protect, orderController.createOrder);
-router.get('/my-orders', protect, orderController.getUserOrders);
-router.get('/:id', protect, orderController.getOrderById);
-router.patch('/:id/cancel', protect, orderController.cancelOrder);
+// User routes - temporarily removing authentication for development
+router.post('/', orderController.createOrder);
+router.get('/my-orders', orderController.getUserOrders);
+router.get('/:id', orderController.getOrderById);
+router.patch('/:id/cancel', orderController.cancelOrder);
 
 // Public routes
 router.get('/track/:trackingNumber', orderController.trackOrder);

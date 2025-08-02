@@ -14,8 +14,8 @@ router.post('/logout', authController.logout);
 router.post('/send-otp', authController.sendOTP);
 router.post('/verify-otp', authController.verifyOTP);
 
-// Protected profile routes
-router.get('/profile', protect, authController.getProfile);
-router.put('/profile', protect, authController.updateProfile);
+// Profile routes - temporarily removing authentication for development
+router.get('/profile', authController.getProfile);
+router.put('/profile', authController.updateProfile);
 
 module.exports = router; 

@@ -57,13 +57,7 @@ export const getProfile = createAsyncThunk(
   'auth/getProfile',
   async (_, thunkAPI) => {
     try {
-      const token = thunkAPI.getState().auth.user?.token;
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      const response = await axios.get(`${API_BASE_URL}/auth/me`, config);
+      const response = await axios.get(`${API_BASE_URL}/auth/profile`);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;

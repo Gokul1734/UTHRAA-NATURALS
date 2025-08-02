@@ -95,7 +95,6 @@ const ProductManagement = () => {
 
   const fetchCategories = async () => {
     try {
-      console.log('Fetching categories from:', `${API_BASE_URL}/categories`);
       const response = await fetch(`${API_BASE_URL}/categories`, {
         method: 'GET',
         headers: {
@@ -103,25 +102,17 @@ const ProductManagement = () => {
         },
       });
 
-      console.log('Categories response status:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('Categories response data:', data);
-        console.log('Categories data type:', typeof data);
-        console.log('Is array:', Array.isArray(data));
         
         // Handle different response formats
         if (Array.isArray(data)) {
           // Direct array response (from getActiveCategories)
-          console.log('Setting categories as direct array, length:', data.length);
           setCategories(data);
         } else if (data.categories && Array.isArray(data.categories)) {
           // Wrapped in categories property
-          console.log('Setting categories from data.categories, length:', data.categories.length);
           setCategories(data.categories);
         } else {
-          console.log('No valid categories found, setting empty array');
           setCategories([]);
         }
       } else {

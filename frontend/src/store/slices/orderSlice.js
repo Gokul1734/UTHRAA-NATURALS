@@ -19,13 +19,7 @@ export const createOrder = createAsyncThunk(
   'orders/create',
   async (orderData, thunkAPI) => {
     try {
-      const token = thunkAPI.getState().auth.user?.token;
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      const response = await axios.post(`${API_BASE_URL}/orders`, orderData, config);
+      const response = await axios.post(`${API_BASE_URL}/orders`, orderData);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;
@@ -39,13 +33,7 @@ export const getUserOrders = createAsyncThunk(
   'orders/getUserOrders',
   async (_, thunkAPI) => {
     try {
-      const token = thunkAPI.getState().auth.user?.token;
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      const response = await axios.get(`${API_BASE_URL}/orders/myorders`, config);
+      const response = await axios.get(`${API_BASE_URL}/orders/myorders`);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;
@@ -59,13 +47,7 @@ export const getOrder = createAsyncThunk(
   'orders/getOne',
   async (id, thunkAPI) => {
     try {
-      const token = thunkAPI.getState().auth.user?.token;
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      const response = await axios.get(`${API_BASE_URL}/orders/${id}`, config);
+      const response = await axios.get(`${API_BASE_URL}/orders/${id}`);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;
