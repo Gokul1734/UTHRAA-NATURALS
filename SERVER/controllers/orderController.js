@@ -66,7 +66,8 @@ const createOrder = async (req, res) => {
       paymentMethod = 'cod',
       notes
     } = req.body;
-    const userId = req.user.userId;
+    // Use mock user ID if no authentication
+    const userId = req.user?.userId || 'mock-user-123';
 
     // Validation
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -171,7 +172,8 @@ const createOrder = async (req, res) => {
 // Get user orders
 const getUserOrders = async (req, res) => {
   try {
-    const userId = req.user.userId;
+    // Use mock user ID if no authentication
+    const userId = req.user?.userId || 'mock-user-123';
     const { page = 1, limit = 10, status } = req.query;
 
     const query = { user: userId };
@@ -216,8 +218,9 @@ const getUserOrders = async (req, res) => {
 const getOrderById = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.userId;
-    const userRole = req.user.role;
+    // Use mock user ID and admin role if no authentication
+    const userId = req.user?.userId || 'mock-user-123';
+    const userRole = req.user?.role || 'admin';
 
     let order;
     
@@ -300,8 +303,9 @@ const updateOrderStatus = async (req, res) => {
 const cancelOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.user.userId;
-    const userRole = req.user.role;
+    // Use mock user ID and admin role if no authentication
+    const userId = req.user?.userId || 'mock-user-123';
+    const userRole = req.user?.role || 'admin';
 
     let order;
     

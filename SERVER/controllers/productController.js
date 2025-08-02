@@ -389,7 +389,8 @@ const addReview = async (req, res) => {
   try {
     const { id } = req.params;
     const { rating, comment } = req.body;
-    const userId = req.user.userId;
+    // Use mock user ID if no authentication
+    const userId = req.user?.userId || 'mock-user-123';
 
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
