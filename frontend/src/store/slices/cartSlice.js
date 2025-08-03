@@ -3,12 +3,18 @@ import { createSlice } from '@reduxjs/toolkit';
 // Get cart from localStorage
 const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
 
+// Helper function to calculate totals
+const calculateCartTotals = (items) => {
+  const total = items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
+  const tax = total * 0.18; // 18% GST
+  const shipping = total > 500 ? 0 : 50; // Free shipping above ₹500
+  const grandTotal = total + tax + shipping;
+  return { total, tax, shipping, grandTotal };
+};
+
 const initialState = {
   cartItems,
-  total: 0,
-  tax: 0,
-  shipping: 0,
-  grandTotal: 0,
+  ...calculateCartTotals(cartItems),
 };
 
 export const cartSlice = createSlice({
@@ -17,6 +23,7 @@ export const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action) => {
       const item = action.payload;
+      console.log('🔍 Cart slice: Adding item to cart:', item);
       const existingItem = state.cartItems.find(
         (cartItem) => cartItem._id === item._id
       );
@@ -31,14 +38,24 @@ export const cartSlice = createSlice({
         state.cartItems.push(item);
       }
 
+      console.log('🔍 Cart slice: Updated cart items:', state.cartItems);
+
       // Save to localStorage
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
+      
+      // Calculate totals
+      const totals = calculateCartTotals(state.cartItems);
+      Object.assign(state, totals);
     },
     removeFromCart: (state, action) => {
       state.cartItems = state.cartItems.filter(
         (item) => item._id !== action.payload
       );
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
+      
+      // Calculate totals
+      const totals = calculateCartTotals(state.cartItems);
+      Object.assign(state, totals);
     },
     updateQuantity: (state, action) => {
       const { id, quantity } = action.payload;
@@ -50,20 +67,21 @@ export const cartSlice = createSlice({
         }
       }
       localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
+      
+      // Calculate totals
+      const totals = calculateCartTotals(state.cartItems);
+      Object.assign(state, totals);
     },
     clearCart: (state) => {
       state.cartItems = [];
       localStorage.removeItem('cartItems');
+      
+      // Reset totals
+      Object.assign(state, calculateCartTotals([]));
     },
     calculateTotals: (state) => {
-      const total = state.cartItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0
-      );
-      state.total = total;
-      state.tax = total * 0.18; // 18% GST
-      state.shipping = total > 500 ? 0 : 50; // Free shipping above ₹500
-      state.grandTotal = total + state.tax + state.shipping;
+      const totals = calculateCartTotals(state.cartItems);
+      Object.assign(state, totals);
     },
   },
 });

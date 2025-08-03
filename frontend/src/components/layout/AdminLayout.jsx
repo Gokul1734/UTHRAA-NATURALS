@@ -39,70 +39,70 @@ const AdminLayout = ({ children }) => {
       bgColor: 'bg-blue-50'
     },
     {
-      title: 'Product Management',
+      title: 'Products',
       icon: Package,
       href: '/admin/products',
       color: 'text-green-600',
       bgColor: 'bg-green-50'
     },
     {
-      title: 'Category Management',
+      title: 'Categories',
       icon: Folder,
       href: '/admin/categories',
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50'
     },
     {
-      title: 'Order Management',
+      title: 'Orders',
       icon: ShoppingCart,
       href: '/admin/orders',
       color: 'text-purple-600',
       bgColor: 'bg-purple-50'
     },
     {
-      title: 'User Management',
+      title: 'Users',
       icon: Users,
       href: '/admin/users',
       color: 'text-orange-600',
       bgColor: 'bg-orange-50'
     },
     {
-      title: 'Finance Management',
+      title: 'Finance',
       icon: DollarSign,
       href: '/admin/finance',
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-50'
     },
     {
-      title: 'Stock Management',
+      title: 'Stock',
       icon: TrendingUp,
       href: '/admin/stock',
       color: 'text-red-600',
       bgColor: 'bg-red-50'
     },
     {
-      title: 'Advertisement Management',
+      title: 'Ads',
       icon: Image,
       href: '/admin/advertisements',
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50'
     },
     {
-      title: 'Delivery Management',
+      title: 'Delivery',
       icon: Truck,
       href: '/admin/delivery',
       color: 'text-teal-600',
       bgColor: 'bg-teal-50'
     },
     {
-      title: 'Reports & Analytics',
+      title: 'Reports',
       icon: FileText,
       href: '/admin/reports',
       color: 'text-pink-600',
       bgColor: 'bg-pink-50'
     },
     {
-      title: 'System Settings',
+      title: 'Settings',
       icon: Settings,
       href: '/admin/settings',
       color: 'text-gray-600',

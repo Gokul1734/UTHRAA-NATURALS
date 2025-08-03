@@ -21,6 +21,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { UPLOAD_URL } from '../../config/environment';
+import { getFirstImageUrl } from '../../utils/imageUtils';
 
 const OrderManagement = () => {
   const [orders, setOrders] = useState([]);
@@ -31,34 +32,6 @@ const OrderManagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
-
-  // Helper function to get proper image URL for products
-  const getProductImageSrc = (imageUrl) => {
-    if (!imageUrl) return '/placeholder-product.jpg';
-    
-    // If it's already a complete URL (starts with http), use as is
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-    
-    // If it starts with /uploads, it's our uploaded file - prepend server URL
-    if (imageUrl.startsWith('/uploads')) {
-      return `${UPLOAD_URL}${imageUrl}`;
-    }
-    
-    // If it's just a filename, assume it's in the uploads folder
-    if (!imageUrl.includes('/') && !imageUrl.includes('\\')) {
-      return `${UPLOAD_URL}/uploads/${imageUrl}`;
-    }
-    
-    // For product images, try the products subfolder
-    if (!imageUrl.startsWith('/uploads/products')) {
-      return `${UPLOAD_URL}/uploads/products/${imageUrl}`;
-    }
-    
-    // Otherwise assume it's a relative path and prepend server URL
-    return `${UPLOAD_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
-  };
 
   const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
@@ -508,7 +481,7 @@ const OrderManagement = () => {
                           {selectedOrder.orderItems.map((item, index) => (
                             <div key={index} className="flex items-center gap-3 bg-gray-50 rounded-lg p-3">
                               <img
-                                src={getProductImageSrc(item.product.images[0])}
+                                src={getFirstImageUrl(item.product.images)}
                                 alt={item.product.name}
                                 className="h-12 w-12 rounded-lg object-cover"
                                 onError={(e) => {

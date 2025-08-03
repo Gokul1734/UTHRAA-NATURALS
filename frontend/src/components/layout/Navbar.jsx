@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import { logout } from '../../store/slices/authSlice';
+import { directLogout } from '../../store/slices/authSlice';
 import { calculateTotals } from '../../store/slices/cartSlice';
 import { ShoppingCart, User, Menu, X, Search, Heart, Phone, LogOut, Settings, Package } from 'lucide-react';
 import Logo from '../common/Logo';
@@ -18,7 +18,14 @@ const Navbar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  const { user } = useSelector((state) => state.auth);
+  // Get user from sessionStorage instead of Redux state
+  const [user, setUser] = useState(null);
+  
+  useEffect(() => {
+    const userData = JSON.parse(sessionStorage.getItem('user') || 'null');
+    setUser(userData);
+  }, []);
+
   const { cartItems } = useSelector((state) => state.cart);
 
   useEffect(() => {
@@ -57,9 +64,10 @@ const Navbar = () => {
   }, [isMenuOpen]);
 
   const handleLogout = () => {
-    dispatch(logout());
+    dispatch(directLogout());
+    setUser(null);
     toast.success('Logged out successfully');
-    navigate('/');
+    navigate('/phone-login');
     setIsMenuOpen(false);
   };
 
@@ -109,8 +117,8 @@ const Navbar = () => {
         animate={{ y: 0 }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
           isScrolled 
-            ? 'bg-white/95 backdrop-blur-xl shadow-lg border-b border-white/20' 
-            : 'bg-white/90 backdrop-blur-lg'
+            ? 'bg-white/80 backdrop-blur-xl shadow-lg border-b border-white/20' 
+            : 'bg-white/70 backdrop-blur-lg'
         }`}
       >
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
@@ -121,7 +129,6 @@ const Navbar = () => {
             {/* Desktop Navigation */}
             <div className="hidden lg:flex items-center space-x-6 xl:space-x-8">
               {[
-                { to: '/', label: 'Home' },
                 { to: '/products', label: 'Products' },
                 { to: '/about', label: 'About' },
                 { to: '/contact', label: 'Contact' }
@@ -232,11 +239,11 @@ const Navbar = () => {
                         Profile
                       </Link>
                       <Link
-                        to="/my-orders"
+                        to="/orders"
                         className="flex items-center px-4 py-3 text-gray-700 hover:bg-gray-50 transition-colors"
                       >
                         <Package className="h-4 w-4 mr-3" />
-                        My Orders
+                        Orders
                       </Link>
                       <button
                         onClick={handleLogout}
@@ -330,7 +337,7 @@ const Navbar = () => {
                 initial="closed"
                 animate="open"
                 exit="closed"
-                className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
+                className="fixed inset-0 bg-black/20 z-40 lg:hidden"
                 onClick={() => setIsMenuOpen(false)}
               />
               
@@ -340,7 +347,7 @@ const Navbar = () => {
                 initial="closed"
                 animate="open"
                 exit="closed"
-                className="mobile-menu-container lg:hidden absolute top-full left-0 right-0 bg-white/98 backdrop-blur-xl rounded-b-3xl shadow-2xl border-t border-gray-100 z-50 max-h-[calc(100vh-4rem)] overflow-y-auto"
+                className="mobile-menu-container lg:hidden absolute top-full left-0 right-0 bg-white rounded-b-3xl shadow-2xl border-t border-gray-100 z-50 max-h-[calc(100vh-4rem)] overflow-y-auto"
               >
                 <div className="px-4 py-6 space-y-2">
                   {/* Mobile Navigation Links */}
@@ -387,12 +394,12 @@ const Navbar = () => {
                       </motion.div>
                       <motion.div variants={menuItemVariants}>
                         <Link
-                          to="/my-orders"
+                          to="/orders"
                           className="flex items-center px-4 py-4 text-gray-700 hover:bg-gray-50 rounded-2xl transition-all duration-300 font-medium touch-manipulation"
                           onClick={() => setIsMenuOpen(false)}
                         >
                           <Package className="h-5 w-5 mr-4 text-green-600" />
-                          <span className="text-base">My Orders</span>
+                          <span className="text-base">Orders</span>
                         </Link>
                       </motion.div>
                       <motion.div variants={menuItemVariants}>

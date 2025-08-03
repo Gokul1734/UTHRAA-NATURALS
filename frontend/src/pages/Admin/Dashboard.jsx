@@ -22,6 +22,7 @@ import {
 import { motion } from 'framer-motion';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { API_BASE_URL, UPLOAD_URL } from '../../config/environment';
+import { getFirstImageUrl } from '../../utils/imageUtils';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -62,34 +63,6 @@ const Dashboard = () => {
     // For category images, try the categories subfolder
     if (!imageUrl.startsWith('/uploads/categories')) {
       return `${UPLOAD_URL}/uploads/categories/${imageUrl}`;
-    }
-    
-    // Otherwise assume it's a relative path and prepend server URL
-    return `${UPLOAD_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
-  };
-
-  // Helper function to get proper image URL for products
-  const getProductImageSrc = (imageUrl) => {
-    if (!imageUrl) return '/placeholder-product.jpg';
-    
-    // If it's already a complete URL (starts with http), use as is
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-    
-    // If it starts with /uploads, it's our uploaded file - prepend server URL
-    if (imageUrl.startsWith('/uploads')) {
-      return `${UPLOAD_URL}${imageUrl}`;
-    }
-    
-    // If it's just a filename, assume it's in the uploads folder
-    if (!imageUrl.includes('/') && !imageUrl.includes('\\')) {
-      return `${UPLOAD_URL}/uploads/${imageUrl}`;
-    }
-    
-    // For product images, try the products subfolder
-    if (!imageUrl.startsWith('/uploads/products')) {
-      return `${UPLOAD_URL}/uploads/products/${imageUrl}`;
     }
     
     // Otherwise assume it's a relative path and prepend server URL
@@ -162,70 +135,70 @@ const Dashboard = () => {
 
   const adminModules = [
     {
-      title: 'Product Management',
+      title: 'Products',
       description: 'Add, edit, and manage products',
       icon: Package,
       color: 'bg-blue-500',
       href: '/admin/products'
     },
     {
-      title: 'Category Management',
+      title: 'Categories',
       description: 'Organize products into categories',
       icon: Folder,
       color: 'bg-indigo-500',
       href: '/admin/categories'
     },
     {
-      title: 'Order Management',
+      title: 'Orders',
       description: 'Process orders and track deliveries',
       icon: ShoppingCart,
       color: 'bg-green-500',
       href: '/admin/orders'
     },
     {
-      title: 'User Management',
+      title: 'Users',
       description: 'Manage customer accounts',
       icon: Users,
       color: 'bg-purple-500',
       href: '/admin/users'
     },
     {
-      title: 'Finance Management',
+      title: 'Finance',
       description: 'Track revenue and financial reports',
       icon: DollarSign,
       color: 'bg-yellow-500',
       href: '/admin/finance'
     },
     {
-      title: 'Stock Management',
+      title: 'Stock',
       description: 'Monitor inventory levels',
       icon: TrendingUp,
       color: 'bg-red-500',
       href: '/admin/stock'
     },
     {
-      title: 'Advertisement Management',
+      title: 'Ads',
       description: 'Manage popups and promotions',
       icon: Image,
       color: 'bg-indigo-500',
       href: '/admin/advertisements'
     },
     {
-      title: 'Delivery Management',
+      title: 'Delivery',
       description: 'Track shipments and delivery instructions',
       icon: Truck,
       color: 'bg-orange-500',
       href: '/admin/delivery'
     },
     {
-      title: 'Reports & Analytics',
+      title: 'Reports',
       description: 'View detailed reports and insights',
       icon: FileText,
       color: 'bg-teal-500',
       href: '/admin/reports'
     },
     {
-      title: 'System Settings',
+      title: 'Settings',
       description: 'Configure website settings',
       icon: Settings,
       color: 'bg-gray-500',
@@ -427,7 +400,7 @@ const Dashboard = () => {
                   >
                     <div className="aspect-w-16 aspect-h-9 bg-gray-200">
                       <img
-                        src={getProductImageSrc(product.images[0])}
+                        src={getFirstImageUrl(product.images)}
                         alt={product.name}
                         className="w-full h-32 sm:h-40 lg:h-48 object-cover"
                       />
@@ -517,7 +490,7 @@ const Dashboard = () => {
                             className="border border-gray-200 rounded-lg p-2 sm:p-3 hover:shadow-md transition-shadow"
                           >
                             <img
-                              src={getProductImageSrc(product.images[0])}
+                              src={getFirstImageUrl(product.images)}
                               alt={product.name}
                               className="w-full h-16 sm:h-20 lg:h-24 object-cover rounded-md mb-2"
                             />

@@ -1,24 +1,42 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, Star, Truck, Shield, Leaf, Heart } from 'lucide-react';
+import { ArrowRight, Star, Truck, Shield, Leaf, Heart, User } from 'lucide-react';
 import { getFeaturedProducts } from '../store/slices/productSlice';
 import { getCategories } from '../store/slices/categorySlice';
 import ProductCard from '../components/products/ProductCard';
 import CategoryCard from '../components/categories/CategoryCard';
 import Logo from '../components/common/Logo';
+import LOGO from '../assets/Logo.jpg';
 import { getBrandName, getBrandTagline, getBrandDescription } from '../utils/brandUtils';
 
 const Home = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { featuredProducts, isLoading } = useSelector((state) => state.products);
   const { categories } = useSelector((state) => state.categories);
+  
+  // User state from sessionStorage
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
+    // Get user from sessionStorage
+    const userData = JSON.parse(sessionStorage.getItem('user') || 'null');
+    setUser(userData);
+    
     dispatch(getFeaturedProducts());
     dispatch(getCategories());
   }, [dispatch]);
+
+  const scrollToTop = () => {
+    window.scrollTo(0, 0);
+  };
+
+  const handleCategoryClick = () => {
+    scrollToTop();
+    navigate('/products');
+  };
 
   const features = [
     {
@@ -69,6 +87,27 @@ const Home = () => {
 
   return (
     <div className="pt-14 sm:pt-16 lg:pt-18">
+      {/* Welcome Message for Logged In Users */}
+      {user && (
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200"
+        >
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-center space-x-2 text-green-800">
+              <User className="h-5 w-5" />
+              <span className="font-medium">
+                Welcome back, {user.name}! 
+                {user.role === 'admin' && (
+                  <span className="ml-2 text-purple-600 font-semibold">(Admin)</span>
+                )}
+              </span>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Hero Section */}
       <section className="relative bg-gradient-to-br from-green-50 to-emerald-100 overflow-hidden min-h-[500px] sm:min-h-[600px] lg:min-h-[700px]">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%239C92AC&quot; fill-opacity=&quot;0.05&quot;%3E%3Ccircle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;2&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
@@ -103,7 +142,7 @@ const Home = () => {
                 </p>
               </div>
               
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center lg:justify-start">
+              {/* <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center lg:justify-start">
                 <Link
                   to="/products"
                   className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl touch-manipulation"
@@ -128,7 +167,7 @@ const Home = () => {
                   <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-red-400 fill-current" />
                   <span>10K+ Happy Customers</span>
                 </div>
-              </div>
+              </div> */}
             </motion.div>
 
             <motion.div
@@ -139,9 +178,9 @@ const Home = () => {
             >
               <div className="relative z-10">
                 <img
-                  src="https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=600&h=600&fit=crop&crop=center"
+                  src={LOGO}
                   alt="Organic Products"
-                  className="w-full h-64 sm:h-80 md:h-96 lg:h-[400px] xl:h-[500px] object-cover rounded-2xl shadow-2xl"
+                  className="w-full h-auto max-h-[500px] rounded-2xl shadow-2xl"
                 />
                 <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
                   <div className="flex items-center space-x-3">
@@ -160,54 +199,8 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
-          >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose {getBrandName()}?
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
-              We are committed to bringing you the finest natural products with uncompromising quality and care.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-                whileHover={{ y: -5 }}
-                className="text-center p-6 sm:p-8 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
-              >
-                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-2xl mb-4 sm:mb-6">
-                  <div className="text-green-600">
-                    {feature.icon}
-                  </div>
-                </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Categories Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
+            {/* Categories Section */}
+            <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -233,7 +226,7 @@ const Home = () => {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 viewport={{ once: true }}
               >
-                <CategoryCard category={category} />
+                <CategoryCard category={category} onClick={handleCategoryClick} />
               </motion.div>
             ))}
           </div>
@@ -311,6 +304,52 @@ const Home = () => {
               <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
             </Link>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-12 sm:py-16 lg:py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-12 sm:mb-16"
+          >
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+              Why Choose {getBrandName()}?
+            </h2>
+            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+              We are committed to bringing you the finest natural products with uncompromising quality and care.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+                whileHover={{ y: -5 }}
+                className="text-center p-6 sm:p-8 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
+              >
+                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-2xl mb-4 sm:mb-6">
+                  <div className="text-green-600">
+                    {feature.icon}
+                  </div>
+                </div>
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
+                  {feature.title}
+                </h3>
+                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+                  {feature.description}
+                </p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 

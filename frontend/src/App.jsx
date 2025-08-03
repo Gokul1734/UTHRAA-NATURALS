@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
 import { store } from './store';
@@ -8,15 +8,18 @@ import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
+import Wishlist from './pages/Wishlist';
 import Login from './pages/Login';
 import PhoneLogin from './pages/PhoneLogin';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Checkout from './pages/Checkout';
+import Orders from './pages/Orders';
 import OrderSuccess from './pages/OrderSuccess';
-import MyOrders from './pages/MyOrders';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import OrderTracking from './pages/OrderTracking';
+import useScrollToTop from './utils/useScrollToTop';
 
 // Admin Pages
 import AdminDashboard from './pages/Admin/Dashboard';
@@ -28,57 +31,173 @@ import FinanceManagement from './pages/Admin/FinanceManagement';
 
 import './App.css';
 
+// Protected Route Component
+const ProtectedRoute = ({ children, allowedRoles = ['user', 'admin'] }) => {
+  const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+  
+  if (!user) {
+    return <Navigate to="/phone-login" replace />;
+  }
+  
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
+
+// Admin Route Component
+const AdminRoute = ({ children }) => {
+  const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+  
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/phone-login" replace />;
+  }
+  
+  return children;
+};
+
+// Component to handle scroll behavior inside Router context
+function AppContent() {
+  // Hook to automatically scroll to top on route changes
+  useScrollToTop();
+
+  return (
+    <div className="App">
+      <ConditionalNavbar />
+      <main className="min-h-screen">
+        <Routes>
+          {/* Public Routes (No Authentication Required) */}
+          <Route path="/" element={<Home />} />
+          <Route path="/phone-login" element={<PhoneLogin />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
+          
+          {/* Protected Routes (Require Authentication) */}
+          <Route path="/products" element={
+            <ProtectedRoute>
+              <Products />
+            </ProtectedRoute>
+          } />
+          <Route path="/product/:id" element={
+            <ProtectedRoute>
+              <ProductDetail />
+            </ProtectedRoute>
+          } />
+          <Route path="/cart" element={
+            <ProtectedRoute>
+              <Cart />
+            </ProtectedRoute>
+          } />
+          <Route path="/wishlist" element={
+            <ProtectedRoute>
+              <Wishlist />
+            </ProtectedRoute>
+          } />
+          <Route path="/profile" element={
+            <ProtectedRoute>
+              <Profile />
+            </ProtectedRoute>
+          } />
+          <Route path="/checkout" element={
+            <ProtectedRoute>
+              <Checkout />
+            </ProtectedRoute>
+          } />
+          <Route path="/orders" element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          } />
+          <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/order-tracking/:id" element={
+            <ProtectedRoute>
+              <OrderTracking />
+            </ProtectedRoute>
+          } />
+
+          {/* Admin Routes */}
+          <Route path="/admin" element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          } />
+          <Route path="/admin/products" element={
+            <AdminRoute>
+              <ProductManagement />
+            </AdminRoute>
+          } />
+          <Route path="/admin/categories" element={
+            <AdminRoute>
+              <CategoryManagement />
+            </AdminRoute>
+          } />
+          <Route path="/admin/orders" element={
+            <AdminRoute>
+              <OrderManagement />
+            </AdminRoute>
+          } />
+          <Route path="/admin/advertisements" element={
+            <AdminRoute>
+              <AdvertisementManagement />
+            </AdminRoute>
+          } />
+          <Route path="/admin/finance" element={
+            <AdminRoute>
+              <FinanceManagement />
+            </AdminRoute>
+          } />
+          
+          {/* Additional Admin Routes (to be implemented) */}
+          <Route path="/admin/users" element={
+            <AdminRoute>
+              <div className="p-6 text-center">Users - Coming Soon</div>
+            </AdminRoute>
+          } />
+          <Route path="/admin/stock" element={
+            <AdminRoute>
+              <div className="p-6 text-center">Stock - Coming Soon</div>
+            </AdminRoute>
+          } />
+          <Route path="/admin/delivery" element={
+            <AdminRoute>
+              <div className="p-6 text-center">Delivery - Coming Soon</div>
+            </AdminRoute>
+          } />
+          <Route path="/admin/reports" element={
+            <AdminRoute>
+              <div className="p-6 text-center">Reports - Coming Soon</div>
+            </AdminRoute>
+          } />
+          <Route path="/admin/settings" element={
+            <AdminRoute>
+              <div className="p-6 text-center">Settings - Coming Soon</div>
+            </AdminRoute>
+          } />
+        </Routes>
+      </main>
+      <ConditionalFooter />
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 3000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+        }}
+      />
+    </div>
+  );
+}
+
 function App() {
   return (
     <Provider store={store}>
       <Router>
-        <div className="App">
-          <ConditionalNavbar />
-          <main className="min-h-screen">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/products" element={<Products />} />
-              <Route path="/product/:id" element={<ProductDetail />} />
-              <Route path="/cart" element={<Cart />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/phone-login" element={<PhoneLogin />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/order-success" element={<OrderSuccess />} />
-              <Route path="/my-orders" element={<MyOrders />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/contact" element={<Contact />} />
-
-              {/* Admin Routes */}
-              <Route path="/admin" element={<AdminDashboard />} />
-              <Route path="/admin/products" element={<ProductManagement />} />
-              <Route path="/admin/categories" element={<CategoryManagement />} />
-              <Route path="/admin/orders" element={<OrderManagement />} />
-              <Route path="/admin/advertisements" element={<AdvertisementManagement />} />
-              <Route path="/admin/finance" element={<FinanceManagement />} />
-              
-              {/* Additional Admin Routes (to be implemented) */}
-              <Route path="/admin/users" element={<div className="p-6 text-center">User Management - Coming Soon</div>} />
-              <Route path="/admin/stock" element={<div className="p-6 text-center">Stock Management - Coming Soon</div>} />
-              <Route path="/admin/delivery" element={<div className="p-6 text-center">Delivery Management - Coming Soon</div>} />
-              <Route path="/admin/reports" element={<div className="p-6 text-center">Reports & Analytics - Coming Soon</div>} />
-              <Route path="/admin/settings" element={<div className="p-6 text-center">System Settings - Coming Soon</div>} />
-            </Routes>
-          </main>
-          <ConditionalFooter />
-          <Toaster 
-            position="top-right"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-            }}
-          />
-        </div>
+        <AppContent />
       </Router>
     </Provider>
   );

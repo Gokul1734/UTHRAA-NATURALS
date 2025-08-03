@@ -77,6 +77,40 @@ The admin panel currently has authentication bypassed for development. In produc
 3. Secure admin routes
 4. Implement proper session management
 
+## 🗺️ Google Maps Integration
+
+The profile page includes address selection with Google Maps integration. To enable this feature:
+
+### 1. Get Google Maps API Key
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the following APIs:
+   - Maps JavaScript API
+   - Places API
+   - Geocoding API
+4. Create credentials (API Key)
+5. Restrict the API key to your domain for security
+
+### 2. Configure Environment Variables
+Create a `.env` file in the frontend directory:
+```bash
+# Google Maps API Key
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
+
+# Backend API URL
+VITE_API_BASE_URL=http://localhost:5001/api
+
+# Frontend URL
+VITE_FRONTEND_URL=http://localhost:5173
+```
+
+### 3. Features
+- Interactive map for address selection
+- Search functionality for addresses
+- Reverse geocoding (click on map to get address)
+- Automatic address parsing
+- Integration with user profile
+
 ## 🎨 Features
 
 ### Customer App Features:
