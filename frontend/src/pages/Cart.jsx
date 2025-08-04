@@ -121,9 +121,9 @@ const Cart = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center"
+            className="text-left"
           >
-            <ShoppingBag className="mx-auto h-24 w-24 text-gray-400 mb-6" />
+            <ShoppingBag className="h-24 w-24 text-gray-400 mb-6" />
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h2>
             <p className="text-gray-600 mb-8">Looks like you haven't added any products to your cart yet.</p>
             <div className="space-x-4">

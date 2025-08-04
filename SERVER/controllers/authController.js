@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const OTPService = require('../services/otpService');
+const validator = require('validator'); // Added for email validation
 
 // Mock admin users for testing when MongoDB is not available
 const mockAdminUser = {
@@ -305,8 +305,8 @@ const verifyToken = async (req, res) => {
   }
 };
 
-// Send OTP
-const sendOTP = async (req, res) => {
+// Phone login without OTP
+const phoneLogin = async (req, res) => {
   try {
     const { phone } = req.body;
     
@@ -314,74 +314,122 @@ const sendOTP = async (req, res) => {
       return res.status(400).json({ message: 'Phone number is required' });
     }
 
-    const result = await OTPService.sendOTP(phone);
+    // Ensure phone is a string and clean it
+    const phoneString = String(phone);
+    const cleanPhone = phoneString.replace(/\D/g, '');
     
-    if (result.success) {
-      res.json({ message: 'OTP sent successfully', sessionId: result.sessionId });
-    } else {
-      res.status(400).json({ message: result.message });
+    // Validate phone number length
+    if (cleanPhone.length < 10) {
+      return res.status(400).json({ message: 'Please enter a valid 10-digit phone number' });
     }
-  } catch (error) {
-    console.error('Send OTP error:', error);
-    res.status(500).json({ message: 'Failed to send OTP' });
-  }
-};
-
-// Verify OTP
-const verifyOTP = async (req, res) => {
-  try {
-    const { phone, otp, sessionId } = req.body;
     
-    if (!phone || !otp) {
-      return res.status(400).json({ message: 'Phone and OTP are required' });
-    }
+    // Special handling for admin phone number
+    if (cleanPhone === '1234567890') {
+      const adminUser = {
+        _id: 'admin123',
+        name: 'Admin User',
+        email: 'admin@uthraa.com',
+        phone: '+91 1234567890',
+        role: 'admin',
+        address: {
+          street: '123 Admin Street',
+          city: 'Mumbai',
+          state: 'Maharashtra',
+          zipCode: '400001',
+          country: 'India'
+        },
+        createdAt: new Date()
+      };
 
-    const result = await OTPService.verifyOTP(phone, otp, sessionId);
-    
-    if (result.success) {
-      // Find or create user with this phone number
-      let user;
-      try {
-        user = await User.findOne({ phone });
-        if (!user) {
-          user = new User({
-            phone,
-            name: `User ${phone}`,
-            email: `${phone}@uthraa.com`,
-            role: 'user',
-            verified: true
-          });
-          await user.save();
-        }
-      } catch (error) {
-        // Mock user for testing
-        user = {
-          _id: Date.now().toString(),
-          phone,
-          name: `User ${phone}`,
-          role: 'user'
-        };
-      }
+      const token = generateToken(adminUser._id, adminUser.email, adminUser.role, adminUser.name, adminUser.phone);
+      const refreshToken = generateRefreshToken(adminUser._id);
 
-      // Generate token
-      const token = generateToken(user._id, user.email || '', user.role, user.name, user.phone);
-      
-      res.json({
-        message: 'OTP verified successfully',
+      // Set refresh token cookie
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+
+      return res.json({
+        message: 'Admin login successful',
         token,
         user: {
-          _id: user._id,
-          name: user.name,
-          phone: user.phone,
-          role: user.role
-        }
+          _id: adminUser._id,
+          name: adminUser.name,
+          email: adminUser.email,
+          phone: adminUser.phone,
+          role: adminUser.role,
+          address: adminUser.address
+        },
+        redirectTo: '/admin'
       });
-    } else {
-      res.status(400).json({ message: result.message });
     }
+
+    // For regular users, find or create user
+    let user;
+    try {
+      user = await User.findOne({ phone: `+91${cleanPhone}` });
+      
+      if (!user) {
+        // Create new user with minimal info
+        user = new User({
+          phone: `+91${cleanPhone}`,
+          name: `User ${cleanPhone}`,
+          email: `${cleanPhone}@uthraa.com`,
+          password: 'temp-password-' + Date.now(), // Temporary password
+          role: 'user',
+          isPhoneVerified: true, // Mark as verified since we're bypassing OTP
+          isProfileComplete: false // Mark as incomplete for profile completion
+        });
+        await user.save();
+        console.log('New user created and saved to database:', user._id);
+      } else {
+        console.log('Existing user found:', user._id);
+      }
+    } catch (error) {
+      console.log('MongoDB not available, using mock user');
+      // Create mock user for testing
+      user = {
+        _id: Date.now().toString(),
+        phone: `+91${cleanPhone}`,
+        name: `User ${cleanPhone}`,
+        email: `${cleanPhone}@uthraa.com`,
+        role: 'user',
+        address: {}
+      };
+    }
+
+    // Generate tokens
+    const token = generateToken(user._id, user.email || '', user.role, user.name, user.phone);
+    const refreshToken = generateRefreshToken(user._id);
+
+    // Set refresh token cookie
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.json({
+      message: 'Phone login successful',
+      token,
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email || '',
+        phone: user.phone,
+        role: user.role,
+        address: user.address || {},
+        isProfileComplete: user.isProfileComplete || false
+      },
+      redirectTo: '/'
+    });
   } catch (error) {
-    console.error('Verify OTP error:', error);
-    res.status(500).json({ message: 'Failed to verify OTP' });
+    console.error('Phone login error:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 };
 
@@ -394,13 +442,13 @@ const logout = (req, res) => {
 // Get user profile
 const getProfile = async (req, res) => {
   try {
-    // Use mock user ID if no authentication
-    const userId = req.user?.userId || 'mock-user-123';
+    const { userId } = req.user;
     let user;
     
     try {
       user = await User.findById(userId);
     } catch (error) {
+      console.log('MongoDB not available, using mock user data');
       // Use mock user data
       if (userId === mockAdminUser._id) {
         user = mockAdminUser;
@@ -414,17 +462,25 @@ const getProfile = async (req, res) => {
           email: 'mock@user.com',
           phone: '+91 98765 43210',
           role: 'user',
-          address: null,
+          address: {
+            street: '123 Mock Street',
+            city: 'Mumbai',
+            state: 'Maharashtra',
+            zipCode: '400001',
+            country: 'India'
+          },
+          isProfileComplete: false,
           createdAt: new Date()
         };
       }
     }
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     res.json({
+      success: true,
       user: {
         _id: user._id,
         name: user.name,
@@ -432,12 +488,13 @@ const getProfile = async (req, res) => {
         phone: user.phone,
         role: user.role,
         address: user.address,
+        isProfileComplete: user.isProfileComplete,
         createdAt: user.createdAt
       }
     });
   } catch (error) {
     console.error('Get profile error:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Failed to get profile' });
   }
 };
 
@@ -445,28 +502,57 @@ const getProfile = async (req, res) => {
 const updateProfile = async (req, res) => {
   try {
     const { name, email, phone, address } = req.body;
-    // Use mock user ID if no authentication
-    const userId = req.user?.userId || 'mock-user-123';
+    const { userId } = req.user;
+    
+    // Validation
+    if (!name || !name.trim()) {
+      return res.status(400).json({ success: false, message: 'Name is required' });
+    }
+
+    if (email && !validator.isEmail(email)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email' });
+    }
     
     let user;
     try {
       user = await User.findByIdAndUpdate(
         userId,
-        { name, email, phone, address },
+        { 
+          name: name.trim(),
+          email: email || null,
+          phone: phone || null,
+          address: address || null,
+          isProfileComplete: true // Mark profile as complete
+        },
         { new: true, runValidators: true }
       );
     } catch (error) {
+      console.log('MongoDB not available, using mock response');
+      // Return mock updated user data
+      const mockUser = {
+        _id: userId,
+        name: name.trim(),
+        email: email || null,
+        phone: phone || null,
+        address: address || null,
+        role: 'user',
+        isProfileComplete: true,
+        createdAt: new Date()
+      };
+      
       return res.json({
-        message: 'Profile updated successfully (mock)',
-        user: { _id: userId, name, email, phone, address }
+        success: true,
+        message: 'Profile updated successfully',
+        user: mockUser
       });
     }
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     res.json({
+      success: true,
       message: 'Profile updated successfully',
       user: {
         _id: user._id,
@@ -474,12 +560,34 @@ const updateProfile = async (req, res) => {
         email: user.email,
         phone: user.phone,
         role: user.role,
-        address: user.address
+        address: user.address,
+        isProfileComplete: user.isProfileComplete,
+        createdAt: user.createdAt
       }
     });
   } catch (error) {
     console.error('Update profile error:', error);
-    res.status(500).json({ message: 'Server error' });
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const errors = Object.values(error.errors).map(e => e.message);
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Validation Error',
+        errors: errors
+      });
+    }
+    
+    // Handle duplicate key errors
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return res.status(400).json({ 
+        success: false, 
+        message: `${field} already exists` 
+      });
+    }
+    
+    res.status(500).json({ success: false, message: 'Failed to update profile' });
   }
 };
 
@@ -488,8 +596,7 @@ module.exports = {
   login,
   refreshToken,
   verifyToken,
-  sendOTP,
-  verifyOTP,
+  phoneLogin,
   logout,
   getProfile,
   updateProfile

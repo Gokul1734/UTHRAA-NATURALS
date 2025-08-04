@@ -428,8 +428,8 @@ const Products = () => {
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="text-center py-12 sm:py-16">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto mb-4 sm:mb-6 rounded-full bg-gray-100 flex items-center justify-center">
+            <div className="text-left py-12 sm:py-16">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 mb-4 sm:mb-6 rounded-full bg-gray-100 flex items-center justify-center">
                 <Search className="h-8 w-8 sm:h-10 sm:w-10 text-gray-400" />
               </div>
               <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No products found</h3>

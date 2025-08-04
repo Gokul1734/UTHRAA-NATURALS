@@ -215,9 +215,9 @@ const Dashboard = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+        <div className="flex items-start justify-start min-h-[60vh] p-6">
+          <div className="text-left">
+            <Loader2 className="h-8 w-8 animate-spin mb-4 text-blue-600" />
             <p className="text-gray-600">Loading dashboard...</p>
           </div>
         </div>
@@ -434,8 +434,8 @@ const Dashboard = () => {
                   </motion.div>
                 ))
               ) : (
-                <div className="col-span-full text-center py-8 text-gray-500">
-                  <Package className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <div className="col-span-full text-left py-8 text-gray-500">
+                  <Package className="h-12 w-12 mb-4 text-gray-400" />
                   <p className="text-lg font-medium">No recent products</p>
                   <p className="text-sm">Products will appear here once added.</p>
                 </div>
@@ -506,8 +506,8 @@ const Dashboard = () => {
                   </motion.div>
                 ))
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <Folder className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                <div className="text-left py-8 text-gray-500">
+                  <Folder className="h-12 w-12 mb-4 text-gray-400" />
                   <p className="text-lg font-medium">No categories with products</p>
                   <p className="text-sm">Categories with products will appear here.</p>
                 </div>

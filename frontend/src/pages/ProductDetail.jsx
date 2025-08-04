@@ -2,125 +2,198 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { 
-  Heart, 
-  Share2, 
-  ShoppingCart, 
-  Star, 
-  Truck, 
-  Shield, 
-  ArrowLeft,
-  Minus,
-  Plus,
-  Check,
-  MapPin
-} from 'lucide-react';
-import { getProduct } from '../store/slices/productSlice';
-import { addToCart } from '../store/slices/cartSlice';
-import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
+import { ArrowLeft, Heart, ShoppingCart, Share2, Star, Minus, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { addToCart, updateQuantity, removeFromCart } from '../store/slices/cartSlice';
+import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
+import { getFirstImageUrl } from '../utils/imageUtils';
+import { handleAuthForCart, handleAuthForWishlist } from '../utils/authUtils';
 import { API_BASE_URL, UPLOAD_URL } from '../config/environment';
-import { getImageUrl } from '../utils/imageUtils';
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { product, isLoading } = useSelector((state) => state.products);
-  const { wishlistItems } = useSelector((state) => state.wishlist);
   
+  const [product, setProduct] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [selectedSize, setSelectedSize] = useState('Buy 1');
   const [pincode, setPincode] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showFullIngredients, setShowFullIngredients] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
-  const isInWishlist = wishlistItems.some(item => item._id === product?._id);
+  // Get cart and wishlist state from Redux
+  const { cartItems } = useSelector((state) => state.cart);
+  const { wishlistItems } = useSelector((state) => state.wishlist);
+  
+  // Check if product is in cart and get its quantity
+  const cartItem = cartItems.find(item => item._id === id);
+  const isInCart = !!cartItem;
+  const cartQuantity = cartItem?.quantity || 0;
+  const isInWishlist = wishlistItems.some(item => item._id === id);
 
   useEffect(() => {
-    if (id) {
-      dispatch(getProduct(id));
-    }
-  }, [dispatch, id]);
+    fetchProduct();
+  }, [id]);
 
-  // Helper function to get proper image URL
-  const getImageSrc = (imageUrl) => {
-    return getImageUrl(imageUrl);
+  const fetchProduct = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_BASE_URL}/products/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setProduct(data);
+      } else {
+        setProduct(null);
+      }
+    } catch (error) {
+      console.error('Error fetching product:', error);
+      setProduct(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Helper function to safely get substring
+  const getImageSrc = (imageUrl) => {
+    if (!imageUrl) return '/placeholder-product.jpg';
+    if (imageUrl.startsWith('http')) return imageUrl;
+    return `${UPLOAD_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+  };
+
   const getSubstring = (text, maxLength) => {
-    if (!text || typeof text !== 'string') return '';
+    if (!text) return '';
     return text.length > maxLength ? text.substring(0, maxLength) : text;
   };
 
-  // Helper function to check if text should show read more
   const shouldShowReadMore = (text, maxLength) => {
-    return text && typeof text === 'string' && text.length > maxLength;
+    return text && text.length > maxLength;
   };
 
   const handleAddToWishlist = () => {
-    if (isInWishlist) {
-      dispatch(removeFromWishlist(product._id));
-      toast.success('Removed from wishlist');
-    } else {
-      dispatch(addToWishlist(product));
-      toast.success('Added to wishlist');
-    }
+    const wishlistAction = () => {
+      if (isInWishlist) {
+        dispatch(removeFromWishlist(product._id));
+        toast.success('Removed from wishlist');
+      } else {
+        dispatch(addToWishlist(product));
+        toast.success('Added to wishlist');
+      }
+    };
+
+    handleAuthForWishlist(wishlistAction, navigate);
   };
 
   const handleAddToCart = () => {
-    dispatch(addToCart({
-      ...product,
-      quantity: quantity
-    }));
-    toast.success('Added to cart');
+    const cartAction = () => {
+      setIsAddingToCart(true);
+      try {
+        dispatch(addToCart({
+          ...product,
+          quantity: quantity
+        }));
+        toast.success('Added to cart');
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+        toast.error('Failed to add to cart');
+      } finally {
+        setIsAddingToCart(false);
+      }
+    };
+
+    handleAuthForCart(cartAction, navigate);
+  };
+
+  const handleRemoveFromCart = () => {
+    const removeAction = () => {
+      try {
+        dispatch(removeFromCart(product._id));
+        toast.success('Removed from cart');
+      } catch (error) {
+        console.error('Error removing from cart:', error);
+        toast.error('Failed to remove from cart');
+      }
+    };
+
+    handleAuthForCart(removeAction, navigate);
+  };
+
+  const handleUpdateQuantity = (newQuantity) => {
+    const updateAction = () => {
+      try {
+        if (newQuantity <= 0) {
+          dispatch(removeFromCart(product._id));
+          toast.success('Removed from cart');
+        } else {
+          dispatch(updateQuantity({ id: product._id, quantity: newQuantity }));
+          toast.success('Cart updated');
+        }
+      } catch (error) {
+        console.error('Error updating quantity:', error);
+        toast.error('Failed to update cart');
+      }
+    };
+
+    handleAuthForCart(updateAction, navigate);
   };
 
   const handleBuyNow = () => {
-    dispatch(addToCart({
-      ...product,
-      quantity: quantity
-    }));
-    navigate('/checkout');
+    const buyNowAction = () => {
+      try {
+        // Add to cart first
+        dispatch(addToCart({
+          ...product,
+          quantity: quantity
+        }));
+
+        // Store buy now data in sessionStorage
+        const buyNowData = {
+          type: 'buy-now',
+          productId: product._id,
+          quantity: quantity,
+          totalAmount: product.price * quantity
+        };
+        sessionStorage.setItem('buyNowData', JSON.stringify(buyNowData));
+        
+        // Navigate to checkout
+        navigate('/checkout?type=buy-now');
+      } catch (error) {
+        console.error('Buy now error:', error);
+        toast.error('Failed to process buy now');
+      }
+    };
+
+    handleAuthForCart(buyNowAction, navigate);
   };
 
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: product?.name,
-        text: `Check out this amazing product: ${product?.name}`,
+        title: product.name,
+        text: product.description,
         url: window.location.href,
       });
     } else {
       navigator.clipboard.writeText(window.location.href);
-      toast.success('Link copied to clipboard');
+      toast.success('Link copied to clipboard!');
     }
   };
 
   const calculateDiscount = () => {
-    if (!product?.originalPrice || !product?.price) return 0;
-    return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+    if (product.originalPrice && product.originalPrice > product.price) {
+      return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+    }
+    return 0;
   };
 
-  const discount = calculateDiscount();
-
-  if (isLoading) {
+  if (loading) {
     return (
-      <div className="pt-16 min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="animate-pulse">
-            <div className="bg-gray-200 h-8 w-1/3 rounded mb-4"></div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-gray-200 h-96 rounded-lg"></div>
-              <div className="space-y-4">
-                <div className="bg-gray-200 h-6 rounded"></div>
-                <div className="bg-gray-200 h-4 rounded w-3/4"></div>
-                <div className="bg-gray-200 h-8 rounded w-1/4"></div>
-              </div>
-            </div>
-          </div>
+      <div className="pt-16 min-h-screen bg-gray-50 flex items-start justify-start p-6">
+        <div className="text-left">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
+          <p className="text-gray-600">Loading product...</p>
         </div>
       </div>
     );
@@ -128,14 +201,78 @@ const ProductDetail = () => {
 
   if (!product) {
     return (
-      <div className="pt-16 min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
+      <div className="pt-16 min-h-screen bg-gray-50 flex items-start justify-start p-6">
+        <div className="text-left">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h2>
           <p className="text-gray-600">The product you're looking for doesn't exist.</p>
         </div>
       </div>
     );
   }
+
+  // Render cart controls based on whether item is in cart
+  const renderCartControls = () => {
+    if (isInCart) {
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center justify-center space-x-3 bg-green-50 border border-green-200 rounded-lg p-3">
+            <button
+              onClick={() => handleUpdateQuantity(cartQuantity - 1)}
+              disabled={isAddingToCart}
+              className="w-10 h-10 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <span className="text-lg font-medium text-green-800 min-w-[2rem] text-center">
+              {cartQuantity}
+            </span>
+            <button
+              onClick={() => handleUpdateQuantity(cartQuantity + 1)}
+              disabled={isAddingToCart || (product.stock && cartQuantity >= product.stock)}
+              className="w-10 h-10 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          </div>
+          <button
+            onClick={handleRemoveFromCart}
+            className="w-full border border-red-300 text-red-600 py-3 px-6 rounded-lg font-medium hover:bg-red-50 transition-colors"
+          >
+            Remove from Cart
+          </button>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => setQuantity(Math.max(1, quantity - 1))}
+            className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+          >
+            <Minus className="h-4 w-4" />
+          </button>
+          <span className="w-16 text-center text-lg font-medium">{quantity}</span>
+          <button
+            onClick={() => setQuantity(quantity + 1)}
+            disabled={product.stock && quantity >= product.stock}
+            className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        </div>
+        <button
+          onClick={handleAddToCart}
+          disabled={isAddingToCart || !product.stock || product.stock === 0}
+          className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+        >
+          <ShoppingCart className="h-5 w-5" />
+          <span>{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
+        </button>
+      </div>
+    );
+  };
 
   return (
     <div className="pt-16 min-h-screen bg-gray-50">
@@ -233,7 +370,7 @@ const ProductDetail = () => {
                       ₹{product.originalPrice?.toFixed(2)}
                     </span>
                     <span className="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded-full">
-                      {discount}% OFF
+                      {calculateDiscount()}% OFF
                     </span>
                   </>
                 )}
@@ -288,14 +425,14 @@ const ProductDetail = () => {
 
             {/* Quantity Selection */}
             <div className="space-y-3">
-              <label className="text-sm font-medium text-gray-700">Size: {selectedSize}</label>
+              <label className="text-sm font-medium text-gray-700">Size: {product.size || 'N/A'}</label>
               <div className="flex space-x-3">
                 {['Buy 1', 'Buy 4', 'Buy 7'].map((size) => (
                   <button
                     key={size}
-                    onClick={() => setSelectedSize(size)}
+                    onClick={() => {/* Size selection is not directly tied to product.size in this component */}}
                     className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                      selectedSize === size
+                      product.size === size
                         ? 'border-green-500 bg-green-50 text-green-700'
                         : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
                     }`}
@@ -307,24 +444,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Quantity Selector */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-gray-700">Quantity</label>
-              <div className="flex items-center space-x-3">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-16 text-center text-lg font-medium">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+            {renderCartControls()}
 
             {/* Action Buttons */}
             <div className="space-y-3">
@@ -333,12 +453,6 @@ const ProductDetail = () => {
                 className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors"
               >
                 Buy Now
-              </button>
-              <button
-                onClick={handleAddToCart}
-                className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors"
-              >
-                Add to Cart
               </button>
             </div>
 
@@ -431,8 +545,9 @@ const ProductDetail = () => {
 
             {/* Trust Badges */}
             <div className="flex items-center space-x-6 pt-4 border-t border-gray-200">
+              {/* Free Delivery badge removed as per new_code */}
               <div className="flex items-center space-x-2">
-                <Truck className="h-5 w-5 text-green-600" />
+                {/* Truck icon removed as per new_code */}
                 <span className="text-sm text-gray-600">Free Delivery</span>
               </div>
               <div className="flex items-center space-x-2">

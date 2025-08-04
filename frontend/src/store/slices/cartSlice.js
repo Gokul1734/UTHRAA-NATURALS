@@ -1,7 +1,24 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { 
+  getUserStorageData, 
+  setUserStorageData, 
+  removeUserStorageData, 
+  migrateToUserStorage 
+} from '../../utils/storageUtils';
 
-// Get cart from localStorage
-const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+// Get cart from user-specific localStorage with migration support
+const getInitialCartItems = () => {
+  // First try to migrate old data
+  const migratedData = migrateToUserStorage('cartItems', []);
+  if (migratedData.length > 0) {
+    return migratedData;
+  }
+  
+  // Then get user-specific data
+  return getUserStorageData('cartItems', []);
+};
+
+const cartItems = getInitialCartItems();
 
 // Helper function to calculate totals
 const calculateCartTotals = (items) => {
@@ -40,8 +57,8 @@ export const cartSlice = createSlice({
 
       console.log('🔍 Cart slice: Updated cart items:', state.cartItems);
 
-      // Save to localStorage
-      localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
+      // Save to user-specific localStorage
+      setUserStorageData('cartItems', state.cartItems);
       
       // Calculate totals
       const totals = calculateCartTotals(state.cartItems);
@@ -51,7 +68,7 @@ export const cartSlice = createSlice({
       state.cartItems = state.cartItems.filter(
         (item) => item._id !== action.payload
       );
-      localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
+      setUserStorageData('cartItems', state.cartItems);
       
       // Calculate totals
       const totals = calculateCartTotals(state.cartItems);
@@ -66,7 +83,7 @@ export const cartSlice = createSlice({
           state.cartItems = state.cartItems.filter((item) => item._id !== id);
         }
       }
-      localStorage.setItem('cartItems', JSON.stringify(state.cartItems));
+      setUserStorageData('cartItems', state.cartItems);
       
       // Calculate totals
       const totals = calculateCartTotals(state.cartItems);
@@ -74,13 +91,26 @@ export const cartSlice = createSlice({
     },
     clearCart: (state) => {
       state.cartItems = [];
-      localStorage.removeItem('cartItems');
+      removeUserStorageData('cartItems');
       
       // Reset totals
       Object.assign(state, calculateCartTotals([]));
     },
     calculateTotals: (state) => {
       const totals = calculateCartTotals(state.cartItems);
+      Object.assign(state, totals);
+    },
+    // Load cart for a specific user (called when user logs in)
+    loadUserCart: (state) => {
+      const userCartItems = getUserStorageData('cartItems', []);
+      state.cartItems = userCartItems;
+      const totals = calculateCartTotals(userCartItems);
+      Object.assign(state, totals);
+    },
+    // Clear cart when user logs out
+    clearUserCart: (state) => {
+      state.cartItems = [];
+      const totals = calculateCartTotals([]);
       Object.assign(state, totals);
     },
   },
@@ -92,6 +122,8 @@ export const {
   updateQuantity,
   clearCart,
   calculateTotals,
+  loadUserCart,
+  clearUserCart,
 } = cartSlice.actions;
 
 export default cartSlice.reducer; 

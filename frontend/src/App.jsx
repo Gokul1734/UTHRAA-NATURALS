@@ -4,6 +4,8 @@ import { Toaster } from 'react-hot-toast';
 import { store } from './store';
 import ConditionalNavbar from './components/layout/ConditionalNavbar';
 import ConditionalFooter from './components/layout/ConditionalFooter';
+import UserDataLoader from './components/common/UserDataLoader';
+import StorageDebugger from './components/debug/StorageDebugger';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -64,6 +66,7 @@ function AppContent() {
 
   return (
     <div className="App">
+      <UserDataLoader />
       <ConditionalNavbar />
       <main className="min-h-screen">
         <Routes>
@@ -74,18 +77,10 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/products" element={<Products />} />
+          <Route path="/product/:id" element={<ProductDetail />} />
           
           {/* Protected Routes (Require Authentication) */}
-          <Route path="/products" element={
-            <ProtectedRoute>
-              <Products />
-            </ProtectedRoute>
-          } />
-          <Route path="/product/:id" element={
-            <ProtectedRoute>
-              <ProductDetail />
-            </ProtectedRoute>
-          } />
           <Route path="/cart" element={
             <ProtectedRoute>
               <Cart />
@@ -111,13 +106,22 @@ function AppContent() {
               <Orders />
             </ProtectedRoute>
           } />
-          <Route path="/order-success" element={<OrderSuccess />} />
-          <Route path="/order-tracking/:id" element={
+          <Route path="/order-success" element={
+            <ProtectedRoute>
+              <OrderSuccess />
+            </ProtectedRoute>
+          } />
+          <Route path="/order-tracking" element={
+            <ProtectedRoute>
+              <Navigate to="/orders" replace />
+            </ProtectedRoute>
+          } />
+          <Route path="/order-tracking/:orderId" element={
             <ProtectedRoute>
               <OrderTracking />
             </ProtectedRoute>
           } />
-
+          
           {/* Admin Routes */}
           <Route path="/admin" element={
             <AdminRoute>
@@ -150,35 +154,12 @@ function AppContent() {
             </AdminRoute>
           } />
           
-          {/* Additional Admin Routes (to be implemented) */}
-          <Route path="/admin/users" element={
-            <AdminRoute>
-              <div className="p-6 text-center">Users - Coming Soon</div>
-            </AdminRoute>
-          } />
-          <Route path="/admin/stock" element={
-            <AdminRoute>
-              <div className="p-6 text-center">Stock - Coming Soon</div>
-            </AdminRoute>
-          } />
-          <Route path="/admin/delivery" element={
-            <AdminRoute>
-              <div className="p-6 text-center">Delivery - Coming Soon</div>
-            </AdminRoute>
-          } />
-          <Route path="/admin/reports" element={
-            <AdminRoute>
-              <div className="p-6 text-center">Reports - Coming Soon</div>
-            </AdminRoute>
-          } />
-          <Route path="/admin/settings" element={
-            <AdminRoute>
-              <div className="p-6 text-center">Settings - Coming Soon</div>
-            </AdminRoute>
-          } />
+          {/* Catch all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       <ConditionalFooter />
+      <StorageDebugger />
       <Toaster 
         position="top-right"
         toastOptions={{

@@ -15,12 +15,13 @@ import {
   MapPin,
   Calendar,
   DollarSign,
-  Package
+  Package,
+  Plus
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import AdminLayout from '../../components/layout/AdminLayout';
-import { UPLOAD_URL } from '../../config/environment';
+import { UPLOAD_URL, API_BASE_URL } from '../../config/environment';
 import { getFirstImageUrl } from '../../utils/imageUtils';
 
 const OrderManagement = () => {
@@ -29,6 +30,7 @@ const OrderManagement = () => {
   const [error, setError] = useState(null);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showCreateTestOrderModal, setShowCreateTestOrderModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
@@ -53,69 +55,158 @@ const OrderManagement = () => {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      // Mock data - replace with actual API call
-      const mockOrders = [
-        {
-          _id: '1',
-          orderNumber: 'ORD-2024-001',
-          user: {
-            name: 'John Doe',
-            email: 'john@example.com',
-            phone: '+91 98765 43210'
-          },
-          orderItems: [
-            {
-              product: { name: 'Organic Honey', images: ['https://via.placeholder.com/100x100?text=Honey'] },
-              quantity: 2,
-              price: 299
+      const response = await fetch(`${API_BASE_URL}/orders/admin/all`);
+      if (response.ok) {
+        const data = await response.json();
+        setOrders(data.orders || []);
+        setTotalOrders(data.orders?.length || 0);
+      } else {
+        // Fallback to mock data if API fails
+        const mockOrders = [
+          {
+            _id: '1',
+            orderId: 'ORD00001',
+            orderNumber: 'ORD-2024-001',
+            user: {
+              name: 'John Doe',
+              email: 'john@example.com',
+              phone: '+91 98765 43210'
             },
-            {
-              product: { name: 'Pure Ghee', images: ['https://via.placeholder.com/100x100?text=Ghee'] },
-              quantity: 1,
-              price: 450
-            }
-          ],
-          shippingAddress: {
-            name: 'John Doe',
-            phone: '+91 98765 43210',
-            street: '123 Main Street',
-            city: 'Mumbai',
-            state: 'Maharashtra',
-            zipCode: '400001',
-            country: 'India'
-          },
-          paymentMethod: 'online',
-          itemsPrice: 1048,
-          taxPrice: 188.64,
-          shippingPrice: 50,
-          totalPrice: 1286.64,
-          status: 'pending',
-          isPaid: false,
-          isDelivered: false,
-          createdAt: '2024-01-15T10:30:00Z',
-          paymentResult: null,
-          trackingNumber: '',
-          notes: ''
-        }
-      ];
-      setOrders(mockOrders);
+            items: [
+              {
+                product: { name: 'Organic Honey', images: ['https://via.placeholder.com/100x100?text=Honey'] },
+                quantity: 2,
+                price: 299,
+                total: 598
+              },
+              {
+                product: { name: 'Pure Ghee', images: ['https://via.placeholder.com/100x100?text=Ghee'] },
+                quantity: 1,
+                price: 450,
+                total: 450
+              }
+            ],
+            shippingAddress: {
+              name: 'John Doe',
+              phone: '+91 98765 43210',
+              street: '123 Main Street',
+              city: 'Mumbai',
+              state: 'Maharashtra',
+              zipCode: '400001',
+              country: 'India'
+            },
+            paymentMethod: 'online',
+            totalAmount: 1048,
+            status: 'pending',
+            paymentStatus: 'pending',
+            isPaid: false,
+            isDelivered: false,
+            orderDate: '2024-01-15T10:30:00Z',
+            trackingNumber: '',
+            notes: ''
+          }
+        ];
+        setOrders(mockOrders);
+        setTotalOrders(mockOrders.length);
+      }
     } catch (error) {
-      toast.error('Error fetching orders');
+      console.error('Error fetching orders:', error);
+      setError('Failed to load orders');
     } finally {
       setLoading(false);
     }
   };
 
+  const createTestOrder = async (status = 'pending') => {
+    try {
+      const testOrder = {
+        orderId: `ORD${String(Math.floor(Math.random() * 100000)).padStart(5, '0')}`,
+        items: [
+          {
+            productId: 'test-product-1',
+            name: 'Organic Honey',
+            price: 299,
+            quantity: 2,
+            total: 598
+          },
+          {
+            productId: 'test-product-2',
+            name: 'Natural Face Cream',
+            price: 450,
+            quantity: 1,
+            total: 450
+          }
+        ],
+        totalAmount: 1048,
+        itemCount: 3,
+        customerInfo: {
+          name: 'Test User',
+          email: 'test@example.com',
+          phone: '+91 9876543210'
+        },
+        shippingAddress: {
+          label: 'Home',
+          street: '123 Test Street',
+          city: 'Mumbai',
+          state: 'Maharashtra',
+          zipCode: '400001',
+          country: 'India'
+        },
+        status: status,
+        paymentStatus: 'paid',
+        paymentMethod: 'cod',
+        shippingMethod: 'standard',
+        shippingCost: 50,
+        trackingNumber: `TRK${Math.random().toString(36).substr(2, 9).toUpperCase()}`,
+        estimatedDelivery: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+        notes: 'Test order for tracking functionality',
+        orderDate: new Date(),
+        confirmedAt: status !== 'pending' ? new Date() : null,
+        shippedAt: ['shipped', 'delivered'].includes(status) ? new Date() : null,
+        deliveredAt: status === 'delivered' ? new Date() : null
+      };
+
+      // In a real implementation, this would be saved to the database
+      // For now, we'll just add it to the local state
+      setOrders(prev => [testOrder, ...prev]);
+      setTotalOrders(prev => prev + 1);
+      
+      toast.success(`Test order created with status: ${status}`);
+      setShowCreateTestOrderModal(false);
+      
+      // Return the order ID for easy testing
+      return testOrder.orderId;
+    } catch (error) {
+      console.error('Error creating test order:', error);
+      toast.error('Failed to create test order');
+    }
+  };
+
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      setOrders(prev => prev.map(order => 
-        order._id === orderId 
-          ? { ...order, status: newStatus }
-          : order
-      ));
-      toast.success(`Order status updated to ${newStatus}`);
+      // Update order status in the backend
+      const response = await fetch(`${API_BASE_URL}/orders/admin/${orderId}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: newStatus })
+      });
+
+      if (response.ok) {
+        // Update local state
+        setOrders(prev => prev.map(order => 
+          order.orderId === orderId 
+            ? { ...order, status: newStatus }
+            : order
+        ));
+        toast.success(`Order status updated to ${newStatus}`);
+      } else {
+        toast.error('Failed to update order status');
+      }
     } catch (error) {
-      toast.error('Error updating order status');
+      console.error('Error updating order status:', error);
+      toast.error('Failed to update order status');
     }
   };
 
@@ -225,49 +316,47 @@ const OrderManagement = () => {
     <AdminLayout>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Order Management</h1>
-            <p className="text-gray-600 mt-2">Process orders and track deliveries</p>
-          </div>
+        <div className="mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Order Management</h1>
+          <p className="text-gray-600 mt-2">Manage and track customer orders</p>
         </div>
 
-        {/* Filters */}
+        {/* Controls */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search orders..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-              />
+          <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div className="flex flex-col sm:flex-row gap-4 flex-1">
+              {/* Search */}
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <input
+                  type="text"
+                  placeholder="Search orders..."
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              {/* Filter */}
+              <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                <option value="">All Status</option>
+                <option value="pending">Pending</option>
+                <option value="confirmed">Confirmed</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
             </div>
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            >
-              <option value="">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="confirmed">Confirmed</option>
-              <option value="processing">Processing</option>
-              <option value="shipped">Shipped</option>
-              <option value="delivered">Delivered</option>
-              <option value="cancelled">Cancelled</option>
-            </select>
-            <input
-              type="date"
-              value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
-            />
-            <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
-              <Filter className="h-4 w-4" />
-              More Filters
-            </button>
+
+            {/* Action Buttons */}
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setShowCreateTestOrderModal(true)}
+                className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Test Order
+              </button>
+            </div>
           </div>
         </div>
 
@@ -587,6 +676,74 @@ const OrderManagement = () => {
                         </div>
                       </div>
                     </div>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Create Test Order Modal */}
+        <AnimatePresence>
+          {showCreateTestOrderModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-lg shadow-xl max-w-md w-full p-6"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900">Create Test Order</h3>
+                  <button
+                    onClick={() => setShowCreateTestOrderModal(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="h-6 w-6" />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <p className="text-gray-600">
+                    Create a test order with the specified status for testing the order tracking functionality.
+                  </p>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Order Status
+                    </label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['pending', 'confirmed', 'processing', 'shipped', 'delivered'].map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => createTestOrder(status)}
+                          className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                        >
+                          <div className="font-medium capitalize">{status}</div>
+                          <div className="text-xs text-gray-500">
+                            {status === 'pending' && 'Order placed'}
+                            {status === 'confirmed' && 'Order confirmed'}
+                            {status === 'processing' && 'Being processed'}
+                            {status === 'shipped' && 'Out for delivery'}
+                            {status === 'delivered' && 'Delivered'}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end space-x-3 pt-4">
+                    <button
+                      onClick={() => setShowCreateTestOrderModal(false)}
+                      className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Cancel
+                    </button>
                   </div>
                 </div>
               </motion.div>

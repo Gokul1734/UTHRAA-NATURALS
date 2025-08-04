@@ -164,6 +164,13 @@ const ProductManagement = () => {
       setFormLoading(true);
       setError(null);
 
+      // Validation
+      if (!formData.name || !formData.description || !formData.price || !formData.category || !formData.weight || !formData.unit) {
+        setError('Please fill in all required fields (Name, Description, Price, Category, Weight, and Unit)');
+        setFormLoading(false);
+        return;
+      }
+
       // Clean up arrays (remove empty strings)
       const cleanFormData = {
         ...formData,
@@ -174,7 +181,8 @@ const ProductManagement = () => {
         price: parseFloat(formData.price),
         originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
         stock: parseInt(formData.stock),
-        weight: parseFloat(formData.weight)
+        weight: parseFloat(formData.weight),
+        unit: formData.unit
       };
 
       const response = await fetch(`${API_BASE_URL}/products`, {
@@ -209,6 +217,13 @@ const ProductManagement = () => {
       setFormLoading(true);
       setError(null);
 
+      // Validation
+      if (!formData.name || !formData.description || !formData.price || !formData.category || !formData.weight || !formData.unit) {
+        setError('Please fill in all required fields (Name, Description, Price, Category, Weight, and Unit)');
+        setFormLoading(false);
+        return;
+      }
+
       // Clean up arrays (remove empty strings)
       const cleanFormData = {
         ...formData,
@@ -219,7 +234,8 @@ const ProductManagement = () => {
         price: parseFloat(formData.price),
         originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
         stock: parseInt(formData.stock),
-        weight: parseFloat(formData.weight)
+        weight: parseFloat(formData.weight),
+        unit: formData.unit
       };
 
       const response = await fetch(`${API_BASE_URL}/products/${selectedProduct._id}`, {
@@ -360,9 +376,9 @@ const ProductManagement = () => {
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+        <div className="flex items-start justify-start min-h-screen p-6">
+          <div className="text-left">
+            <Loader2 className="h-8 w-8 animate-spin mb-4 text-blue-600" />
             <p className="text-gray-600">Loading products...</p>
           </div>
         </div>
@@ -500,7 +516,7 @@ const ProductManagement = () => {
                             className="h-10 w-10 rounded-lg object-cover mr-3"
                           />
                           <div>
-                            <div className="text-sm font-medium text-gray-900">{product.name}</div>
+                            <div className="text-sm font-medium text-left text-gray-900">{product.name}</div>
                             <div className="text-sm text-gray-500 truncate max-w-xs">
                               {product.description}
                             </div>
@@ -544,15 +560,15 @@ const ProductManagement = () => {
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="6" className="px-6 py-12 text-center text-gray-500">
+                    <td colSpan="6" className="px-6 py-12 text-left text-gray-500">
                       {loading ? (
-                        <div className="flex items-center justify-center">
+                        <div className="flex items-start justify-start">
                           <Loader2 className="h-6 w-6 animate-spin mr-2" />
                           Loading products...
                         </div>
                       ) : (
                         <div>
-                          <Package className="h-12 w-12 mx-auto mb-4 text-gray-400" />
+                          <Package className="h-12 w-12 mb-4 text-gray-400" />
                           <p className="text-lg font-medium">No products found</p>
                           <p className="text-sm">Get started by adding your first product.</p>
                         </div>

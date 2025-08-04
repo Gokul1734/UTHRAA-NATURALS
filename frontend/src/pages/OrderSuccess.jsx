@@ -15,6 +15,7 @@ import {
   Share2
 } from 'lucide-react';
 import axios from 'axios';
+import { toast } from 'react-hot-toast';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -222,8 +223,8 @@ const OrderSuccess = () => {
                 <div className="flex items-start space-x-3">
                   <MapPin className="h-5 w-5 text-gray-400 mt-1" />
                   <div>
-                    <h3 className="font-medium text-gray-900">Delivery Address</h3>
-                    <p className="text-gray-600 text-sm">
+                    <h3 className="font-medium text-left text-gray-900">Delivery Address</h3>
+                    <p className="text-gray-600 text-left text-sm">
                       {orderDetails.shippingAddress?.label && (
                         <span className="block font-medium">{orderDetails.shippingAddress.label}</span>
                       )}
@@ -237,8 +238,8 @@ const OrderSuccess = () => {
                 <div className="flex items-start space-x-3">
                   <Clock className="h-5 w-5 text-gray-400 mt-1" />
                   <div>
-                    <h3 className="font-medium text-gray-900">Estimated Delivery</h3>
-                    <p className="text-gray-600 text-sm">
+                    <h3 className="font-medium text-left text-gray-900">Estimated Delivery</h3>
+                    <p className="text-gray-600 text-left text-sm">
                       {orderDetails.estimatedDelivery 
                         ? new Date(orderDetails.estimatedDelivery).toLocaleDateString('en-IN', {
                             year: 'numeric',
@@ -260,19 +261,19 @@ const OrderSuccess = () => {
                 Customer Information
               </h2>
               
-              <div className="space-y-4">
-                <div className="flex items-center space-x-3">
+              <div className="space-y-4 text-left">
+                <div className="flex justify-start space-x-3">
                   <Mail className="h-5 w-5 text-gray-400" />
                   <div>
-                    <span className="text-gray-600 text-sm">Email</span>
+                    <span className="text-gray-600 text-left text-sm">Email</span>
                     <p className="font-medium text-gray-900">{orderDetails.customerInfo?.email}</p>
                   </div>
                 </div>
                 
-                <div className="flex items-center space-x-3">
+                <div className="flex justify-start space-x-3">
                   <Phone className="h-5 w-5 text-gray-400" />
                   <div>
-                    <span className="text-gray-600 text-sm">Phone</span>
+                    <span className="text-gray-600 text-left text-sm">Phone</span>
                     <p className="font-medium text-gray-900">{orderDetails.customerInfo?.phone}</p>
                   </div>
                 </div>
@@ -293,7 +294,29 @@ const OrderSuccess = () => {
               
               <div className="space-y-3">
                 <button
-                  onClick={() => navigate(`/order-tracking/${orderDetails.orderId}`)}
+                  onClick={async () => {
+                    try {
+                      // Fetch order details via API
+                      const response = await fetch(`${API_BASE_URL}/orders/${orderDetails.orderId}`, {
+                        headers: {
+                          'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                        }
+                      });
+                      
+                      if (response.ok) {
+                        const data = await response.json();
+                        // Navigate with order data
+                        navigate(`/order-tracking/${orderDetails.orderId}`, { 
+                          state: { orderData: data.order } 
+                        });
+                      } else {
+                        toast.error('Failed to load order details');
+                      }
+                    } catch (error) {
+                      console.error('Error fetching order:', error);
+                      toast.error('Failed to load order details');
+                    }
+                  }}
                   className="w-full flex items-center justify-between p-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
                 >
                   <div className="flex items-center">
@@ -344,7 +367,7 @@ const OrderSuccess = () => {
             {/* Continue Shopping */}
             <div className="bg-white rounded-lg shadow-sm border p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Continue Shopping</h3>
-              <p className="text-gray-600 text-sm mb-4">
+              <p className="text-gray-600 text-left text-sm mb-4">
                 Discover more amazing products from our collection.
               </p>
               <button

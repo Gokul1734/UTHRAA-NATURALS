@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Package, 
@@ -23,35 +23,150 @@ import { API_BASE_URL } from '../config/environment';
 const OrderTracking = () => {
   const { orderId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState(null);
+  const [error, setError] = useState(null);
   
   // Get user from sessionStorage
   const user = JSON.parse(sessionStorage.getItem('user') || 'null');
   const token = sessionStorage.getItem('token');
 
+  // Debug logging
+  console.log('🔍 OrderTracking component - orderId from params:', orderId);
+  console.log('🔍 OrderTracking component - location state:', location.state);
+  console.log('🔍 OrderTracking component - user:', user);
+  console.log('🔍 OrderTracking component - token:', token ? 'exists' : 'missing');
+
   useEffect(() => {
+    console.log('🔍 OrderTracking useEffect triggered');
+    console.log('🔍 orderId:', orderId);
+    console.log('🔍 user:', user);
+    console.log('🔍 location state:', location.state);
+    
     if (!user) {
+      console.log('🔍 No user found, redirecting to login');
       navigate('/phone-login');
       return;
     }
     
-    fetchOrderDetails();
-  }, [user, navigate, orderId]);
+    if (!orderId) {
+      console.log('🔍 No orderId found, showing error');
+      setError('Order ID is required');
+      setLoading(false);
+      return;
+    }
+
+    // Check if order data was passed through navigation state
+    if (location.state?.orderData) {
+      console.log('🔍 Using order data from navigation state');
+      setOrder(location.state.orderData);
+      setLoading(false);
+    } else {
+      console.log('🔍 No order data in state, fetching from API');
+      fetchOrderDetails();
+    }
+  }, [user, navigate, orderId, location.state]);
 
   const fetchOrderDetails = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/orders/${orderId}`, {
+      setLoading(true);
+      setError(null);
+      
+      // Clean the orderId - remove # if present
+      const cleanOrderId = orderId?.replace('#', '');
+      
+      console.log('🔍 Fetching order with ID:', cleanOrderId);
+      console.log('🔍 API URL:', `${API_BASE_URL}/orders/${cleanOrderId}`);
+      
+      const response = await axios.get(`${API_BASE_URL}/orders/${cleanOrderId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      setOrder(response.data.order);
+      console.log('🔍 Order response:', response.data);
+      
+      if (response.data.success) {
+        setOrder(response.data.order);
+      } else {
+        setError('Order not found');
+      }
     } catch (error) {
       console.error('Error fetching order details:', error);
+      console.error('Error response:', error.response);
+      
+      if (error.response?.status === 404) {
+        setError('Order not found');
+      } else if (error.response?.status === 403) {
+        setError('Access denied - this order does not belong to you');
+      } else {
+        setError('Failed to load order details');
+      }
+      
       toast.error('Failed to load order details');
     } finally {
       setLoading(false);
     }
+  };
+
+  // For development/testing - create a sample order if no real order is found
+  const createSampleOrder = () => {
+    const sampleOrder = {
+      orderId: orderId || '#ORD00008',
+      userId: user?._id,
+      items: [
+        {
+          productId: 'sample-product-1',
+          name: 'Organic Honey',
+          price: 299,
+          quantity: 2,
+          total: 598
+        },
+        {
+          productId: 'sample-product-2',
+          name: 'Natural Face Cream',
+          price: 450,
+          quantity: 1,
+          total: 450
+        }
+      ],
+      totalAmount: 1048,
+      itemCount: 3,
+      customerInfo: {
+        name: user?.name || 'John Doe',
+        email: user?.email || 'john@example.com',
+        phone: user?.phone || '+91 9876543210'
+      },
+      shippingAddress: {
+        label: 'Home',
+        street: '123 Main Street',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        zipCode: '400001',
+        country: 'India'
+      },
+      billingAddress: {
+        label: 'Home',
+        street: '123 Main Street',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        zipCode: '400001',
+        country: 'India'
+      },
+      status: 'shipped', // Change this to test different statuses: 'pending', 'confirmed', 'processing', 'shipped', 'delivered'
+      paymentStatus: 'paid',
+      paymentMethod: 'cod',
+      shippingMethod: 'standard',
+      shippingCost: 50,
+      trackingNumber: 'TRK123456789',
+      estimatedDelivery: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days from now
+      notes: 'Please deliver during business hours',
+      orderDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
+      confirmedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+      shippedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
+      deliveredAt: null
+    };
+    
+    return sampleOrder;
   };
 
   const getOrderStatusIcon = (status) => {
@@ -187,6 +302,7 @@ const OrderTracking = () => {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return 'Not set';
     return new Date(dateString).toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'long',
@@ -213,20 +329,45 @@ const OrderTracking = () => {
     );
   }
 
-  if (!order) {
+  // If no order found and we're in development, show sample order
+  if (!order && error && process.env.NODE_ENV === 'development') {
+    const sampleOrder = createSampleOrder();
+    setOrder(sampleOrder);
+    setError(null);
+  }
+
+  if (!order && error) {
     return (
       <div className="min-h-screen bg-gray-50 pt-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">Order Not Found</h2>
-            <p className="text-gray-600 mb-6">The order you're looking for doesn't exist.</p>
-            <button
-              onClick={() => navigate('/orders')}
-              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              View All Orders
-            </button>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              {error === 'Order ID is required' ? 'Invalid Order URL' : 'Order Not Found'}
+            </h2>
+            <p className="text-gray-600 mb-4">
+              {error === 'Order ID is required' 
+                ? 'The order tracking URL is invalid. Please check the link and try again.'
+                : error
+              }
+            </p>
+            {orderId && (
+              <p className="text-sm text-gray-500 mb-6">Order ID: {orderId}</p>
+            )}
+            <div className="space-x-4">
+              <button
+                onClick={() => navigate('/orders')}
+                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                View All Orders
+              </button>
+              <button
+                onClick={() => navigate('/products')}
+                className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Continue Shopping
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -247,7 +388,7 @@ const OrderTracking = () => {
             </button>
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Order Tracking</h1>
-              <p className="text-gray-600">Order #{order.orderId}</p>
+              <p className="text-gray-600">Order {order.orderId}</p>
             </div>
           </div>
           <div className="text-right">

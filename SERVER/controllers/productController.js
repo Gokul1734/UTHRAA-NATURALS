@@ -1,36 +1,6 @@
 const Product = require('../models/Product');
 const Category = require('../models/Category');
 
-// Mock products for testing when MongoDB is not available
-const mockProducts = [
-  {
-    _id: 'product1',
-    name: 'Organic Turmeric Powder',
-    description: 'Pure organic turmeric powder with anti-inflammatory properties',
-    price: 299,
-    originalPrice: 399,
-    category: 'category1',
-    images: ['/uploads/turmeric.jpg'],
-    stock: 50,
-    isActive: true,
-    tags: ['organic', 'turmeric', 'spices'],
-    ratings: { average: 4.5, count: 23 }
-  },
-  {
-    _id: 'product2',
-    name: 'Ayurvedic Hair Oil',
-    description: 'Natural hair oil with herbs for hair growth and nourishment',
-    price: 599,
-    originalPrice: 799,
-    category: 'category2',
-    images: ['/uploads/hair-oil.jpg'],
-    stock: 30,
-    isActive: true,
-    tags: ['ayurvedic', 'hair-care', 'natural'],
-    ratings: { average: 4.8, count: 45 }
-  }
-];
-
 // Get all products with filtering and pagination
 const getAllProducts = async (req, res) => {
   try {
@@ -84,28 +54,14 @@ const getAllProducts = async (req, res) => {
     const sortOrder = order === 'desc' ? -1 : 1;
     const sortQuery = { [sort]: sortOrder };
 
-    let products, total;
-    
-    try {
-      products = await Product.find(query)
-        .populate('category', 'name')
-        .sort(sortQuery)
-        .limit(limit * 1)
-        .skip((page - 1) * limit)
-        .exec();
+    const products = await Product.find(query)
+      .populate('category', 'name')
+      .sort(sortQuery)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
 
-      total = await Product.countDocuments(query);
-    } catch (error) {
-      console.log('MongoDB not available, using mock data');
-      products = mockProducts.filter(product => {
-        if (search) {
-          return product.name.toLowerCase().includes(search.toLowerCase()) ||
-                 product.description.toLowerCase().includes(search.toLowerCase());
-        }
-        return true;
-      });
-      total = products.length;
-    }
+    const total = await Product.countDocuments(query);
 
     res.json({
       products,
@@ -135,16 +91,9 @@ const getAllProducts = async (req, res) => {
 // Get single product by ID
 const getProductById = async (req, res) => {
   try {
-    let product;
-    
-    try {
-      product = await Product.findById(req.params.id)
-        .populate('category', 'name description')
-        .populate('reviews.user', 'name');
-    } catch (error) {
-      console.log('MongoDB not available, using mock data');
-      product = mockProducts.find(p => p._id === req.params.id);
-    }
+    const product = await Product.findById(req.params.id)
+      .populate('category', 'name description')
+      .populate('reviews.user', 'name');
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
@@ -169,52 +118,115 @@ const createProduct = async (req, res) => {
       images,
       stock,
       tags,
-      specifications
+      specifications,
+      weight,
+      unit,
+      ingredients,
+      benefits,
+      usage,
+      isOrganic,
+      isVegan,
+      isGlutenFree,
+      isFeatured
     } = req.body;
 
+    // Print received data to console
+    console.log('🔍 Received product data:', {
+      name,
+      description,
+      price,
+      originalPrice,
+      category,
+      images,
+      stock,
+      tags,
+      specifications,
+      weight,
+      unit,
+      ingredients,
+      benefits,
+      usage,
+      isOrganic,
+      isVegan,
+      isGlutenFree,
+      isFeatured
+    });
+
     // Validation
-    if (!name || !description || !price || !category) {
+    if (!name || !description || !price || !category || !weight || !unit) {
+      console.log('❌ Validation failed: Missing required fields');
       return res.status(400).json({ 
-        message: 'Name, description, price, and category are required' 
+        message: 'Name, description, price, category, weight, and unit are required' 
+      });
+    }
+
+    // Validate unit enum values
+    const validUnits = ['g', 'kg', 'ml', 'l', 'pieces', 'packets'];
+    if (!validUnits.includes(unit)) {
+      console.log('❌ Validation failed: Invalid unit value');
+      return res.status(400).json({ 
+        message: `Unit must be one of: ${validUnits.join(', ')}` 
       });
     }
 
     const productData = {
       name,
       description,
-      price,
-      originalPrice,
+      price: parseFloat(price),
+      originalPrice: originalPrice ? parseFloat(originalPrice) : undefined,
       category,
       images: images || [],
-      stock: stock || 0,
+      stock: parseInt(stock) || 0,
+      weight: parseFloat(weight),
+      unit,
       tags: tags || [],
       specifications: specifications || {},
-      isActive: true
+      ingredients: ingredients || [],
+      benefits: benefits || [],
+      usage: usage || '',
+      isOrganic: isOrganic || false,
+      isVegan: isVegan || false,
+      isGlutenFree: isGlutenFree || false,
+      isFeatured: isFeatured || false,
+      isActive: true,
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
-    let product;
+    // Print processed product data to console
+    console.log('📦 Processed product data:', productData);
+
+    console.log('💾 Attempting to save to MongoDB...');
+    const product = new Product(productData);
+    await product.save();
     
-    try {
-      product = new Product(productData);
-      await product.save();
-      
-      // Populate category information
-      product = await Product.findById(product._id).populate('category', 'name');
-    } catch (error) {
-      console.log('MongoDB not available, returning mock response');
-      product = {
-        _id: Date.now().toString(),
-        ...productData,
-        createdAt: new Date()
-      };
-    }
+    console.log('✅ Product saved to MongoDB successfully:', product._id);
+    
+    // Populate category information
+    const populatedProduct = await Product.findById(product._id).populate('category', 'name');
+    console.log('📋 Product with populated category:', {
+      _id: populatedProduct._id,
+      name: populatedProduct.name,
+      category: populatedProduct.category,
+      weight: populatedProduct.weight,
+      unit: populatedProduct.unit
+    });
+
+    console.log('🎉 Final product response:', {
+      _id: populatedProduct._id,
+      name: populatedProduct.name,
+      price: populatedProduct.price,
+      category: populatedProduct.category,
+      weight: populatedProduct.weight,
+      unit: populatedProduct.unit
+    });
 
     res.status(201).json({
       message: 'Product created successfully',
-      product
+      product: populatedProduct
     });
   } catch (error) {
-    console.error('Create product error:', error);
+    console.error('❌ Create product error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 };
@@ -225,18 +237,11 @@ const updateProduct = async (req, res) => {
     const { id } = req.params;
     const updateData = req.body;
 
-    let product;
-    
-    try {
-      product = await Product.findByIdAndUpdate(
-        id,
-        updateData,
-        { new: true, runValidators: true }
-      ).populate('category', 'name');
-    } catch (error) {
-      console.log('MongoDB not available, returning mock response');
-      product = { _id: id, ...updateData, updatedAt: new Date() };
-    }
+    const product = await Product.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate('category', 'name');
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
@@ -257,14 +262,7 @@ const deleteProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    let product;
-    
-    try {
-      product = await Product.findByIdAndDelete(id);
-    } catch (error) {
-      console.log('MongoDB not available, returning mock response');
-      product = { _id: id };
-    }
+    const product = await Product.findByIdAndDelete(id);
 
     if (!product) {
       return res.status(404).json({ message: 'Product not found' });
@@ -286,22 +284,14 @@ const getProductsByCategory = async (req, res) => {
     const sortOrder = order === 'desc' ? -1 : 1;
     const sortQuery = { [sort]: sortOrder };
 
-    let products, total;
-    
-    try {
-      products = await Product.find({ category: categoryId, isActive: true })
-        .populate('category', 'name')
-        .sort(sortQuery)
-        .limit(limit * 1)
-        .skip((page - 1) * limit)
-        .exec();
+    const products = await Product.find({ category: categoryId, isActive: true })
+      .populate('category', 'name')
+      .sort(sortQuery)
+      .limit(limit * 1)
+      .skip((page - 1) * limit)
+      .exec();
 
-      total = await Product.countDocuments({ category: categoryId, isActive: true });
-    } catch (error) {
-      console.log('MongoDB not available, using mock data');
-      products = mockProducts.filter(p => p.category === categoryId);
-      total = products.length;
-    }
+    const total = await Product.countDocuments({ category: categoryId, isActive: true });
 
     res.json({
       products,
@@ -324,20 +314,13 @@ const getFeaturedProducts = async (req, res) => {
   try {
     const { limit = 8 } = req.query;
 
-    let products;
-    
-    try {
-      products = await Product.find({ 
-        isActive: true, 
-        isFeatured: true 
-      })
-        .populate('category', 'name')
-        .sort({ createdAt: -1 })
-        .limit(parseInt(limit));
-    } catch (error) {
-      console.log('MongoDB not available, using mock data');
-      products = mockProducts.slice(0, limit);
-    }
+    const products = await Product.find({ 
+      isActive: true, 
+      isFeatured: true 
+    })
+      .populate('category', 'name')
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
 
     res.json(products);
   } catch (error) {
@@ -355,27 +338,17 @@ const searchProducts = async (req, res) => {
       return res.status(400).json({ message: 'Search query is required' });
     }
 
-    let products;
-    
-    try {
-      products = await Product.find({
-        isActive: true,
-        $or: [
-          { name: { $regex: searchQuery, $options: 'i' } },
-          { description: { $regex: searchQuery, $options: 'i' } },
-          { tags: { $in: [new RegExp(searchQuery, 'i')] } }
-        ]
-      })
-        .populate('category', 'name')
-        .limit(parseInt(limit))
-        .select('name description price originalPrice images ratings');
-    } catch (error) {
-      console.log('MongoDB not available, using mock data');
-      products = mockProducts.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
+    const products = await Product.find({
+      isActive: true,
+      $or: [
+        { name: { $regex: searchQuery, $options: 'i' } },
+        { description: { $regex: searchQuery, $options: 'i' } },
+        { tags: { $in: [new RegExp(searchQuery, 'i')] } }
+      ]
+    })
+      .populate('category', 'name')
+      .limit(parseInt(limit))
+      .select('name description price originalPrice images ratings');
 
     res.json(products);
   } catch (error) {
@@ -396,46 +369,39 @@ const addReview = async (req, res) => {
       return res.status(400).json({ message: 'Rating must be between 1 and 5' });
     }
 
-    let product;
+    const product = await Product.findById(id);
     
-    try {
-      product = await Product.findById(id);
-      
-      if (!product) {
-        return res.status(404).json({ message: 'Product not found' });
-      }
-
-      // Check if user already reviewed this product
-      const existingReview = product.reviews.find(
-        review => review.user.toString() === userId
-      );
-
-      if (existingReview) {
-        return res.status(400).json({ message: 'You have already reviewed this product' });
-      }
-
-      // Add new review
-      const newReview = {
-        user: userId,
-        rating,
-        comment: comment || '',
-        createdAt: new Date()
-      };
-
-      product.reviews.push(newReview);
-
-      // Update average rating
-      const totalRating = product.reviews.reduce((sum, review) => sum + review.rating, 0);
-      product.ratings = {
-        average: totalRating / product.reviews.length,
-        count: product.reviews.length
-      };
-
-      await product.save();
-    } catch (error) {
-      console.log('MongoDB not available, returning mock response');
-      return res.json({ message: 'Review added successfully (mock)' });
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
     }
+
+    // Check if user already reviewed this product
+    const existingReview = product.reviews.find(
+      review => review.user.toString() === userId
+    );
+
+    if (existingReview) {
+      return res.status(400).json({ message: 'You have already reviewed this product' });
+    }
+
+    // Add new review
+    const newReview = {
+      user: userId,
+      rating,
+      comment: comment || '',
+      createdAt: new Date()
+    };
+
+    product.reviews.push(newReview);
+
+    // Update average rating
+    const totalRating = product.reviews.reduce((sum, review) => sum + review.rating, 0);
+    product.ratings = {
+      average: totalRating / product.reviews.length,
+      count: product.reviews.length
+    };
+
+    await product.save();
 
     res.status(201).json({ message: 'Review added successfully' });
   } catch (error) {
@@ -454,31 +420,24 @@ const updateStock = async (req, res) => {
       return res.status(400).json({ message: 'Stock must be a number' });
     }
 
-    let product;
+    const product = await Product.findById(id);
     
-    try {
-      product = await Product.findById(id);
-      
-      if (!product) {
-        return res.status(404).json({ message: 'Product not found' });
-      }
-
-      switch (operation) {
-        case 'add':
-          product.stock += stock;
-          break;
-        case 'subtract':
-          product.stock = Math.max(0, product.stock - stock);
-          break;
-        default: // 'set'
-          product.stock = stock;
-      }
-
-      await product.save();
-    } catch (error) {
-      console.log('MongoDB not available, returning mock response');
-      product = { _id: id, stock };
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
     }
+
+    switch (operation) {
+      case 'add':
+        product.stock += stock;
+        break;
+      case 'subtract':
+        product.stock = Math.max(0, product.stock - stock);
+        break;
+      default: // 'set'
+        product.stock = stock;
+    }
+
+    await product.save();
 
     res.json({
       message: 'Stock updated successfully',
@@ -499,19 +458,12 @@ const getLowStockProducts = async (req, res) => {
   try {
     const { threshold = 10 } = req.query;
 
-    let products;
-    
-    try {
-      products = await Product.find({
-        stock: { $lte: parseInt(threshold) },
-        isActive: true
-      })
-        .populate('category', 'name')
-        .sort({ stock: 1 });
-    } catch (error) {
-      console.log('MongoDB not available, using mock data');
-      products = mockProducts.filter(p => p.stock <= threshold);
-    }
+    const products = await Product.find({
+      stock: { $lte: parseInt(threshold) },
+      isActive: true
+    })
+      .populate('category', 'name')
+      .sort({ stock: 1 });
 
     res.json(products);
   } catch (error) {

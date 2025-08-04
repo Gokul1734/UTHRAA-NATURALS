@@ -5,6 +5,7 @@ import productReducer from './slices/productSlice';
 import categoryReducer from './slices/categorySlice';
 import orderReducer from './slices/orderSlice';
 import wishlistReducer from './slices/wishlistSlice';
+import { userDataMiddleware } from './middleware/userDataMiddleware';
 
 export const store = configureStore({
   reducer: {
@@ -20,5 +21,5 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: ['persist/PERSIST'],
       },
-    }),
+    }).concat(userDataMiddleware),
 }); 

@@ -11,14 +11,21 @@ const userSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: [true, 'Please provide your email'],
+    required: false, // Made optional for phone-only login
     unique: true,
+    sparse: true, // Allow multiple null values
     lowercase: true,
-    validate: [validator.isEmail, 'Please provide a valid email']
+    validate: {
+      validator: function(v) {
+        if (!v) return true; // Allow empty email
+        return validator.isEmail(v);
+      },
+      message: 'Please provide a valid email'
+    }
   },
   password: {
     type: String,
-    required: [true, 'Please provide a password'],
+    required: false, // Made optional for phone-only login
     minlength: [6, 'Password must be at least 6 characters'],
     select: false
   },
@@ -41,6 +48,43 @@ const userSchema = new mongoose.Schema({
     zipCode: String,
     country: String
   },
+  // Multiple addresses for checkout
+  addresses: [{
+    label: {
+      type: String,
+      required: true,
+      enum: ['Home', 'Office', 'Other'],
+      default: 'Home'
+    },
+    street: {
+      type: String,
+      required: true
+    },
+    city: {
+      type: String,
+      required: true
+    },
+    state: {
+      type: String,
+      required: true
+    },
+    zipCode: {
+      type: String,
+      required: true
+    },
+    country: {
+      type: String,
+      default: 'India'
+    },
+    isDefault: {
+      type: Boolean,
+      default: false
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   role: {
     type: String,
     enum: ['user', 'admin'],
@@ -71,8 +115,25 @@ const userSchema = new mongoose.Schema({
   loginMethod: {
     type: String,
     enum: ['email', 'phone'],
-    default: 'email'
+    default: 'phone' // Changed default to phone
   },
+  // Profile completion status
+  isProfileComplete: {
+    type: Boolean,
+    default: false
+  },
+  // Wishlist functionality
+  wishlist: [{
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
   createdAt: {
     type: Date,
     default: Date.now
@@ -81,16 +142,17 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Hash password before saving
+// Hash password before saving (only if password exists)
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password') || !this.password) return next();
   
   this.password = await bcrypt.hash(this.password, 12);
   next();
 });
 
-// Compare password method
+// Compare password method (handle cases where password might not exist)
 userSchema.methods.comparePassword = async function(candidatePassword) {
+  if (!this.password) return false;
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
@@ -119,6 +181,23 @@ userSchema.methods.verifyOTP = function(otp) {
 userSchema.methods.clearOTP = function() {
   this.phoneVerificationOTP = undefined;
   this.phoneVerificationExpires = undefined;
+};
+
+// Wishlist methods
+userSchema.methods.addToWishlist = function(productId) {
+  if (!this.wishlist.some(item => item.productId.toString() === productId.toString())) {
+    this.wishlist.push({ productId });
+  }
+  return this.save();
+};
+
+userSchema.methods.removeFromWishlist = function(productId) {
+  this.wishlist = this.wishlist.filter(item => item.productId.toString() !== productId.toString());
+  return this.save();
+};
+
+userSchema.methods.isInWishlist = function(productId) {
+  return this.wishlist.some(item => item.productId.toString() === productId.toString());
 };
 
 module.exports = mongoose.model('User', userSchema); 

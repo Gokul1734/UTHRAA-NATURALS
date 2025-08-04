@@ -258,7 +258,7 @@ const Orders = () => {
                         </div>
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900">Order #{order.orderId}</h3>
+                        <h3 className="font-semibold text-left text-gray-900">Order #{order.orderId}</h3>
                         <p className="text-sm text-gray-600 flex items-center">
                           <Calendar className="h-4 w-4 mr-1" />
                           {formatDate(order.orderDate)}
@@ -292,8 +292,8 @@ const Orders = () => {
                           <span className="text-xs text-gray-500">IMG</span>
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-medium text-gray-900 text-sm">{item.name}</h4>
-                          <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                          <h4 className="font-medium text-left text-gray-900 text-sm">{item.name}</h4>
+                          <p className="text-sm text-left text-gray-600">Qty: {item.quantity}</p>
                         </div>
                         <div className="text-right">
                           <p className="font-medium text-gray-900 text-sm">₹{item.total}</p>
@@ -321,18 +321,33 @@ const Orders = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => navigate(`/order-tracking/${order.orderId}`)}
+                        onClick={async () => {
+                          try {
+                            // Fetch order details via API
+                            const response = await fetch(`${API_BASE_URL}/orders/${order.orderId}`, {
+                              headers: {
+                                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                              }
+                            });
+                            
+                            if (response.ok) {
+                              const data = await response.json();
+                              // Navigate with order data
+                              navigate(`/order-tracking/${order.orderId}`, { 
+                                state: { orderData: data.order } 
+                              });
+                            } else {
+                              toast.error('Failed to load order details');
+                            }
+                          } catch (error) {
+                            console.error('Error fetching order:', error);
+                            toast.error('Failed to load order details');
+                          }
+                        }}
                         className="flex items-center px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                       >
                         <Truck className="h-4 w-4 mr-1" />
                         Track Order
-                      </button>
-                      <button
-                        onClick={() => viewOrderDetails(order.orderId)}
-                        className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        <Eye className="h-4 w-4 mr-2" />
-                        View Details
                       </button>
                     </div>
                   </div>
@@ -367,7 +382,29 @@ const Orders = () => {
                   <div className="flex items-center space-x-3">
                     {!loadingOrderDetails && selectedOrder && (
                       <button
-                        onClick={() => navigate(`/order-tracking/${selectedOrder.orderId}`)}
+                        onClick={async () => {
+                          try {
+                            // Fetch order details via API
+                            const response = await fetch(`${API_BASE_URL}/orders/${selectedOrder.orderId}`, {
+                              headers: {
+                                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                              }
+                            });
+                            
+                            if (response.ok) {
+                              const data = await response.json();
+                              // Navigate with order data
+                              navigate(`/order-tracking/${selectedOrder.orderId}`, { 
+                                state: { orderData: data.order } 
+                              });
+                            } else {
+                              toast.error('Failed to load order details');
+                            }
+                          } catch (error) {
+                            console.error('Error fetching order:', error);
+                            toast.error('Failed to load order details');
+                          }
+                        }}
                         className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                       >
                         <Truck className="h-4 w-4 mr-2" />

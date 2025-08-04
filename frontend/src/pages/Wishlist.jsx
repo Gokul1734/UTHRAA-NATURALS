@@ -101,9 +101,9 @@ const Wishlist = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-center"
+            className="text-left"
           >
-            <Heart className="mx-auto h-24 w-24 text-gray-400 mb-6" />
+            <Heart className="h-24 w-24 text-gray-400 mb-6" />
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Your wishlist is empty</h2>
             <p className="text-gray-600 mb-8">Start adding products to your wishlist to save them for later.</p>
             <div className="space-x-4">

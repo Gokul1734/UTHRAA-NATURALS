@@ -207,12 +207,12 @@ const Home = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-left mb-12 sm:mb-16"
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
               Shop by Category
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 max-w-3xl">
               Explore our wide range of natural and organic products across different categories.
             </p>
           </motion.div>
@@ -257,12 +257,12 @@ const Home = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-left mb-12 sm:mb-16"
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
               Featured Products
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 max-w-3xl">
               Discover our most popular and highly-rated natural products loved by thousands of customers.
             </p>
           </motion.div>
@@ -315,12 +315,12 @@ const Home = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-left mb-12 sm:mb-16"
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
               Why Choose {getBrandName()}?
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 max-w-3xl">
               We are committed to bringing you the finest natural products with uncompromising quality and care.
             </p>
           </motion.div>
@@ -361,12 +361,12 @@ const Home = () => {
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-12 sm:mb-16"
+            className="text-left mb-12 sm:mb-16"
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
               What Our Customers Say
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-base sm:text-lg text-gray-600 max-w-3xl">
               Real stories from real customers who have experienced the benefits of our natural products.
             </p>
           </motion.div>
@@ -407,13 +407,13 @@ const Home = () => {
 
       {/* CTA Section */}
       <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-green-600 to-emerald-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="max-w-3xl mx-auto"
+            className="max-w-3xl"
           >
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 sm:mb-6">
               Ready to Start Your Natural Journey?
@@ -422,7 +422,7 @@ const Home = () => {
               Join thousands of satisfied customers who have made the switch to natural, 
               organic products for a healthier lifestyle.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start justify-start">
               <Link
                 to="/products"
                 className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white text-green-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors shadow-lg hover:shadow-xl touch-manipulation"

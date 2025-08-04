@@ -13,7 +13,7 @@ const app = express();
 const corsOptions = {
   origin: process.env.NODE_ENV === 'production' 
     ? [process.env.FRONTEND_URL, 'https://uthraa-naturals.vercel.app']
-    : ['http://localhost:3000', 'http://localhost:3001'],
+    : ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -161,6 +161,14 @@ console.log('🔄 Loading API routes...');
 app.use('/api/auth', require('./routes/auth'));
 console.log('✅ Auth routes loaded');
 
+// Cart routes
+app.use('/api/cart', require('./routes/cart'));
+console.log('✅ Cart routes loaded');
+
+// Wishlist routes
+app.use('/api/wishlist', require('./routes/wishlist'));
+console.log('✅ Wishlist routes loaded');
+
 // Product routes
 app.use('/api/products', require('./routes/products'));
 console.log('✅ Product routes loaded');
@@ -279,7 +287,7 @@ process.on('SIGINT', () => {
 });
 
 // Start server
-const PORT = process.env.PORT || 5000;
+const PORT =  5001;
 const server = app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 URL: http://localhost:${PORT}`);

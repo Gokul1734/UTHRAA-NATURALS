@@ -21,6 +21,8 @@ export const register = createAsyncThunk(
       const response = await axios.post(`${API_BASE_URL}/auth/register`, userData);
       if (response.data) {
         sessionStorage.setItem('user', JSON.stringify(response.data));
+        // Load user-specific cart and wishlist after registration
+        thunkAPI.dispatch(loadUserData());
       }
       return response.data;
     } catch (error) {
@@ -38,6 +40,8 @@ export const login = createAsyncThunk(
       const response = await axios.post(`${API_BASE_URL}/auth/login`, userData);
       if (response.data) {
         sessionStorage.setItem('user', JSON.stringify(response.data));
+        // Load user-specific cart and wishlist after login
+        thunkAPI.dispatch(loadUserData());
       }
       return response.data;
     } catch (error) {
@@ -48,23 +52,19 @@ export const login = createAsyncThunk(
 );
 
 // Logout user
-export const logout = createAsyncThunk('auth/logout', async (_, thunkAPI) => {
-  try {
-    // Call logout endpoint to clear server-side session
-    const token = sessionStorage.getItem('token');
-    if (token) {
-      await axios.post(`${API_BASE_URL}/auth/logout`, {}, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+export const logout = createAsyncThunk(
+  'auth/logout',
+  async (_, thunkAPI) => {
+    try {
+      // Clear user-specific data before logout
+      thunkAPI.dispatch(clearUserData());
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+    } catch (error) {
+      console.error('Logout error:', error);
     }
-  } catch (error) {
-    console.error('Logout error:', error);
-  } finally {
-    // Clear session storage
-    sessionStorage.removeItem('user');
-    sessionStorage.removeItem('token');
   }
-});
+);
 
 // Get user profile
 export const getProfile = createAsyncThunk(
@@ -72,9 +72,12 @@ export const getProfile = createAsyncThunk(
   async (_, thunkAPI) => {
     try {
       const token = sessionStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      const response = await axios.get(`${API_BASE_URL}/auth/profile`, config);
       return response.data;
     } catch (error) {
       const message = error.response?.data?.message || error.message;
@@ -103,6 +106,14 @@ export const authSlice = createSlice({
       state.user = null;
       sessionStorage.removeItem('user');
       sessionStorage.removeItem('token');
+    },
+    // Load user-specific data (cart and wishlist)
+    loadUserData: (state) => {
+      // This action will be handled by the store to dispatch cart and wishlist actions
+    },
+    // Clear user-specific data
+    clearUserData: (state) => {
+      // This action will be handled by the store to dispatch cart and wishlist actions
     }
   },
   extraReducers: (builder) => {
@@ -150,9 +161,17 @@ export const authSlice = createSlice({
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
+        state.user = null;
       });
-  },
+  }
 });
 
-export const { reset, directLogin, directLogout } = authSlice.actions;
+export const {
+  reset,
+  directLogin,
+  directLogout,
+  loadUserData,
+  clearUserData
+} = authSlice.actions;
+
 export default authSlice.reducer; 

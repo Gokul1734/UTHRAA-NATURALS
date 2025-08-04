@@ -1,7 +1,24 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { 
+  getUserStorageData, 
+  setUserStorageData, 
+  removeUserStorageData, 
+  migrateToUserStorage 
+} from '../../utils/storageUtils';
 
-// Get wishlist from localStorage
-const wishlistItems = JSON.parse(localStorage.getItem('wishlistItems')) || [];
+// Get wishlist from user-specific localStorage with migration support
+const getInitialWishlistItems = () => {
+  // First try to migrate old data
+  const migratedData = migrateToUserStorage('wishlistItems', []);
+  if (migratedData.length > 0) {
+    return migratedData;
+  }
+  
+  // Then get user-specific data
+  return getUserStorageData('wishlistItems', []);
+};
+
+const wishlistItems = getInitialWishlistItems();
 
 const initialState = {
   wishlistItems,
@@ -19,8 +36,8 @@ const wishlistSlice = createSlice({
       if (!existingItem) {
         state.wishlistItems.push(action.payload);
         console.log('🔍 Wishlist slice: Updated wishlist items:', state.wishlistItems);
-        // Save to localStorage
-        localStorage.setItem('wishlistItems', JSON.stringify(state.wishlistItems));
+        // Save to user-specific localStorage
+        setUserStorageData('wishlistItems', state.wishlistItems);
       } else {
         console.log('🔍 Wishlist slice: Item already in wishlist');
       }
@@ -29,12 +46,12 @@ const wishlistSlice = createSlice({
       console.log('🔍 Wishlist slice: Removing item from wishlist:', action.payload);
       state.wishlistItems = state.wishlistItems.filter(item => item._id !== action.payload);
       console.log('🔍 Wishlist slice: Updated wishlist items:', state.wishlistItems);
-      // Save to localStorage
-      localStorage.setItem('wishlistItems', JSON.stringify(state.wishlistItems));
+      // Save to user-specific localStorage
+      setUserStorageData('wishlistItems', state.wishlistItems);
     },
     clearWishlist: (state) => {
       state.wishlistItems = [];
-      localStorage.removeItem('wishlistItems');
+      removeUserStorageData('wishlistItems');
     },
     setWishlistLoading: (state, action) => {
       state.loading = action.payload;
@@ -44,8 +61,17 @@ const wishlistSlice = createSlice({
     },
     loadWishlistFromStorage: (state, action) => {
       state.wishlistItems = action.payload || [];
-      localStorage.setItem('wishlistItems', JSON.stringify(state.wishlistItems));
-    }
+      setUserStorageData('wishlistItems', state.wishlistItems);
+    },
+    // Load wishlist for a specific user (called when user logs in)
+    loadUserWishlist: (state) => {
+      const userWishlistItems = getUserStorageData('wishlistItems', []);
+      state.wishlistItems = userWishlistItems;
+    },
+    // Clear wishlist when user logs out
+    clearUserWishlist: (state) => {
+      state.wishlistItems = [];
+    },
   }
 });
 
@@ -55,7 +81,9 @@ export const {
   clearWishlist,
   setWishlistLoading,
   setWishlistError,
-  loadWishlistFromStorage
+  loadWishlistFromStorage,
+  loadUserWishlist,
+  clearUserWishlist
 } = wishlistSlice.actions;
 
 export default wishlistSlice.reducer; 
