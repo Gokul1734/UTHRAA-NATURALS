@@ -392,6 +392,52 @@ const ConditionalNavbar = () => {
                     </div>
                   )}
                 </div>
+
+                {/* User Profile Actions for Mobile */}
+                {user && (
+                  <>
+                    <hr className="my-4" />
+                    <div className="space-y-2">
+                      <Link
+                        to="/profile"
+                        className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-green-50 rounded-lg transition-colors"
+                        onClick={closeMenu}
+                      >
+                        <User className="w-5 h-5 mr-3" />
+                        View Profile
+                      </Link>
+                      <Link
+                        to="/orders"
+                        className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-green-50 rounded-lg transition-colors"
+                        onClick={closeMenu}
+                      >
+                        <ShoppingBag className="w-5 h-5 mr-3" />
+                        My Orders
+                      </Link>
+                      {user.role === 'admin' && (
+                        <Link
+                          to="/admin"
+                          className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-primary hover:bg-green-50 rounded-lg transition-colors"
+                          onClick={closeMenu}
+                        >
+                          <Leaf className="w-5 h-5 mr-3" />
+                          Admin Dashboard
+                        </Link>
+                      )}
+                      <hr className="my-2" />
+                      <button
+                        onClick={() => {
+                          handleProfileAction('logout');
+                          closeMenu();
+                        }}
+                        className="flex items-center w-full px-3 py-2 text-base font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <X className="w-5 h-5 mr-3" />
+                        Logout
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </motion.div>
           )}

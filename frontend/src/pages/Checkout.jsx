@@ -397,13 +397,13 @@ const Checkout = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
-            <div className="space-y-4">
+            <div className="h-6 sm:h-8 bg-gray-200 rounded w-1/3 sm:w-1/4 mb-4 sm:mb-8"></div>
+            <div className="space-y-3 sm:space-y-4">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-32 bg-gray-200 rounded"></div>
+                <div key={i} className="h-24 sm:h-32 bg-gray-200 rounded"></div>
               ))}
             </div>
           </div>
@@ -413,69 +413,69 @@ const Checkout = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
-            <h1 className="text-3xl font-bold text-gray-900">Checkout</h1>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Checkout</h1>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-4 sm:space-y-6">
             {/* Customer Information */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-lg shadow-sm border p-6"
+              className="bg-white rounded-lg shadow-sm border p-4 sm:p-6"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                <User className="h-5 w-5 mr-2" />
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
+                <User className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Customer Information
               </h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Full Name *
                   </label>
                   <input
                     type="text"
                     value={customerInfo.name}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
                     placeholder="Enter your full name"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Email Address *
                   </label>
                   <input
                     type="email"
                     value={customerInfo.email}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, email: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
                     placeholder="Enter your email"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Phone Number *
                   </label>
                   <input
                     type="tel"
                     value={customerInfo.phone}
                     onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
                     placeholder="Enter your phone number"
                   />
                 </div>
@@ -487,40 +487,40 @@ const Checkout = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-lg shadow-sm border p-6"
+              className="bg-white rounded-lg shadow-sm border p-4 sm:p-6"
             >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                  <MapPin className="h-5 w-5 mr-2" />
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 space-y-3 sm:space-y-0">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center">
+                  <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                   Delivery Address
                 </h2>
                 <button
                   onClick={() => setShowAddAddress(true)}
-                  className="flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className="flex items-center px-3 sm:px-4 py-2 sm:py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base self-start sm:self-auto"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
+                  <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                   Add New Address
                 </button>
               </div>
               
               {addresses.length === 0 ? (
-                <div className="text-left py-8">
-                  <MapPin className="h-12 w-12 text-gray-400 mb-4" />
-                  <p className="text-gray-600 mb-4">No delivery addresses found</p>
-                  <p className="text-sm text-gray-500 mb-4">Please add your delivery address to continue with checkout</p>
+                <div className="text-left py-6 sm:py-8">
+                  <MapPin className="h-10 sm:h-12 w-10 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">No delivery addresses found</p>
+                  <p className="text-xs sm:text-sm text-gray-500 mb-4">Please add your delivery address to continue with checkout</p>
                   <button
                     onClick={() => setShowAddAddress(true)}
-                    className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                    className="bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-2 rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base"
                   >
                     Add Your First Address
                   </button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {addresses.map((address) => (
                     <div
                       key={address._id || address._id?.toString()}
-                      className={`border rounded-lg p-4 cursor-pointer transition-colors ${
+                      className={`border rounded-lg p-3 sm:p-4 cursor-pointer transition-colors ${
                         selectedAddressId === (address._id || address._id?.toString())
                           ? 'border-green-500 bg-green-50'
                           : 'border-gray-200 hover:border-gray-300'
@@ -528,20 +528,20 @@ const Checkout = () => {
                       onClick={() => setSelectedAddressId(address._id || address._id?.toString())}
                     >
                       <div className="flex items-start justify-between">
-                        <div className="flex items-start space-x-3">
-                          <div className="flex items-center space-x-2">
-                            {address.label === 'Home' && <Home className="h-4 w-4 text-gray-500" />}
-                            {address.label === 'Office' && <Building className="h-4 w-4 text-gray-500" />}
-                            {address.label === 'Other' && <Star className="h-4 w-4 text-gray-500" />}
-                            <span className="text-sm font-medium text-gray-900">{address.label}</span>
+                        <div className="flex items-start space-x-2 sm:space-x-3">
+                          <div className="flex items-center space-x-1 sm:space-x-2">
+                            {address.label === 'Home' && <Home className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />}
+                            {address.label === 'Office' && <Building className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />}
+                            {address.label === 'Other' && <Star className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500" />}
+                            <span className="text-xs sm:text-sm font-medium text-gray-900">{address.label}</span>
                             {address.isDefault && (
-                              <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                              <span className="text-xs bg-green-100 text-green-800 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">
                                 Default
                               </span>
                             )}
                           </div>
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-1 sm:space-x-2">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
@@ -549,7 +549,7 @@ const Checkout = () => {
                             }}
                             className="p-1 text-gray-400 hover:text-gray-600"
                           >
-                            <Edit className="h-4 w-4" />
+                            <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                           </button>
                           <button
                             onClick={(e) => {
@@ -558,11 +558,11 @@ const Checkout = () => {
                             }}
                             className="p-1 text-red-400 hover:text-red-600"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                           </button>
                         </div>
                       </div>
-                      <div className="mt-2 text-sm text-gray-600">
+                      <div className="mt-2 text-xs sm:text-sm text-gray-600">
                         <p>{address.street}</p>
                         <p>{address.city}, {address.state} {address.zipCode}</p>
                         <p>{address.country}</p>
@@ -578,20 +578,20 @@ const Checkout = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-lg shadow-sm border p-6"
+              className="bg-white rounded-lg shadow-sm border p-4 sm:p-6"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                <Truck className="h-5 w-5 mr-2" />
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6 flex items-center">
+                <Truck className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                 Shipping & Payment
               </h2>
               
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Shipping Method */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                     Shipping Method
                   </label>
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {[
                       { id: 'standard', name: 'Standard Delivery', cost: 0, time: '3-5 business days' },
                       { id: 'express', name: 'Express Delivery', cost: 100, time: '1-2 business days' },
@@ -599,13 +599,13 @@ const Checkout = () => {
                     ].map((method) => (
                       <label
                         key={method.id}
-                        className={`flex items-center justify-between p-4 border rounded-lg cursor-pointer transition-colors ${
+                        className={`flex items-center justify-between p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors ${
                           shippingMethod === method.id
                             ? 'border-green-500 bg-green-50'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
                           <input
                             type="radio"
                             name="shippingMethod"
@@ -615,12 +615,12 @@ const Checkout = () => {
                             className="text-green-600 focus:ring-green-500"
                           />
                           <div>
-                            <div className="font-medium text-gray-900">{method.name}</div>
-                            <div className="text-sm text-gray-600">{method.time}</div>
+                            <div className="font-medium text-gray-900 text-sm sm:text-base">{method.name}</div>
+                            <div className="text-xs sm:text-sm text-gray-600">{method.time}</div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium text-gray-900">
+                          <div className="font-medium text-gray-900 text-sm sm:text-base">
                             {method.cost === 0 ? 'Free' : `₹${method.cost}`}
                           </div>
                         </div>
@@ -631,10 +631,10 @@ const Checkout = () => {
 
                 {/* Payment Method */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                     Payment Method
                   </label>
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     {[
                       { id: 'cod', name: 'Cash on Delivery', icon: '💵' },
                       { id: 'online', name: 'Online Payment', icon: '💳' },
@@ -642,7 +642,7 @@ const Checkout = () => {
                     ].map((method) => (
                       <label
                         key={method.id}
-                        className={`flex items-center space-x-3 p-4 border rounded-lg cursor-pointer transition-colors ${
+                        className={`flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 border rounded-lg cursor-pointer transition-colors ${
                           paymentMethod === method.id
                             ? 'border-green-500 bg-green-50'
                             : 'border-gray-200 hover:border-gray-300'
@@ -656,8 +656,8 @@ const Checkout = () => {
                           onChange={(e) => setPaymentMethod(e.target.value)}
                           className="text-green-600 focus:ring-green-500"
                         />
-                        <span className="text-xl">{method.icon}</span>
-                        <span className="font-medium text-gray-900">{method.name}</span>
+                        <span className="text-lg sm:text-xl">{method.icon}</span>
+                        <span className="font-medium text-gray-900 text-sm sm:text-base">{method.name}</span>
                       </label>
                     ))}
                   </div>
@@ -665,14 +665,14 @@ const Checkout = () => {
 
                 {/* Order Notes */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     Order Notes (Optional)
                   </label>
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm sm:text-base"
                     placeholder="Any special instructions for delivery..."
                   />
                 </div>
@@ -686,15 +686,15 @@ const Checkout = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
-              className="bg-white rounded-lg shadow-sm border p-6 sticky top-24"
+              className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 sticky top-20 sm:top-24"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Summary</h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Order Summary</h2>
               
               {/* Order Items */}
-              <div className="space-y-4 mb-6">
+              <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
                 {cartItems.map((item, index) => (
-                  <div key={index} className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
+                  <div key={index} className="flex items-center space-x-3 sm:space-x-4">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                       <img
                         src={getFirstImageUrl(item.images)}
                         alt={item.name}
@@ -708,35 +708,35 @@ const Checkout = () => {
                         <span className="text-xs text-gray-500">IMG</span>
                       </div>
                     </div>
-                    <div className="flex-1">
-                      <h3 className="font-medium text-gray-900 text-sm">{item.name}</h3>
-                      <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium text-gray-900 text-xs sm:text-sm truncate">{item.name}</h3>
+                      <p className="text-xs sm:text-sm text-gray-600">Qty: {item.quantity}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-gray-900">₹{item.price * item.quantity}</p>
+                      <p className="font-medium text-gray-900 text-xs sm:text-sm">₹{item.price * item.quantity}</p>
                     </div>
                   </div>
                 ))}
               </div>
               
               {/* Price Breakdown */}
-              <div className="space-y-3 mb-6">
-                <div className="flex justify-between text-sm">
+              <div className="space-y-2 sm:space-y-3 mb-4 sm:mb-6">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium">₹{total}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Tax (18% GST)</span>
                   <span className="font-medium">₹{tax}</span>
                 </div>
-                <div className="flex justify-between text-sm">
+                <div className="flex justify-between text-xs sm:text-sm">
                   <span className="text-gray-600">Shipping</span>
                   <span className="font-medium">
                     {getShippingCost() === 0 ? 'Free' : `₹${getShippingCost()}`}
                   </span>
                 </div>
-                <div className="border-t pt-3">
-                  <div className="flex justify-between font-semibold">
+                <div className="border-t pt-2 sm:pt-3">
+                  <div className="flex justify-between font-semibold text-sm sm:text-base">
                     <span>Total</span>
                     <span>₹{getTotalAmount()}</span>
                   </div>
@@ -747,16 +747,16 @@ const Checkout = () => {
               <button
                 onClick={placeOrder}
                 disabled={placingOrder || !selectedAddressId}
-                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-full bg-green-600 text-white py-2.5 sm:py-3 px-4 sm:px-6 rounded-lg font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center text-sm sm:text-base"
               >
                 {placingOrder ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-1.5 sm:mr-2"></div>
                     Placing Order...
                   </>
                 ) : (
                   <>
-                    <CreditCard className="h-5 w-5 mr-2" />
+                    <CreditCard className="h-4 w-4 sm:h-5 sm:w-5 mr-1.5 sm:mr-2" />
                     Place Order
                   </>
                 )}

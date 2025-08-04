@@ -55,7 +55,7 @@ A complete e-commerce solution for Uthraa Naturals, featuring a modern React fro
    npm run dev
    ```
 
-The backend will be running at `http://localhost:5000`
+The backend will be running at `https://uthraa-naturals.onrender.com`
 
 ### Frontend Setup
 
@@ -174,7 +174,7 @@ NODE_ENV=development
 
 #### Frontend (.env)
 ```env
-VITE_API_URL=http://localhost:5000/api
+VITE_API_URL=https://uthraa-naturals.onrender.com/api
 ```
 
 ## 🚀 Deployment

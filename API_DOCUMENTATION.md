@@ -4,7 +4,7 @@ This document provides comprehensive API documentation for the admin endpoints t
 
 ## Base URL
 ```
-http://localhost:5000/api
+https://uthraa-naturals.onrender.com/api
 ```
 
 ## Authentication
@@ -296,7 +296,7 @@ GET /api/admin/categories/:categoryId/products?page=1&limit=10&sort=createdAt&or
 
 #### Create a Category
 ```bash
-curl -X POST http://localhost:5000/api/admin/categories \
+curl -X POST https://uthraa-naturals.onrender.com/api/admin/categories \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Test Category",
@@ -308,7 +308,7 @@ curl -X POST http://localhost:5000/api/admin/categories \
 
 #### Create a Product
 ```bash
-curl -X POST http://localhost:5000/api/admin/products \
+curl -X POST https://uthraa-naturals.onrender.com/api/admin/products \
   -H "Content-Type: application/json" \
   -d '{
     "name": "Test Product",
@@ -330,14 +330,14 @@ curl -X POST http://localhost:5000/api/admin/products \
 
 #### Get Dashboard Stats
 ```bash
-curl -X GET http://localhost:5000/api/dashboard/stats
+curl -X GET https://uthraa-naturals.onrender.com/api/dashboard/stats
 ```
 
 ### Using JavaScript/Fetch
 
 #### Get All Categories
 ```javascript
-const response = await fetch('http://localhost:5000/api/admin/categories?page=1&limit=10');
+const response = await fetch('https://uthraa-naturals.onrender.com/api/admin/categories?page=1&limit=10');
 const data = await response.json();
 console.log(data.categories);
 ```
@@ -355,7 +355,7 @@ const productData = {
   unit: "ml"
 };
 
-const response = await fetch('http://localhost:5000/api/admin/products', {
+const response = await fetch('https://uthraa-naturals.onrender.com/api/admin/products', {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',

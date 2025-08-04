@@ -64,7 +64,7 @@ JWT_EXPIRE=30d
 
 2. Check the health endpoint:
    ```
-   http://localhost:5000/api/health
+   https://uthraa-naturals.onrender.com/api/health
    ```
 
 3. You should see:

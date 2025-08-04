@@ -314,13 +314,13 @@ const OrderTracking = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
-            <div className="space-y-4">
+            <div className="h-6 sm:h-8 bg-gray-200 rounded w-1/3 sm:w-1/4 mb-4 sm:mb-8"></div>
+            <div className="space-y-3 sm:space-y-4">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="h-32 bg-gray-200 rounded"></div>
+                <div key={i} className="h-24 sm:h-32 bg-gray-200 rounded"></div>
               ))}
             </div>
           </div>
@@ -338,32 +338,32 @@ const OrderTracking = () => {
 
   if (!order && error) {
     return (
-      <div className="min-h-screen bg-gray-50 pt-20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
           <div className="text-center">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <Package className="h-12 sm:h-16 w-12 sm:w-16 text-gray-400 mx-auto mb-3 sm:mb-4" />
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">
               {error === 'Order ID is required' ? 'Invalid Order URL' : 'Order Not Found'}
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
               {error === 'Order ID is required' 
                 ? 'The order tracking URL is invalid. Please check the link and try again.'
                 : error
               }
             </p>
             {orderId && (
-              <p className="text-sm text-gray-500 mb-6">Order ID: {orderId}</p>
+              <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">Order ID: {orderId}</p>
             )}
-            <div className="space-x-4">
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 justify-center">
               <button
                 onClick={() => navigate('/orders')}
-                className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+                className="bg-green-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-green-700 transition-colors text-sm sm:text-base"
               >
                 View All Orders
               </button>
               <button
                 onClick={() => navigate('/products')}
-                className="bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 transition-colors"
+                className="bg-gray-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-lg hover:bg-gray-700 transition-colors text-sm sm:text-base"
               >
                 Continue Shopping
               </button>
@@ -375,43 +375,43 @@ const OrderTracking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-20">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50 pt-16 sm:pt-20">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center space-x-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 sm:mb-8 space-y-3 sm:space-y-0">
+          <div className="flex items-center space-x-3 sm:space-x-4">
             <button
               onClick={() => navigate(-1)}
-              className="p-2 rounded-lg hover:bg-gray-200 transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              <ArrowLeft className="h-5 w-5" />
+              <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
             </button>
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">Order Tracking</h1>
-              <p className="text-gray-600">Order {order.orderId}</p>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Order Tracking</h1>
+              <p className="text-sm sm:text-base text-gray-600">Order {order.orderId}</p>
             </div>
           </div>
-          <div className="text-right">
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getOrderStatusColor(order.status)}`}>
+          <div className="text-left sm:text-right">
+            <span className={`px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${getOrderStatusColor(order.status)}`}>
               {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
           {/* Order Status Timeline */}
           <div className="lg:col-span-2">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="bg-white rounded-lg shadow-sm border p-6"
+              className="bg-white rounded-lg shadow-sm border p-4 sm:p-6"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Status</h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Order Status</h2>
               
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {getOrderStatusSteps().map((step, index) => (
-                  <div key={step.key} className="flex items-start space-x-4">
-                    <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                  <div key={step.key} className="flex items-start space-x-3 sm:space-x-4">
+                    <div className={`flex-shrink-0 w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center ${
                       step.completed 
                         ? 'bg-green-500 text-white' 
                         : step.current 
@@ -419,16 +419,16 @@ const OrderTracking = () => {
                           : 'bg-gray-200 text-gray-500'
                     }`}>
                       {step.completed ? (
-                        <CheckCircle className="h-6 w-6" />
+                        <CheckCircle className="h-4 w-4 sm:h-6 sm:w-6" />
                       ) : step.current ? (
                         step.icon
                       ) : (
-                        <span className="text-sm font-medium">{index + 1}</span>
+                        <span className="text-xs sm:text-sm font-medium">{index + 1}</span>
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <h3 className={`font-medium ${
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-1 sm:space-y-0">
+                        <h3 className={`font-medium text-sm sm:text-base ${
                           step.completed || step.current ? 'text-gray-900' : 'text-gray-500'
                         }`}>
                           {step.label}
@@ -441,7 +441,7 @@ const OrderTracking = () => {
                           </span>
                         )}
                       </div>
-                      <p className={`text-sm ${
+                      <p className={`text-xs sm:text-sm ${
                         step.completed || step.current ? 'text-gray-600' : 'text-gray-400'
                       }`}>
                         {step.description}
@@ -459,16 +459,16 @@ const OrderTracking = () => {
               </div>
 
               {/* Tracking Information */}
-              <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                <h3 className="font-semibold text-blue-900 mb-4 flex items-center">
-                  <Truck className="h-5 w-5 mr-2" />
+              <div className="mt-6 sm:mt-8 p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                <h3 className="font-semibold text-blue-900 mb-3 sm:mb-4 flex items-center text-sm sm:text-base">
+                  <Truck className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
                   Delivery Information
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="space-y-2 sm:space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-blue-700 font-medium">Shipping Method:</span>
-                      <span className="font-semibold text-blue-900 capitalize">
+                      <span className="text-blue-700 font-medium text-xs sm:text-sm">Shipping Method:</span>
+                      <span className="font-semibold text-blue-900 capitalize text-xs sm:text-sm">
                         {order.shippingMethod === 'standard' ? 'Standard Delivery' : 
                          order.shippingMethod === 'express' ? 'Express Delivery' : 
                          order.shippingMethod === 'same-day' ? 'Same Day Delivery' : 
@@ -476,37 +476,37 @@ const OrderTracking = () => {
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-blue-700 font-medium">Shipping Cost:</span>
-                      <span className="font-semibold text-blue-900">
+                      <span className="text-blue-700 font-medium text-xs sm:text-sm">Shipping Cost:</span>
+                      <span className="font-semibold text-blue-900 text-xs sm:text-sm">
                         {order.shippingCost === 0 ? 'Free' : `₹${order.shippingCost}`}
                       </span>
                     </div>
                     {order.trackingNumber && (
                       <div className="flex justify-between items-center">
-                        <span className="text-blue-700 font-medium">Tracking Number:</span>
-                        <span className="font-semibold text-blue-900 font-mono">
+                        <span className="text-blue-700 font-medium text-xs sm:text-sm">Tracking Number:</span>
+                        <span className="font-semibold text-blue-900 font-mono text-xs sm:text-sm">
                           {order.trackingNumber}
                         </span>
                       </div>
                     )}
                   </div>
-                  <div className="space-y-3">
+                  <div className="space-y-2 sm:space-y-3">
                     <div className="flex justify-between items-center">
-                      <span className="text-blue-700 font-medium">Order Date:</span>
-                      <span className="font-semibold text-blue-900">
+                      <span className="text-blue-700 font-medium text-xs sm:text-sm">Order Date:</span>
+                      <span className="font-semibold text-blue-900 text-xs sm:text-sm">
                         {formatDate(order.orderDate)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-blue-700 font-medium">Estimated Delivery:</span>
-                      <span className="font-semibold text-blue-900">
+                      <span className="text-blue-700 font-medium text-xs sm:text-sm">Estimated Delivery:</span>
+                      <span className="font-semibold text-blue-900 text-xs sm:text-sm">
                         {formatDate(getEstimatedDeliveryDate())}
                       </span>
                     </div>
                     {order.status === 'shipped' && order.estimatedDelivery && (
                       <div className="flex justify-between items-center">
-                        <span className="text-blue-700 font-medium">Expected Delivery:</span>
-                        <span className="font-semibold text-blue-900">
+                        <span className="text-blue-700 font-medium text-xs sm:text-sm">Expected Delivery:</span>
+                        <span className="font-semibold text-blue-900 text-xs sm:text-sm">
                           {formatDate(order.estimatedDelivery)}
                         </span>
                       </div>
@@ -516,14 +516,14 @@ const OrderTracking = () => {
                 
                 {/* Delivery Progress Bar */}
                 {order.status !== 'delivered' && order.status !== 'cancelled' && (
-                  <div className="mt-4">
-                    <div className="flex justify-between text-sm text-blue-700 mb-2">
+                  <div className="mt-3 sm:mt-4">
+                    <div className="flex justify-between text-xs sm:text-sm text-blue-700 mb-1 sm:mb-2">
                       <span>Delivery Progress</span>
                       <span>{Math.round((getOrderStatusSteps().findIndex(step => step.current) + 1) / 5 * 100)}%</span>
                     </div>
-                    <div className="w-full bg-blue-200 rounded-full h-2">
+                    <div className="w-full bg-blue-200 rounded-full h-1.5 sm:h-2">
                       <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                        className="bg-blue-600 h-1.5 sm:h-2 rounded-full transition-all duration-500"
                         style={{ 
                           width: `${(getOrderStatusSteps().findIndex(step => step.current) + 1) / 5 * 100}%` 
                         }}
@@ -539,23 +539,23 @@ const OrderTracking = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="bg-white rounded-lg shadow-sm border p-6 mt-6"
+              className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 mt-4 sm:mt-6"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Items</h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Order Items</h2>
               
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {order.items?.map((item, index) => (
-                  <div key={index} className="flex items-center space-x-4 p-4 border border-gray-200 rounded-lg">
-                    <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <div key={index} className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 border border-gray-200 rounded-lg">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <span className="text-xs text-gray-500">IMG</span>
                     </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-gray-900">{item.name}</h4>
-                      <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                      <p className="text-sm text-gray-600">Price: ₹{item.price} each</p>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 text-sm sm:text-base truncate">{item.name}</h4>
+                      <p className="text-xs sm:text-sm text-gray-600">Quantity: {item.quantity}</p>
+                      <p className="text-xs sm:text-sm text-gray-600">Price: ₹{item.price} each</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-gray-900">₹{item.total}</p>
+                      <p className="font-semibold text-gray-900 text-sm sm:text-base">₹{item.total}</p>
                     </div>
                   </div>
                 ))}
@@ -569,15 +569,15 @@ const OrderTracking = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-lg shadow-sm border p-6 sticky top-24"
+              className="bg-white rounded-lg shadow-sm border p-4 sm:p-6 sticky top-20 sm:top-24"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">Order Details</h2>
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 sm:mb-6">Order Details</h2>
               
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Order Information */}
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-3">Order Information</h3>
-                  <div className="space-y-2 text-sm">
+                  <h3 className="font-medium text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Order Information</h3>
+                  <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Order ID:</span>
                       <span className="font-medium">{order.orderId}</span>
@@ -592,7 +592,7 @@ const OrderTracking = () => {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Payment Status:</span>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      <span className={`px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-xs font-medium ${
                         order.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'
                       }`}>
                         {order.paymentStatus.charAt(0).toUpperCase() + order.paymentStatus.slice(1)}
@@ -603,18 +603,18 @@ const OrderTracking = () => {
 
                 {/* Customer Information */}
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-3">Customer Information</h3>
-                  <div className="space-y-2 text-sm">
+                  <h3 className="font-medium text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Customer Information</h3>
+                  <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                     <div className="flex items-center">
-                      <User className="h-4 w-4 text-gray-500 mr-2" />
+                      <User className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 mr-1.5 sm:mr-2" />
                       <span>{order.customerInfo?.name}</span>
                     </div>
                     <div className="flex items-center">
-                      <Mail className="h-4 w-4 text-gray-500 mr-2" />
+                      <Mail className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 mr-1.5 sm:mr-2" />
                       <span>{order.customerInfo?.email}</span>
                     </div>
                     <div className="flex items-center">
-                      <Phone className="h-4 w-4 text-gray-500 mr-2" />
+                      <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 mr-1.5 sm:mr-2" />
                       <span>{order.customerInfo?.phone}</span>
                     </div>
                   </div>
@@ -622,10 +622,10 @@ const OrderTracking = () => {
 
                 {/* Shipping Address */}
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-3">Shipping Address</h3>
-                  <div className="text-sm text-gray-600">
+                  <h3 className="font-medium text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Shipping Address</h3>
+                  <div className="text-xs sm:text-sm text-gray-600">
                     <div className="flex items-start">
-                      <MapPin className="h-4 w-4 text-gray-500 mr-2 mt-0.5" />
+                      <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 mr-1.5 sm:mr-2 mt-0.5" />
                       <div>
                         <p className="font-medium">{order.shippingAddress?.label}</p>
                         <p>{order.shippingAddress?.street}</p>
@@ -638,8 +638,8 @@ const OrderTracking = () => {
 
                 {/* Order Summary */}
                 <div>
-                  <h3 className="font-medium text-gray-900 mb-3">Order Summary</h3>
-                  <div className="space-y-2 text-sm">
+                  <h3 className="font-medium text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Order Summary</h3>
+                  <div className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Subtotal:</span>
                       <span className="font-medium">₹{order.totalAmount - (order.shippingCost || 0)}</span>
@@ -648,8 +648,8 @@ const OrderTracking = () => {
                       <span className="text-gray-600">Shipping:</span>
                       <span className="font-medium">₹{order.shippingCost || 0}</span>
                     </div>
-                    <div className="border-t pt-2">
-                      <div className="flex justify-between font-semibold">
+                    <div className="border-t pt-1.5 sm:pt-2">
+                      <div className="flex justify-between font-semibold text-sm sm:text-base">
                         <span>Total:</span>
                         <span>₹{order.totalAmount}</span>
                       </div>
@@ -659,8 +659,8 @@ const OrderTracking = () => {
 
                 {order.notes && (
                   <div>
-                    <h3 className="font-medium text-gray-900 mb-3">Order Notes</h3>
-                    <p className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
+                    <h3 className="font-medium text-gray-900 mb-2 sm:mb-3 text-sm sm:text-base">Order Notes</h3>
+                    <p className="text-xs sm:text-sm text-gray-600 bg-gray-50 p-2 sm:p-3 rounded-lg">
                       {order.notes}
                     </p>
                   </div>

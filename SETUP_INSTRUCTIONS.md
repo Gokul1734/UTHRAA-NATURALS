@@ -48,7 +48,7 @@ This guide will help you set up the admin dashboard with real database data inst
    ```bash
    npm run dev
    ```
-   The server will run on `http://localhost:5000`
+   The server will run on `https://uthraa-naturals.onrender.com`
 
 ### 2. Frontend Setup
 
@@ -65,7 +65,7 @@ This guide will help you set up the admin dashboard with real database data inst
 3. **Set up environment variables:**
    Create a `.env` file in the frontend directory:
    ```env
-   VITE_API_URL=http://localhost:5000
+   VITE_API_URL=https://uthraa-naturals.onrender.com
    ```
 
 4. **Start the frontend:**
