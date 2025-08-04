@@ -23,7 +23,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import ProductCard from '../components/products/ProductCard';
 import CategoryCard from '../components/categories/CategoryCard';
 import { getCategories } from '../store/slices/categorySlice';
-import Logo from '../assets/logo.png';
+import Logo from '../assets/LOGO.png';
 
 const Home = () => {
   const navigate = useNavigate();
