@@ -1,13 +1,13 @@
 // Environment configuration for Vite
 const config = {
   development: {
-    API_BASE_URL: 'http://localhost:5001/api',
-    UPLOAD_URL: 'http://localhost:5001',
+    API_BASE_URL: 'https://uthraa-naturals.onrender.com/api',
+    UPLOAD_URL: 'https://uthraa-naturals.onrender.com',
     FRONTEND_URL: 'http://localhost:3000'
   },
   production: {
-    API_BASE_URL: import.meta.env.VITE_API_URL || 'http://localhost:5001/api',
-    UPLOAD_URL: import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5001',
+    API_BASE_URL: import.meta.env.VITE_API_URL || 'https://uthraa-naturals.onrender.com/api',
+    UPLOAD_URL: import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'https://uthraa-naturals.onrender.com',
     FRONTEND_URL: import.meta.env.VITE_FRONTEND_URL || 'https://uthraa-naturals.vercel.app'
   }
 };

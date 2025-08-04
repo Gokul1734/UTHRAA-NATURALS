@@ -6,7 +6,7 @@ async function testProfileAPI() {
     console.log('🧪 Testing Profile Update API...');
     
     // First, let's test the health endpoint
-    const healthResponse = await axios.get('http://localhost:5001/api/health');
+    const healthResponse = await axios.get('https://uthraa-naturals.onrender.com/api/health');
     console.log('✅ Server is running:', healthResponse.data.status);
     
     // Test profile update with sample data
