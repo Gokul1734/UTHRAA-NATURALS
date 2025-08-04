@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, ShoppingCart, Share2, Star, Minus, Plus } from 'lucide-react';
+import { ArrowLeft, Heart, ShoppingCart, Share2, Star, Minus, Plus, Shield, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { addToCart, updateQuantity, removeFromCart } from '../store/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
@@ -19,6 +19,7 @@ const ProductDetail = () => {
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [selectedBuyQuantity, setSelectedBuyQuantity] = useState(1);
   const [pincode, setPincode] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [showFullIngredients, setShowFullIngredients] = useState(false);
@@ -83,7 +84,15 @@ const ProductDetail = () => {
       }
     };
 
-    handleAuthForWishlist(wishlistAction, navigate);
+    // Check if user is logged in, if not redirect to login
+    const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+    if (!user) {
+      toast.error('Please login to add items to wishlist');
+      navigate('/phone-login');
+      return;
+    }
+
+    wishlistAction();
   };
 
   const handleAddToCart = () => {
@@ -94,7 +103,7 @@ const ProductDetail = () => {
           ...product,
           quantity: quantity
         }));
-        toast.success('Added to cart');
+        // Removed toast notification for cart actions
       } catch (error) {
         console.error('Error adding to cart:', error);
         toast.error('Failed to add to cart');
@@ -103,21 +112,37 @@ const ProductDetail = () => {
       }
     };
 
-    handleAuthForCart(cartAction, navigate);
+    // Check if user is logged in, if not redirect to login
+    const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+    if (!user) {
+      toast.error('Please login to add items to cart');
+      navigate('/phone-login');
+      return;
+    }
+
+    cartAction();
   };
 
   const handleRemoveFromCart = () => {
     const removeAction = () => {
       try {
         dispatch(removeFromCart(product._id));
-        toast.success('Removed from cart');
+        // Removed toast notification for cart actions
       } catch (error) {
         console.error('Error removing from cart:', error);
         toast.error('Failed to remove from cart');
       }
     };
 
-    handleAuthForCart(removeAction, navigate);
+    // Check if user is logged in, if not redirect to login
+    const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+    if (!user) {
+      toast.error('Please login to manage cart');
+      navigate('/phone-login');
+      return;
+    }
+
+    removeAction();
   };
 
   const handleUpdateQuantity = (newQuantity) => {
@@ -125,10 +150,10 @@ const ProductDetail = () => {
       try {
         if (newQuantity <= 0) {
           dispatch(removeFromCart(product._id));
-          toast.success('Removed from cart');
+          // Removed toast notification for cart actions
         } else {
           dispatch(updateQuantity({ id: product._id, quantity: newQuantity }));
-          toast.success('Cart updated');
+          // Removed toast notification for cart actions
         }
       } catch (error) {
         console.error('Error updating quantity:', error);
@@ -136,7 +161,15 @@ const ProductDetail = () => {
       }
     };
 
-    handleAuthForCart(updateAction, navigate);
+    // Check if user is logged in, if not redirect to login
+    const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+    if (!user) {
+      toast.error('Please login to manage cart');
+      navigate('/phone-login');
+      return;
+    }
+
+    updateAction();
   };
 
   const handleBuyNow = () => {
@@ -165,7 +198,44 @@ const ProductDetail = () => {
       }
     };
 
-    handleAuthForCart(buyNowAction, navigate);
+    // Check if user is logged in, if not redirect to login
+    const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+    if (!user) {
+      toast.error('Please login to purchase this product');
+      navigate('/phone-login');
+      return;
+    }
+
+    buyNowAction();
+  };
+
+  const handleBuyQuantity = (buyQuantity) => {
+    const buyQuantityAction = () => {
+      setIsAddingToCart(true);
+      try {
+        dispatch(addToCart({
+          ...product,
+          quantity: buyQuantity
+        }));
+        setSelectedBuyQuantity(buyQuantity);
+        // Removed toast notification for cart actions
+      } catch (error) {
+        console.error('Error adding to cart:', error);
+        toast.error('Failed to add to cart');
+      } finally {
+        setIsAddingToCart(false);
+      }
+    };
+
+    // Check if user is logged in, if not redirect to login
+    const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+    if (!user) {
+      toast.error('Please login to add items to cart');
+      navigate('/phone-login');
+      return;
+    }
+
+    buyQuantityAction();
   };
 
   const handleShare = () => {
@@ -219,24 +289,24 @@ const ProductDetail = () => {
             <button
               onClick={() => handleUpdateQuantity(cartQuantity - 1)}
               disabled={isAddingToCart}
-              className="w-10 h-10 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center"
             >
-              <Minus className="h-4 w-4" />
+              <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
-            <span className="text-lg font-medium text-green-800 min-w-[2rem] text-center">
+            <span className="text-base sm:text-lg font-medium text-green-800 min-w-[1.5rem] sm:min-w-[2rem] text-center">
               {cartQuantity}
             </span>
             <button
               onClick={() => handleUpdateQuantity(cartQuantity + 1)}
               disabled={isAddingToCart || (product.stock && cartQuantity >= product.stock)}
-              className="w-10 h-10 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center"
             >
-              <Plus className="h-4 w-4" />
+              <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
             </button>
           </div>
           <button
             onClick={handleRemoveFromCart}
-            className="w-full border border-red-300 text-red-600 py-3 px-6 rounded-lg font-medium hover:bg-red-50 transition-colors"
+            className="w-full border border-red-300 text-red-600 py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-red-50 transition-colors text-sm sm:text-base"
           >
             Remove from Cart
           </button>
@@ -246,28 +316,28 @@ const ProductDetail = () => {
 
     return (
       <div className="space-y-3">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center justify-center space-x-3">
           <button
             onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
           >
-            <Minus className="h-4 w-4" />
+            <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
           </button>
-          <span className="w-16 text-center text-lg font-medium">{quantity}</span>
+          <span className="w-12 sm:w-16 text-center text-base sm:text-lg font-medium">{quantity}</span>
           <button
             onClick={() => setQuantity(quantity + 1)}
             disabled={product.stock && quantity >= product.stock}
-            className="w-10 h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
           </button>
         </div>
         <button
           onClick={handleAddToCart}
           disabled={isAddingToCart || !product.stock || product.stock === 0}
-          className="w-full border border-gray-300 text-gray-700 py-3 px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+          className="w-full border border-gray-300 text-gray-700 py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm sm:text-base"
         >
-          <ShoppingCart className="h-5 w-5" />
+          <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
           <span>{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
         </button>
       </div>
@@ -276,23 +346,23 @@ const ProductDetail = () => {
 
   return (
     <div className="pt-16 min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Breadcrumb */}
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6"
+          className="mb-4 sm:mb-6"
         >
           <button
             onClick={() => navigate(-1)}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm sm:text-base"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Products
           </button>
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8 xl:gap-12">
           {/* Left Section - Product Images */}
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -301,12 +371,12 @@ const ProductDetail = () => {
             className="space-y-4"
           >
             {/* Main Image */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
               <div className="aspect-w-1 aspect-h-1">
                 <img
                   src={getImageSrc(product.images?.[selectedImage])}
                   alt={product.name || 'Product Image'}
-                  className="w-full h-96 lg:h-[500px] object-cover"
+                  className="w-full h-64 sm:h-80 md:h-96 lg:h-[500px] object-cover"
                   onError={(e) => {
                     e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==';
                   }}
@@ -316,12 +386,12 @@ const ProductDetail = () => {
 
             {/* Thumbnail Images */}
             {product.images && product.images.length > 1 && (
-              <div className="flex space-x-3">
+              <div className="flex space-x-2 sm:space-x-3 overflow-x-auto pb-2">
                 {product.images.map((image, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
                       selectedImage === index 
                         ? 'border-green-500 shadow-md' 
                         : 'border-gray-200 hover:border-gray-300'
@@ -346,11 +416,11 @@ const ProductDetail = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            className="space-y-6"
+            className="space-y-4 sm:space-y-6"
           >
             {/* Product Title */}
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
                 {product.name}
               </h1>
               {product.brand && (
@@ -361,7 +431,7 @@ const ProductDetail = () => {
             {/* Price Section */}
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
-                <span className="text-2xl lg:text-3xl font-bold text-gray-900">
+                <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
                   ₹{product.price?.toFixed(2)}
                 </span>
                 {product.originalPrice && product.originalPrice > product.price && (
@@ -374,103 +444,6 @@ const ProductDetail = () => {
                     </span>
                   </>
                 )}
-              </div>
-            </div>
-
-            {/* Rating */}
-            {product.rating && (
-              <div className="flex items-center space-x-2">
-                <div className="flex items-center">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`h-4 w-4 ${
-                        i < Math.floor(product.rating)
-                          ? 'text-yellow-400 fill-current'
-                          : 'text-gray-300'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-sm text-gray-600">
-                  {product.rating} ({product.reviewCount || 0} reviews)
-                </span>
-              </div>
-            )}
-
-            {/* Engagement Buttons */}
-            <div className="flex items-center space-x-4">
-              <button
-                onClick={handleAddToWishlist}
-                className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-all ${
-                  isInWishlist
-                    ? 'border-red-200 bg-red-50 text-red-600'
-                    : 'border-gray-200 bg-white text-gray-700 hover:border-red-200 hover:bg-red-50 hover:text-red-600'
-                }`}
-              >
-                <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-current' : ''}`} />
-                <span className="text-sm font-medium">
-                  {isInWishlist ? 'Added to Wishlist' : 'Add to Wishlist'}
-                </span>
-              </button>
-              
-              <button
-                onClick={handleShare}
-                className="flex items-center space-x-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all"
-              >
-                <Share2 className="h-5 w-5" />
-                <span className="text-sm font-medium">Share</span>
-              </button>
-            </div>
-
-            {/* Quantity Selection */}
-            <div className="space-y-3">
-              <label className="text-sm font-medium text-gray-700">Size: {product.size || 'N/A'}</label>
-              <div className="flex space-x-3">
-                {['Buy 1', 'Buy 4', 'Buy 7'].map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => {/* Size selection is not directly tied to product.size in this component */}}
-                    className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
-                      product.size === size
-                        ? 'border-green-500 bg-green-50 text-green-700'
-                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Quantity Selector */}
-            {renderCartControls()}
-
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              <button
-                onClick={handleBuyNow}
-                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors"
-              >
-                Buy Now
-              </button>
-            </div>
-
-            {/* Delivery Check */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <h3 className="font-medium text-gray-900">Check Delivery Charges</h3>
-              <div className="flex space-x-2">
-                <input
-                  type="text"
-                  placeholder="Enter Pincode"
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  maxLength={6}
-                />
-                <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
-                  Check
-                </button>
               </div>
             </div>
 
@@ -514,6 +487,108 @@ const ProductDetail = () => {
               </div>
             )}
 
+            {/* Rating */}
+            {product.rating && (
+              <div className="flex items-center space-x-2">
+                <div className="flex items-center">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`h-4 w-4 ${
+                        i < Math.floor(product.rating)
+                          ? 'text-yellow-400 fill-current'
+                          : 'text-gray-300'
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm text-gray-600">
+                  {product.rating} ({product.reviewCount || 0} reviews)
+                </span>
+              </div>
+            )}
+
+            {/* Engagement Buttons */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
+              <button
+                onClick={handleAddToWishlist}
+                className={`flex items-center space-x-2 px-4 py-2 rounded-lg border transition-all w-full sm:w-auto justify-center ${
+                  isInWishlist
+                    ? 'border-red-200 bg-red-50 text-red-600'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-red-200 hover:bg-red-50 hover:text-red-600'
+                }`}
+              >
+                <Heart className={`h-5 w-5 ${isInWishlist ? 'fill-current' : ''}`} />
+                <span className="text-sm font-medium">
+                  {isInWishlist ? 'Added to Wishlist' : 'Add to Wishlist'}
+                </span>
+              </button>
+              
+              <button
+                onClick={handleShare}
+                className="flex items-center space-x-2 px-4 py-2 rounded-lg border border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all w-full sm:w-auto justify-center"
+              >
+                <Share2 className="h-5 w-5" />
+                <span className="text-sm font-medium">Share</span>
+              </button>
+            </div>
+
+            {/* Quantity Selection */}
+            <div className="space-y-3">
+              <label className="text-sm font-medium text-gray-700">Quick Add to Cart</label>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                {[
+                  { label: 'Buy 1', quantity: 1 },
+                  { label: 'Buy 4', quantity: 4 },
+                  { label: 'Buy 7', quantity: 7 }
+                ].map((option) => (
+                  <button
+                    key={option.quantity}
+                    onClick={() => handleBuyQuantity(option.quantity)}
+                    disabled={isAddingToCart || !product.stock || product.stock === 0}
+                    className={`px-3 sm:px-4 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                      selectedBuyQuantity === option.quantity
+                        ? 'border-green-500 bg-green-50 text-green-700'
+                        : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Quantity Selector */}
+            {renderCartControls()}
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              <button
+                onClick={handleBuyNow}
+                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors"
+              >
+                Buy Now
+              </button>
+            </div>
+
+            {/* Delivery Check */}
+            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <h3 className="font-medium text-gray-900">Check Delivery Charges</h3>
+              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
+                <input
+                  type="text"
+                  placeholder="Enter Pincode"
+                  value={pincode}
+                  onChange={(e) => setPincode(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                  maxLength={6}
+                />
+                <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap">
+                  Check
+                </button>
+              </div>
+            </div>
+
             {/* Product Details */}
             <div className="space-y-3">
               <h3 className="font-medium text-gray-900">Product Details</h3>
@@ -544,10 +619,8 @@ const ProductDetail = () => {
             </div>
 
             {/* Trust Badges */}
-            <div className="flex items-center space-x-6 pt-4 border-t border-gray-200">
-              {/* Free Delivery badge removed as per new_code */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 pt-4 border-t border-gray-200">
               <div className="flex items-center space-x-2">
-                {/* Truck icon removed as per new_code */}
                 <span className="text-sm text-gray-600">Free Delivery</span>
               </div>
               <div className="flex items-center space-x-2">

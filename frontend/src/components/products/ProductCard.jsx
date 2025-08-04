@@ -45,7 +45,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
           ...product,
           quantity: 1
         }));
-        toast.success('Added to cart successfully!');
+        // Removed toast notification for cart actions
       } catch (error) {
         console.error('Error adding to cart:', error);
         toast.error('Failed to add to cart');
@@ -65,7 +65,7 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
       try {
         console.log('🔍 Removing from cart:', product._id);
         dispatch(removeFromCart(product._id));
-        toast.success('Removed from cart');
+        // Removed toast notification for cart actions
       } catch (error) {
         console.error('Error removing from cart:', error);
         toast.error('Failed to remove from cart');
@@ -83,10 +83,10 @@ const ProductCard = ({ product, viewMode = 'grid' }) => {
       try {
         if (newQuantity <= 0) {
           dispatch(removeFromCart(product._id));
-          toast.success('Removed from cart');
+          // Removed toast notification for cart actions
         } else {
           dispatch(updateQuantity({ id: product._id, quantity: newQuantity }));
-          toast.success('Cart updated');
+          // Removed toast notification for cart actions
         }
       } catch (error) {
         console.error('Error updating quantity:', error);

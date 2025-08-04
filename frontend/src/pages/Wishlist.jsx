@@ -51,7 +51,7 @@ const Wishlist = () => {
       // Remove from wishlist
       dispatch(removeFromWishlist(product._id));
       
-      toast.success('Product moved to cart successfully');
+      // Removed toast notification for cart actions
     } catch (error) {
       console.error('Error moving to cart:', error);
       toast.error('Failed to move product to cart');

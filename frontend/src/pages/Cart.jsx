@@ -50,7 +50,7 @@ const Cart = () => {
     setUpdating(true);
     try {
       dispatch(updateQuantity({ id: productId, quantity: newQuantity }));
-      toast.success(`Quantity updated to ${newQuantity}`);
+      // Removed toast notification for cart actions
     } catch (error) {
       console.error('Error updating cart:', error);
       toast.error('Failed to update cart');
@@ -63,7 +63,7 @@ const Cart = () => {
     setUpdating(true);
     try {
       dispatch(removeFromCart(productId));
-      toast.success('Item removed from cart');
+      // Removed toast notification for cart actions
     } catch (error) {
       console.error('Error removing item:', error);
       toast.error('Failed to remove item');
@@ -79,7 +79,7 @@ const Cart = () => {
     
     try {
       dispatch(clearCart());
-      toast.success('Cart cleared successfully');
+      // Removed toast notification for cart actions
     } catch (error) {
       console.error('Error clearing cart:', error);
       toast.error('Failed to clear cart');

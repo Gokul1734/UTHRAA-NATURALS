@@ -1,404 +1,502 @@
-import { useEffect, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ArrowRight, Star, Truck, Shield, Leaf, Heart, User } from 'lucide-react';
-import { getFeaturedProducts } from '../store/slices/productSlice';
-import { getCategories } from '../store/slices/categorySlice';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
+import { 
+  ArrowRight,
+  Star, 
+  Shield, 
+  Truck, 
+  Leaf, 
+  Heart,
+  ShoppingBag,
+  Search,
+  ChevronDown,
+  Sparkles,
+  Award,
+  Users,
+  Package,
+  Zap,
+  Globe,
+  CheckCircle
+} from 'lucide-react';
+import { useSelector, useDispatch } from 'react-redux';
 import ProductCard from '../components/products/ProductCard';
 import CategoryCard from '../components/categories/CategoryCard';
-import Logo from '../components/common/Logo';
-import LOGO from '../assets/Logo.jpg';
-import { getBrandName, getBrandTagline, getBrandDescription } from '../utils/brandUtils';
+import { getCategories } from '../store/slices/categorySlice';
+import Logo from '../assets/logo.png';
 
 const Home = () => {
-  const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { featuredProducts, isLoading } = useSelector((state) => state.products);
-  const { categories } = useSelector((state) => state.categories);
+  const dispatch = useDispatch();
+  const { products } = useSelector((state) => state.products);
+  const { categories, loading: categoriesLoading } = useSelector((state) => state.categories);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
+  const { scrollY } = useScroll();
   
-  // User state from sessionStorage
-  const [user, setUser] = useState(null);
+  const y = useTransform(scrollY, [0, 300], [0, 100]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+
+  // Featured products (first 6 products)
+  const featuredProducts = products.slice(0, 6);
+
+  // Hero section data
+  const heroSlides = [
+    {
+      title: "Natural Wellness",
+      subtitle: "Discover the power of nature with our premium organic products",
+      description: "From farm to your doorstep, we bring you the finest natural ingredients for your health and wellness journey.",
+      image: "/images/hero-1.jpg",
+      cta: "Shop Now",
+      color: "from-green-400 to-green-600"
+    },
+    {
+      title: "Pure & Organic",
+      subtitle: "100% natural ingredients for a healthier lifestyle",
+      description: "Every product is carefully crafted with organic ingredients, ensuring purity and effectiveness for your daily needs.",
+      image: "/images/hero-2.jpg",
+      cta: "Explore Products",
+      color: "from-emerald-400 to-emerald-600"
+    },
+    {
+      title: "Sustainable Living",
+      subtitle: "Eco-friendly products for a better tomorrow",
+      description: "Join us in making the world a better place with our sustainable and environmentally conscious product range.",
+      image: "/images/hero-3.jpg",
+      cta: "Learn More",
+      color: "from-teal-400 to-teal-600"
+    }
+  ];
 
   useEffect(() => {
-    // Get user from sessionStorage
-    const userData = JSON.parse(sessionStorage.getItem('user') || 'null');
-    setUser(userData);
-    
-    dispatch(getFeaturedProducts());
+    // Check if categories are already loaded
+    if (categories && categories.length > 0) {
+      setPageLoading(false);
+    } else {
+      // If categories are not loaded, wait for them to load
+      const checkCategories = () => {
+        if (categories && categories.length > 0) {
+          setPageLoading(false);
+        } else if (!categoriesLoading) {
+          // If categories failed to load or are empty, still show the page
+          setPageLoading(false);
+        }
+      };
+      
+      checkCategories();
+      
+      // Set a timeout to show the page even if categories don't load
+      const timeout = setTimeout(() => {
+        setPageLoading(false);
+      }, 3000);
+      
+      return () => clearTimeout(timeout);
+    }
+  }, [categories, categoriesLoading]);
+
+  // Fetch categories when component mounts
+  useEffect(() => {
     dispatch(getCategories());
   }, [dispatch]);
 
-  const scrollToTop = () => {
-    window.scrollTo(0, 0);
+  useEffect(() => {
+    if (!pageLoading) {
+      setIsVisible(true);
+      
+      // Auto-slide hero section
+      const interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
+      }, 5000);
+
+      return () => clearInterval(interval);
+    }
+  }, [pageLoading]);
+
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
-  const handleCategoryClick = () => {
-    scrollToTop();
-    navigate('/products');
-  };
-
-  const features = [
-    {
-      icon: <Leaf className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" />,
-      title: '100% Organic',
-      description: 'All our products are certified organic and natural'
-    },
-    {
-      icon: <Truck className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" />,
-      title: 'Free Shipping',
-      description: 'Free shipping on orders above ₹500'
-    },
-    {
-      icon: <Shield className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" />,
-      title: 'Quality Assured',
-      description: 'Premium quality products with guarantee'
-    },
-    {
-      icon: <Heart className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8" />,
-      title: 'Made with Love',
-      description: 'Handcrafted with care and traditional methods'
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: 'Priya Sharma',
-      role: 'Wellness Coach',
-      content: `${getBrandName()} has transformed my skincare routine. Their products are truly amazing!`,
-      rating: 5,
-      image: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      name: 'Rajesh Kumar',
-      role: 'Fitness Trainer',
-      content: 'I love their organic supplements. They have improved my overall health significantly.',
-      rating: 5,
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      name: 'Anjali Patel',
-      role: 'Yoga Instructor',
-      content: 'The quality and purity of their products is unmatched. Highly recommended!',
-      rating: 5,
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face'
-    }
-  ];
+  // Show loading state while categories are being loaded
+  if (pageLoading) {
+    return (
+      <div className="min-h-screen bg-light-green flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading categories...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="pt-14 sm:pt-16 lg:pt-18">
-      {/* Welcome Message for Logged In Users */}
-      {user && (
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-gradient-to-r from-green-50 to-emerald-50 border-b border-green-200"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-center space-x-2 text-green-800">
-              <User className="h-5 w-5" />
-              <span className="font-medium">
-                Welcome back, {user.name}! 
-                {user.role === 'admin' && (
-                  <span className="ml-2 text-purple-600 font-semibold">(Admin)</span>
-                )}
-              </span>
-            </div>
-          </div>
-        </motion.div>
-      )}
-
+    <div className="min-h-screen bg-light-green">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-green-50 to-emerald-100 overflow-hidden min-h-[500px] sm:min-h-[600px] lg:min-h-[700px]">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%239C92AC&quot; fill-opacity=&quot;0.05&quot;%3E%3Ccircle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;2&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-50"></div>
-        
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 xl:py-24">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-12 xl:gap-16 items-center">
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="space-y-6 sm:space-y-8 text-center lg:text-left"
-            >
-              <div className="space-y-4 sm:space-y-6">
-                {/* Logo and Brand Name */}
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
+      <section className="relative h-screen overflow-hidden">
+        {/* Background Pattern */}
+        <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-light-green to-green-100">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%2398b702&quot; fill-opacity=&quot;0.05&quot;%3E%3Ccircle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;2&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
+        </div>
+
+        {/* Floating Elements */}
+        <motion.div
+          animate={{ y: [0, -20, 0] }}
+          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-20 left-10 w-20 h-20 bg-green-200 rounded-full opacity-20"
+        />
+        <motion.div
+          animate={{ y: [0, 20, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-40 right-20 w-16 h-16 bg-green-300 rounded-full opacity-30"
+        />
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute bottom-20 left-20 w-32 h-32 border-2 border-green-200 rounded-full opacity-20"
+        />
+
+        {/* Hero Content */}
+        <div className="relative z-10 h-full flex items-center justify-center">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+              {/* Text Content */}
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="text-center"
+              >
+                {/* <motion.div
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.2 }}
-                  className="flex justify-center lg:justify-start"
+                  transition={{ duration: 0.8, delay: 0.4 }}
+                  className="mb-6"
                 >
-                  <Logo size="large" showText={true} />
+                  <span className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium mb-4">
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Premium Organic Products
+                  </span>
+                </motion.div> */}
+
+                <motion.h1
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
+                  className="heading-1 text-gray-900 mb-6"
+                >
+                  Discover the Power of{' '}
+                  <span className="text-primary bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
+                    Natural Wellness
+                  </span>
+                </motion.h1>
+
+                <motion.p
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 0.8 }}
+                  className="text-xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto"
+                >
+                  Experience the finest organic products crafted with care for your health and wellness. 
+                  From farm to your doorstep, we bring nature's best to you.
+                </motion.p>
+
+                {/* Stats */}
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: 1.2 }}
+                  className="grid grid-cols-3 gap-6 mt-12 max-w-2xl mx-auto"
+                >
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary mb-1">10K+</div>
+                    <div className="text-sm text-gray-600">Happy Customers</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary mb-1">500+</div>
+                    <div className="text-sm text-gray-600">Products</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-primary mb-1">100%</div>
+                    <div className="text-sm text-gray-600">Organic</div>
+                  </div>
                 </motion.div>
+              </motion.div>
 
-                <span className="inline-block px-3 py-2 sm:px-4 sm:py-2 bg-green-100 text-green-800 rounded-full text-xs sm:text-sm font-medium">
-                  🌿 100% Natural & Organic
-                </span>
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
-                  {getBrandTagline()}
-                </h1>
-                <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed max-w-2xl mx-auto lg:mx-0">
-                  {getBrandDescription()}
-                </p>
-              </div>
-              
-              {/* <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center lg:justify-start">
-                <Link
-                  to="/products"
-                  className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl touch-manipulation"
-                >
-                  Shop Now
-                  <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-                </Link>
-                <Link
-                  to="/about"
-                  className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 border-2 border-green-600 text-green-600 font-semibold rounded-lg hover:bg-green-600 hover:text-white transition-colors touch-manipulation"
-                >
-                  Learn More
-                </Link>
-              </div>
-
-              <div className="flex flex-col xs:flex-row items-center justify-center lg:justify-start space-y-2 xs:space-y-0 xs:space-x-6 lg:space-x-8 text-xs sm:text-sm text-gray-600">
-                <div className="flex items-center space-x-2">
-                  <Star className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 fill-current" />
-                  <span>4.9/5 Rating</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-red-400 fill-current" />
-                  <span>10K+ Happy Customers</span>
-                </div>
-              </div> */}
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, x: 50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              className="relative order-first lg:order-last"
-            >
-              <div className="relative z-10">
-                <img
-                  src={LOGO}
-                  alt="Organic Products"
-                  className="w-full h-auto max-h-[500px] rounded-2xl shadow-2xl"
-                />
-                <div className="absolute -bottom-4 -left-4 sm:-bottom-6 sm:-left-6 bg-white p-4 sm:p-6 rounded-xl shadow-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center">
-                      <Leaf className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-900 text-sm sm:text-base">Certified Organic</p>
-                      <p className="text-xs sm:text-sm text-gray-600">100% Natural</p>
+              {/* Hero Image */}
+              <motion.div
+                initial={{ opacity: 0, x: 50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                className="relative"
+              >
+                <div className="relative">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                    className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 rounded-full opacity-20 blur-3xl"
+                  />
+                  <div className="relative bg-white rounded-3xl p-8 shadow-2xl">
+                    <div className="aspect-square bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center">
+                      <img src={Logo} alt="Hero Image" className="w-full h-full object-cover rounded-2xl" />
                     </div>
                   </div>
                 </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-            {/* Categories Section */}
-            <section className="py-12 sm:py-16 lg:py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-left mb-12 sm:mb-16"
-          >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Shop by Category
-            </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-3xl">
-              Explore our wide range of natural and organic products across different categories.
-            </p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-            {categories.slice(0, 10).map((category, index) => (
-              <motion.div
-                key={category._id}
-                initial={{ opacity: 0, scale: 0.9 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <CategoryCard category={category} onClick={handleCategoryClick} />
               </motion.div>
-            ))}
+            </div>
           </div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            viewport={{ once: true }}
-            className="text-center mt-8 sm:mt-12"
-          >
-            <Link
-              to="/products"
-              className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl touch-manipulation"
-            >
-              View All Categories
-              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-            </Link>
-          </motion.div>
         </div>
+
+        {/* Scroll Indicator */}
+        {/* <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 2 }}
+          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+        >
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="flex flex-col items-center text-gray-600 cursor-pointer"
+            onClick={() => scrollToSection('categories')}
+          >
+            <span className="text-sm mb-2">Scroll to explore</span>
+            <ChevronDown className="w-6 h-6" />
+          </motion.div>
+        </motion.div> */}
       </section>
 
-      {/* Featured Products Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Categories Section */}
+      <section id="categories" className="py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-left mb-12 sm:mb-16"
+            className="text-center mb-16"
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Featured Products
+            <span className="text-primary font-semibold text-sm uppercase tracking-wider mb-4 block">
+              Shop by Category
+            </span>
+            <h2 className="heading-2 text-gray-900 mb-6">
+              All Our Natural Categories
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-3xl">
-              Discover our most popular and highly-rated natural products loved by thousands of customers.
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Explore our complete range of organic and natural product categories, 
+              each carefully curated to enhance your wellness journey.
             </p>
           </motion.div>
 
-          {isLoading ? (
-            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {[...Array(8)].map((_, index) => (
-                <div key={index} className="bg-gray-200 rounded-2xl h-64 sm:h-80 animate-pulse"></div>
-              ))}
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
-              {featuredProducts.slice(0, 8).map((product, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+            {categories && categories.length > 0 ? (
+              categories.map((category, index) => (
                 <motion.div
-                  key={product._id}
-                  initial={{ opacity: 0, y: 20 }}
+                  key={category._id}
+                  initial={{ opacity: 0, y: 50 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
                   viewport={{ once: true }}
                 >
-                  <ProductCard product={product} />
+                  <CategoryCard category={category} />
                 </motion.div>
-              ))}
-            </div>
-          )}
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            viewport={{ once: true }}
-            className="text-center mt-8 sm:mt-12"
-          >
-            <Link
-              to="/products"
-              className="inline-flex items-center px-6 sm:px-8 py-3 sm:py-4 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-lg hover:shadow-xl touch-manipulation"
-            >
-              View All Products
-              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-            </Link>
-          </motion.div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-600">No categories available at the moment.</p>
+              </div>
+            )}
+          </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 bg-gradient-light">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-left mb-12 sm:mb-16"
+            className="text-center mb-16"
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              Why Choose {getBrandName()}?
+            <span className="text-primary font-semibold text-sm uppercase tracking-wider mb-4 block">
+              Why Choose Us
+            </span>
+            <h2 className="heading-2 text-gray-900 mb-6">
+              The Natural Difference
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-3xl">
-              We are committed to bringing you the finest natural products with uncompromising quality and care.
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              We're committed to bringing you the highest quality natural products 
+              with exceptional service and care.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
-            {features.map((feature, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                icon: <Leaf className="w-8 h-8" />,
+                title: "100% Organic",
+                description: "All our products are certified organic and free from harmful chemicals."
+              },
+              {
+                icon: <Truck className="w-8 h-8" />,
+                title: "Fast Delivery",
+                description: "Quick and reliable delivery to your doorstep within 24-48 hours."
+              },
+              {
+                icon: <Shield className="w-8 h-8" />,
+                title: "Quality Assured",
+                description: "Every product undergoes rigorous quality checks before reaching you."
+              },
+              {
+                icon: <Heart className="w-8 h-8" />,
+                title: "Customer First",
+                description: "Your satisfaction is our priority with 24/7 customer support."
+              }
+            ].map((feature, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                whileHover={{ y: -5 }}
-                className="text-center p-6 sm:p-8 rounded-2xl bg-white shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
+                className="card p-8 text-center hover-lift"
               >
-                <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-green-100 rounded-2xl mb-4 sm:mb-6">
-                  <div className="text-green-600">
-                    {feature.icon}
-                  </div>
+                <div className="w-16 h-16 bg-gradient-primary rounded-full flex items-center justify-center text-white mx-auto mb-6">
+                  {feature.icon}
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 sm:mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
+                <h3 className="heading-3 text-gray-900 mb-4">{feature.title}</h3>
+                <p className="text-gray-600">{feature.description}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-green-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Featured Products Section */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="text-left mb-12 sm:mb-16"
+            className="text-center mb-16"
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
-              What Our Customers Say
+            <span className="text-primary font-semibold text-sm uppercase tracking-wider mb-4 block">
+              Featured Products
+            </span>
+            <h2 className="heading-2 text-gray-900 mb-6">
+              Our Most Popular Products
             </h2>
-            <p className="text-base sm:text-lg text-gray-600 max-w-3xl">
-              Real stories from real customers who have experienced the benefits of our natural products.
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Discover our best-selling natural products that customers love and trust.
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-            {testimonials.map((testimonial, index) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {featuredProducts.map((product, index) => (
+              <motion.div
+                key={product._id}
+                initial={{ opacity: 0, y: 50 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <ProductCard product={product} />
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-center mt-12"
+          >
+            <button
+              onClick={() => navigate('/products')}
+              className="btn-primary group"
+            >
+              View All Products
+              <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Testimonials Section */}
+      <section className="py-20 bg-gradient-light">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <span className="text-primary font-semibold text-sm uppercase tracking-wider mb-4 block">
+              Customer Reviews
+            </span>
+            <h2 className="heading-2 text-gray-900 mb-6">
+              What Our Customers Say
+            </h2>
+            <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Don't just take our word for it. Here's what our valued customers have to say about their experience.
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                name: "Sarah Johnson",
+                role: "Wellness Enthusiast",
+                content: "The quality of these organic products is exceptional. I've never felt better since switching to natural alternatives.",
+                rating: 5,
+                avatar: "SJ"
+              },
+              {
+                name: "Michael Chen",
+                role: "Health Coach",
+                content: "As a health coach, I recommend Uthraa Naturals to all my clients. The products are pure and effective.",
+                rating: 5,
+                avatar: "MC"
+              },
+              {
+                name: "Emma Davis",
+                role: "Yoga Instructor",
+                content: "The natural ingredients and sustainable packaging make this my go-to choice for wellness products.",
+                rating: 5,
+                avatar: "ED"
+              }
+            ].map((testimonial, index) => (
               <motion.div
                 key={index}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 50 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                whileHover={{ y: -5 }}
-                className="bg-white p-6 sm:p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300"
+                className="card p-8"
               >
-                <div className="flex items-center mb-4 sm:mb-6">
-                  <img
-                    src={testimonial.image}
-                    alt={testimonial.name}
-                    className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover mr-4"
-                  />
-                  <div>
-                    <h4 className="font-semibold text-gray-900 text-sm sm:text-base">{testimonial.name}</h4>
-                    <p className="text-xs sm:text-sm text-gray-600">{testimonial.role}</p>
-                  </div>
-                </div>
-                <div className="flex mb-3 sm:mb-4">
+                <div className="flex items-center mb-4">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-400 fill-current" />
+                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                   ))}
                 </div>
-                <p className="text-sm sm:text-base text-gray-700 leading-relaxed">{testimonial.content}</p>
+                <p className="text-gray-600 mb-6 italic">"{testimonial.content}"</p>
+                <div className="flex items-center">
+                  <div className="w-12 h-12 bg-gradient-primary rounded-full flex items-center justify-center text-white font-semibold mr-4">
+                    {testimonial.avatar}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
+                    <p className="text-sm text-gray-600">{testimonial.role}</p>
+                  </div>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -406,36 +504,36 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-gradient-to-r from-green-600 to-emerald-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
+      <section className="py-20 bg-gradient-primary">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
             viewport={{ once: true }}
-            className="max-w-3xl"
+            className="text-center"
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white mb-4 sm:mb-6">
-              Ready to Start Your Natural Journey?
+            <h2 className="heading-2 text-white mb-6">
+              Ready to Start Your Natural Wellness Journey?
             </h2>
-            <p className="text-base sm:text-lg text-green-100 mb-6 sm:mb-8 leading-relaxed">
-              Join thousands of satisfied customers who have made the switch to natural, 
-              organic products for a healthier lifestyle.
+            <p className="text-xl text-green-100 mb-8 max-w-2xl mx-auto">
+              Join thousands of customers who have already discovered the power of natural products. 
+              Start your journey to better health today.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-start justify-start">
-              <Link
-                to="/products"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 bg-white text-green-600 font-semibold rounded-lg hover:bg-gray-50 transition-colors shadow-lg hover:shadow-xl touch-manipulation"
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onClick={() => navigate('/products')}
+                className="bg-white text-primary px-8 py-4 rounded-lg font-semibold hover:bg-gray-50 transition-colors group flex items-center justify-center"
               >
                 Shop Now
-                <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-              </Link>
-              <Link
-                to="/contact"
-                className="w-full sm:w-auto inline-flex items-center justify-center px-6 sm:px-8 py-3 sm:py-4 border-2 border-white text-white font-semibold rounded-lg hover:bg-white hover:text-green-600 transition-colors touch-manipulation"
+                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+              </button>
+              <button
+                onClick={() => navigate('/about')}
+                className="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold hover:bg-white hover:text-primary transition-colors"
               >
-                Contact Us
-              </Link>
+                Learn More
+              </button>
             </div>
           </motion.div>
         </div>

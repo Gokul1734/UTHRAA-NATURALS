@@ -84,62 +84,111 @@ export default {
         },
         // Enhanced green palette for better consistency
         green: {
-          50: '#f0fdf4',
-          100: '#dcfce7',
-          200: '#bbf7d0',
-          300: '#86efac',
-          400: '#4ade80',
-          500: '#22c55e',
-          600: '#16a34a',
-          700: '#15803d',
-          800: '#166534',
-          900: '#14532d',
-          950: '#052e16',
-        }
+          50: '#f2fff8',
+          100: '#e8f5e8',
+          200: '#d1e8d1',
+          300: '#b8d403',
+          400: '#a8c902',
+          500: '#98b702',
+          600: '#7a9201',
+          700: '#5c6d01',
+          800: '#3e4801',
+          900: '#202400',
+        },
+        'light-green': '#f2fff8',
+        'dark-green': '#7a9201',
+        'accent-green': '#b8d403',
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        'xl': '0.75rem',
-        '2xl': '1rem',
-        '3xl': '1.5rem',
-        '4xl': '2rem',
+        'xl': '1rem',
+        '2xl': '1.5rem',
+        '3xl': '2rem',
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'system-ui', 'sans-serif'],
       },
       animation: {
-        'fade-in': 'fadeIn 0.5s ease-in-out',
-        'slide-up': 'slideUp 0.5s ease-out',
-        'slide-down': 'slideDown 0.5s ease-out',
-        'scale-in': 'scaleIn 0.3s ease-out',
-        'bounce-slow': 'bounce 2s infinite',
-        'pulse-slow': 'pulse 3s ease-in-out infinite',
-        'float': 'float 6s ease-in-out infinite',
+        'fade-in-up': 'fadeInUp 0.8s ease-out',
+        'fade-in-left': 'fadeInLeft 0.8s ease-out',
+        'fade-in-right': 'fadeInRight 0.8s ease-out',
+        'scale-in': 'scaleIn 0.6s ease-out',
+        'float': 'float 3s ease-in-out infinite',
+        'pulse-slow': 'pulse 2s ease-in-out infinite',
+        'slide-in-bottom': 'slideInFromBottom 0.8s ease-out',
       },
       keyframes: {
-        fadeIn: {
-          '0%': { opacity: '0' },
-          '100%': { opacity: '1' },
+        fadeInUp: {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(30px)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
         },
-        slideUp: {
-          '0%': { transform: 'translateY(20px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
+        fadeInLeft: {
+          '0%': {
+            opacity: '0',
+            transform: 'translateX(-30px)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateX(0)',
+          },
         },
-        slideDown: {
-          '0%': { transform: 'translateY(-20px)', opacity: '0' },
-          '100%': { transform: 'translateY(0)', opacity: '1' },
+        fadeInRight: {
+          '0%': {
+            opacity: '0',
+            transform: 'translateX(30px)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateX(0)',
+          },
         },
         scaleIn: {
-          '0%': { transform: 'scale(0.9)', opacity: '0' },
-          '100%': { transform: 'scale(1)', opacity: '1' },
+          '0%': {
+            opacity: '0',
+            transform: 'scale(0.9)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'scale(1)',
+          },
         },
         float: {
-          '0%, 100%': { transform: 'translateY(0px)' },
-          '50%': { transform: 'translateY(-10px)' },
+          '0%, 100%': {
+            transform: 'translateY(0px)',
+          },
+          '50%': {
+            transform: 'translateY(-10px)',
+          },
         },
+        slideInFromBottom: {
+          '0%': {
+            opacity: '0',
+            transform: 'translateY(50px)',
+          },
+          '100%': {
+            opacity: '1',
+            transform: 'translateY(0)',
+          },
+        },
+      },
+      backgroundImage: {
+        'gradient-primary': 'linear-gradient(135deg, #98b702 0%, #b8d403 100%)',
+        'gradient-light': 'linear-gradient(135deg, #f2fff8 0%, #e8f5e8 100%)',
+        'gradient-dark': 'linear-gradient(135deg, #7a9201 0%, #98b702 100%)',
+      },
+      boxShadow: {
+        'soft': '0 4px 20px rgba(0, 0, 0, 0.08)',
+        'medium': '0 8px 25px rgba(0, 0, 0, 0.12)',
+        'large': '0 12px 40px rgba(0, 0, 0, 0.15)',
+        'glow': '0 0 20px rgba(152, 183, 2, 0.3)',
       },
       container: {
         center: true,

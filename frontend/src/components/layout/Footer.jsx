@@ -81,7 +81,7 @@ const Footer = () => {
           </div>
 
           {/* Customer Service */}
-          <div className="space-y-4 sm:space-y-6 text-center sm:text-left">
+          {/* <div className="space-y-4 sm:space-y-6 text-center sm:text-left">
             <h3 className="text-lg sm:text-xl font-semibold text-white">Customer Service</h3>
             <nav className="flex flex-col space-y-2 sm:space-y-3">
               <Link to="/shipping" className="text-gray-300 hover:text-green-400 transition-colors text-sm sm:text-base py-1 hover:underline touch-manipulation">
@@ -103,7 +103,7 @@ const Footer = () => {
                 Wholesale
               </Link>
             </nav>
-          </div>
+          </div> */}
 
           {/* Contact Info */}
           <div className="space-y-4 sm:space-y-6 text-center sm:text-left">
