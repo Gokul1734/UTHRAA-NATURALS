@@ -135,7 +135,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-light-green">
       {/* Hero Section */}
-      <section className="relative h-screen overflow-hidden">
+      <section className="relative min-h-screen overflow-hidden pt-16 sm:pt-20 lg:pt-24">
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-gradient-to-br from-green-50 via-light-green to-green-100">
           <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%2398b702&quot; fill-opacity=&quot;0.05&quot;%3E%3Ccircle cx=&quot;30&quot; cy=&quot;30&quot; r=&quot;2&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
@@ -159,33 +159,21 @@ const Home = () => {
         />
 
         {/* Hero Content */}
-        <div className="relative z-10 h-full flex items-center justify-center">
+        <div className="relative z-10 h-full flex items-center justify-center py-8 sm:py-12 lg:py-16">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 items-center">
               {/* Text Content */}
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="text-center"
+                className="text-center lg:text-left"
               >
-                {/* <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, delay: 0.4 }}
-                  className="mb-6"
-                >
-                  <span className="inline-flex items-center px-4 py-2 bg-green-100 text-green-800 rounded-full text-sm font-medium mb-4">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Premium Organic Products
-                  </span>
-                </motion.div> */}
-
                 <motion.h1
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.6 }}
-                  className="heading-1 text-gray-900 mb-6"
+                  className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 mb-4 sm:mb-6"
                 >
                   Discover the Power of{' '}
                   <span className="text-primary bg-gradient-to-r from-green-600 to-green-800 bg-clip-text text-transparent">
@@ -197,7 +185,7 @@ const Home = () => {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 0.8 }}
-                  className="text-xl text-gray-600 mb-8 leading-relaxed max-w-3xl mx-auto"
+                  className="text-lg sm:text-xl text-gray-600 mb-6 sm:mb-8 leading-relaxed max-w-3xl mx-auto lg:mx-0"
                 >
                   Experience the finest organic products crafted with care for your health and wellness. 
                   From farm to your doorstep, we bring nature's best to you.
@@ -208,19 +196,19 @@ const Home = () => {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.8, delay: 1.2 }}
-                  className="grid grid-cols-3 gap-6 mt-12 max-w-2xl mx-auto"
+                  className="grid grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-12 max-w-2xl mx-auto lg:mx-0"
                 >
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-1">10K+</div>
-                    <div className="text-sm text-gray-600">Happy Customers</div>
+                    <div className="text-xl sm:text-2xl font-bold text-primary mb-1">10K+</div>
+                    <div className="text-xs sm:text-sm text-gray-600">Happy Customers</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-1">500+</div>
-                    <div className="text-sm text-gray-600">Products</div>
+                    <div className="text-xl sm:text-2xl font-bold text-primary mb-1">500+</div>
+                    <div className="text-xs sm:text-sm text-gray-600">Products</div>
                   </div>
                   <div className="text-center">
-                    <div className="text-2xl font-bold text-primary mb-1">100%</div>
-                    <div className="text-sm text-gray-600">Organic</div>
+                    <div className="text-xl sm:text-2xl font-bold text-primary mb-1">100%</div>
+                    <div className="text-xs sm:text-sm text-gray-600">Organic</div>
                   </div>
                 </motion.div>
               </motion.div>
@@ -230,7 +218,7 @@ const Home = () => {
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="relative"
+                className="relative order-first lg:order-last"
               >
                 <div className="relative">
                   <motion.div
@@ -238,9 +226,9 @@ const Home = () => {
                     transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                     className="absolute inset-0 bg-gradient-to-r from-green-400 to-green-600 rounded-full opacity-20 blur-3xl"
                   />
-                  <div className="relative bg-white rounded-3xl p-8 shadow-2xl">
-                    <div className="aspect-square bg-gradient-to-br from-green-100 to-green-200 rounded-2xl flex items-center justify-center">
-                      <img src={Logo} alt="Hero Image" className="w-full h-full object-cover rounded-2xl" />
+                  <div className="relative bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 shadow-2xl">
+                    <div className="aspect-square bg-gradient-to-br from-green-100 to-green-200 rounded-xl sm:rounded-2xl flex items-center justify-center">
+                      <img src={Logo} alt="Hero Image" className="w-full h-full object-cover rounded-xl sm:rounded-2xl" />
                     </div>
                   </div>
                 </div>
@@ -248,24 +236,6 @@ const Home = () => {
             </div>
           </div>
         </div>
-
-        {/* Scroll Indicator */}
-        {/* <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 2 }}
-          className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
-        >
-          <motion.div
-            animate={{ y: [0, 10, 0] }}
-            transition={{ duration: 2, repeat: Infinity }}
-            className="flex flex-col items-center text-gray-600 cursor-pointer"
-            onClick={() => scrollToSection('categories')}
-          >
-            <span className="text-sm mb-2">Scroll to explore</span>
-            <ChevronDown className="w-6 h-6" />
-          </motion.div>
-        </motion.div> */}
       </section>
 
       {/* Categories Section */}
