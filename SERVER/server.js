@@ -69,6 +69,59 @@ const connectDB = async () => {
 // Initialize database connection
 connectDB();
 
+// Create HTTP server
+const server = require('http').createServer(app);
+
+// Socket.IO setup
+const io = require('socket.io')(server, {
+  cors: {
+    origin: process.env.NODE_ENV === 'production' 
+      ? [process.env.FRONTEND_URL, 'https://uthraa-naturals.vercel.app']
+      : ['http://localhost:5173', 'http://localhost:5174'],
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  console.log('🔌 Client connected:', socket.id);
+
+  // Join order tracking room
+  socket.on('join-order-tracking', (orderId) => {
+    socket.join(`order-${orderId}`);
+    console.log(`👥 Client ${socket.id} joined order tracking room: order-${orderId}`);
+  });
+
+  // Leave order tracking room
+  socket.on('leave-order-tracking', (orderId) => {
+    socket.leave(`order-${orderId}`);
+    console.log(`👋 Client ${socket.id} left order tracking room: order-${orderId}`);
+  });
+
+  // Handle admin status updates
+  socket.on('admin-status-update', (data) => {
+    const { orderId, status, trackingNumber, estimatedDelivery } = data;
+    console.log(`📦 Admin updated order ${orderId} to status: ${status}`);
+    
+    // Emit to all clients tracking this order
+    io.to(`order-${orderId}`).emit('order-status-updated', {
+      orderId,
+      status,
+      trackingNumber,
+      estimatedDelivery,
+      updatedAt: new Date()
+    });
+  });
+
+  socket.on('disconnect', () => {
+    console.log('🔌 Client disconnected:', socket.id);
+  });
+});
+
+// Make io available to routes
+app.set('io', io);
+
 // Root endpoint with API documentation
 app.get('/', (req, res) => {
   res.json({ 
@@ -288,12 +341,13 @@ process.on('SIGINT', () => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-const server = app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📍 URL: http://localhost:${PORT}`);
   console.log(`🔗 Health: http://localhost:${PORT}/api/health`);
   console.log(`📖 API Docs: http://localhost:${PORT}/`);
   console.log('✅ Server ready to accept requests!');
+  console.log('🔌 Socket.IO server is running');
 });
 
 // Handle server errors

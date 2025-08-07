@@ -323,8 +323,10 @@ const Orders = () => {
                       <button
                         onClick={async () => {
                           try {
+                            // Clean orderId to remove any leading '#' (if present)
+                            const cleanOrderId = order.orderId?.replace(/^#/, '');
                             // Fetch order details via API
-                            const response = await fetch(`${API_BASE_URL}/orders/${order.orderId}`, {
+                            const response = await fetch(`${API_BASE_URL}/orders/${cleanOrderId}`, {
                               headers: {
                                 'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                               }
@@ -332,8 +334,8 @@ const Orders = () => {
                             
                             if (response.ok) {
                               const data = await response.json();
-                              // Navigate with order data
-                              navigate(`/order-tracking/${order.orderId}`, { 
+                              // Navigate with order data, use cleanOrderId in URL
+                              navigate(`/order-tracking/${cleanOrderId}`, { 
                                 state: { orderData: data.order } 
                               });
                             } else {
@@ -385,7 +387,9 @@ const Orders = () => {
                         onClick={async () => {
                           try {
                             // Fetch order details via API
-                            const response = await fetch(`${API_BASE_URL}/orders/${selectedOrder.orderId}`, {
+                            const orderId = selectedOrder.orderId?.replace(/^#/, '');
+                            console.log('🔍 Order ID:', orderId);
+                            const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
                               headers: {
                                 'Authorization': `Bearer ${sessionStorage.getItem('token')}`
                               }
@@ -394,7 +398,7 @@ const Orders = () => {
                             if (response.ok) {
                               const data = await response.json();
                               // Navigate with order data
-                              navigate(`/order-tracking/${selectedOrder.orderId}`, { 
+                              navigate(`/order-tracking/${orderId}`, { 
                                 state: { orderData: data.order } 
                               });
                             } else {

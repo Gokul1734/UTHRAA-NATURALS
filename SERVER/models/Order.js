@@ -150,7 +150,7 @@ orderSchema.pre('save', async function(next) {
       // Fallback to timestamp-based ID if counting fails
       const timestamp = Date.now().toString();
       const random = Math.random().toString(36).substr(2, 9).toUpperCase();
-      this.orderId = `#ORD-${timestamp.slice(-8)}-${random}`;
+      this.orderId = `ORD-${timestamp.slice(-8)}-${random}`;
       console.log('🔍 Using fallback orderId:', this.orderId);
     }
   } else {
@@ -198,25 +198,52 @@ orderSchema.statics.getUserOrders = async function(userId) {
 orderSchema.statics.getByOrderId = async function(orderId) {
   console.log('🔍 getByOrderId called with orderId:', orderId);
   
-  // First try to find by orderId
-  let order = await this.findOne({ orderId })
+  // Clean the orderId - remove any extra spaces or special characters
+  const cleanOrderId = orderId ? orderId.trim() : orderId;
+  console.log('🔍 Cleaned orderId:', cleanOrderId);
+  
+  // First try to find by orderId (exact match)
+  let order = await this.findOne({ orderId: cleanOrderId })
     .populate('items.productId')
     .populate('userId', 'name email phone');
   
   console.log('🔍 Order found by orderId:', order ? 'Yes' : 'No');
   
   // If not found by orderId, try to find by MongoDB _id (for backward compatibility)
-  if (!order && orderId.length === 24) { // MongoDB ObjectId is 24 characters
+  if (!order && cleanOrderId && cleanOrderId.length === 24) { // MongoDB ObjectId is 24 characters
     console.log('🔍 Trying to find by MongoDB _id as fallback');
-    order = await this.findById(orderId)
+    order = await this.findById(cleanOrderId)
       .populate('items.productId')
       .populate('userId', 'name email phone');
     console.log('🔍 Order found by _id:', order ? 'Yes' : 'No');
   }
   
+  // If still not found, try to find by orderId with # prefix (for backward compatibility)
+  if (!order && cleanOrderId && !cleanOrderId.startsWith('#')) {
+    console.log('🔍 Trying to find by orderId with # prefix (backward compatibility)');
+    const orderIdWithHash = `#${cleanOrderId}`;
+    order = await this.findOne({ orderId: orderIdWithHash })
+      .populate('items.productId')
+      .populate('userId', 'name email phone');
+    console.log('🔍 Order found by orderId with #:', order ? 'Yes' : 'No');
+  }
+  
+  // If still not found, try to find by orderId without # prefix (for backward compatibility)
+  if (!order && cleanOrderId && cleanOrderId.startsWith('#')) {
+    console.log('🔍 Trying to find by orderId without # prefix (backward compatibility)');
+    const orderIdWithoutHash = cleanOrderId.substring(1);
+    order = await this.findOne({ orderId: orderIdWithoutHash })
+      .populate('items.productId')
+      .populate('userId', 'name email phone');
+    console.log('🔍 Order found by orderId without #:', order ? 'Yes' : 'No');
+  }
+  
   if (order) {
     console.log('🔍 Order ID from database:', order.orderId);
     console.log('🔍 Order user ID:', order.userId?._id || order.userId);
+    console.log('🔍 Order status:', order.status);
+  } else {
+    console.log('🔍 No order found with any method');
   }
   
   return order;
@@ -227,25 +254,37 @@ orderSchema.statics.generateNextOrderId = async function() {
   try {
     console.log('🔍 Generating next order ID...');
     
-    // Find the highest order number and increment it
-    const lastOrder = await this.findOne({}, {}, { sort: { 'orderId': -1 } });
+    // Find the highest order number from ORD format first
+    const lastOrdOrder = await this.findOne({ orderId: { $regex: /^ORD\d+$/ } }, {}, { sort: { 'orderId': -1 } });
     
     let nextNumber = 1;
-    if (lastOrder && lastOrder.orderId) {
-      console.log('🔍 Last order ID found:', lastOrder.orderId);
-      // Extract number from existing orderId (e.g., "#ORD00001" -> 1)
-      const match = lastOrder.orderId.match(/#ORD(\d+)/);
+    if (lastOrdOrder && lastOrdOrder.orderId) {
+      console.log('🔍 Last ORD order ID found:', lastOrdOrder.orderId);
+      // Extract number from existing orderId (e.g., "ORD00001" -> 1)
+      const match = lastOrdOrder.orderId.match(/ORD(\d+)/);
       if (match) {
         nextNumber = parseInt(match[1]) + 1;
         console.log('🔍 Next number will be:', nextNumber);
       }
     } else {
-      console.log('🔍 No previous orders found, starting with #1');
+      // If no ORD orders found, check for old format orders
+      const lastOldOrder = await this.findOne({ orderId: { $regex: /^#\d+$/ } }, {}, { sort: { 'orderId': -1 } });
+      if (lastOldOrder && lastOldOrder.orderId) {
+        console.log('🔍 Last old format order ID found:', lastOldOrder.orderId);
+        // Extract number from old format (e.g., "#000018" -> 18)
+        const match = lastOldOrder.orderId.match(/#(\d+)/);
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1;
+          console.log('🔍 Next number from old format will be:', nextNumber);
+        }
+      } else {
+        console.log('🔍 No previous orders found, starting with #1');
+      }
     }
     
-    // Format the order ID with leading zeros (e.g., #ORD00001, #ORD00002)
+    // Format the order ID with leading zeros (e.g., ORD00001, ORD00002)
     const paddedNumber = nextNumber.toString().padStart(5, '0');
-    const newOrderId = `#ORD${paddedNumber}`;
+    const newOrderId = `ORD${paddedNumber}`;
     
     console.log('🔍 Generated order ID:', newOrderId);
     return newOrderId;
@@ -254,7 +293,7 @@ orderSchema.statics.generateNextOrderId = async function() {
     // Fallback to timestamp-based ID if counting fails
     const timestamp = Date.now().toString();
     const random = Math.random().toString(36).substr(2, 9).toUpperCase();
-    const fallbackId = `#ORD-${timestamp.slice(-8)}-${random}`;
+    const fallbackId = `ORD-${timestamp.slice(-8)}-${random}`;
     console.log('🔍 Using fallback order ID:', fallbackId);
     return fallbackId;
   }

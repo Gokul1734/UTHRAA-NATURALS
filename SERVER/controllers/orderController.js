@@ -487,11 +487,16 @@ const updateOrderStatus = async (req, res) => {
     const { orderId } = req.params;
     const { status, trackingNumber, estimatedDelivery } = req.body;
     
-    const order = await Order.findOne({ orderId });
+    console.log('🔍 updateOrderStatus called with orderId:', orderId);
+    
+    const order = await Order.getByOrderId(orderId);
     
     if (!order) {
+      console.log('🔍 Order not found for orderId:', orderId);
       return res.status(404).json({ success: false, message: 'Order not found' });
     }
+    
+    console.log('🔍 Order found, updating status to:', status);
     
     // Update order status
     await order.updateStatus(status);
@@ -505,6 +510,19 @@ const updateOrderStatus = async (req, res) => {
     }
     
     await order.save();
+    
+    // Emit Socket.IO event for real-time updates
+    const io = req.app.get('io');
+    if (io) {
+      io.to(`order-${order.orderId}`).emit('order-status-updated', {
+        orderId: order.orderId,
+        status: order.status,
+        trackingNumber: order.trackingNumber,
+        estimatedDelivery: order.estimatedDelivery,
+        updatedAt: new Date()
+      });
+      console.log(`📦 Emitted order status update for order ${order.orderId}: ${status}`);
+    }
     
     res.json({
       success: true,
@@ -674,6 +692,293 @@ const testOrderIdGeneration = async (req, res) => {
   }
 };
 
+// Get orders grouped by pincode (Admin only)
+const getOrdersByPincode = async (req, res) => {
+  try {
+    const { pincode } = req.query;
+    
+    let query = {};
+    if (pincode) {
+      query['shippingAddress.zipCode'] = pincode;
+    }
+    
+    const orders = await Order.find(query)
+      .populate('userId', 'name email phone')
+      .populate('items.productId', 'name images weight')
+      .sort({ createdAt: -1 });
+    
+    // Group by pincode
+    const groupedOrders = {};
+    orders.forEach(order => {
+      const pincode = order.shippingAddress.zipCode;
+      if (!groupedOrders[pincode]) {
+        groupedOrders[pincode] = [];
+      }
+      groupedOrders[pincode].push(order);
+    });
+    
+    res.json({
+      success: true,
+      groupedOrders: groupedOrders,
+      totalOrders: orders.length
+    });
+  } catch (error) {
+    console.error('Get orders by pincode error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get orders by pincode' });
+  }
+};
+
+// Get orders grouped by weight category (Admin only)
+const getOrdersByWeight = async (req, res) => {
+  try {
+    const orders = await Order.find()
+      .populate('userId', 'name email phone')
+      .populate('items.productId', 'name images weight')
+      .sort({ createdAt: -1 });
+    
+    // Calculate weight and group by category
+    const groupedOrders = {
+      light: [],
+      medium: [],
+      heavy: []
+    };
+    
+    orders.forEach(order => {
+      const totalWeight = order.items.reduce((total, item) => {
+        const productWeight = item.productId?.weight || 0;
+        return total + (productWeight * item.quantity);
+      }, 0);
+      
+      let category = 'light';
+      if (totalWeight >= 5000) {
+        category = 'heavy';
+      } else if (totalWeight >= 1000) {
+        category = 'medium';
+      }
+      
+      groupedOrders[category].push({
+        ...order.toObject(),
+        totalWeight,
+        weightCategory: category
+      });
+    });
+    
+    res.json({
+      success: true,
+      groupedOrders: groupedOrders,
+      totalOrders: orders.length
+    });
+  } catch (error) {
+    console.error('Get orders by weight error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get orders by weight' });
+  }
+};
+
+// Bulk update order status (Admin only)
+const bulkUpdateOrderStatus = async (req, res) => {
+  try {
+    const { orderIds, status, trackingNumber, estimatedDelivery } = req.body;
+    
+    if (!orderIds || !Array.isArray(orderIds) || orderIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'Order IDs array is required' });
+    }
+    
+    if (!status) {
+      return res.status(400).json({ success: false, message: 'Status is required' });
+    }
+    
+    console.log('🔍 Bulk update order status called with orderIds:', orderIds);
+    console.log('🔍 New status:', status);
+    
+    const io = req.app.get('io');
+    
+    const updatePromises = orderIds.map(async (orderId) => {
+      const order = await Order.getByOrderId(orderId);
+      if (order) {
+        console.log(`🔍 Updating order ${order.orderId} to status: ${status}`);
+        await order.updateStatus(status);
+        if (trackingNumber) {
+          order.trackingNumber = trackingNumber;
+        }
+        if (estimatedDelivery) {
+          order.estimatedDelivery = new Date(estimatedDelivery);
+        }
+        await order.save();
+        
+        // Emit Socket.IO event for real-time updates
+        if (io) {
+          io.to(`order-${order.orderId}`).emit('order-status-updated', {
+            orderId: order.orderId,
+            status: order.status,
+            trackingNumber: order.trackingNumber,
+            estimatedDelivery: order.estimatedDelivery,
+            updatedAt: new Date()
+          });
+          console.log(`📦 Emitted bulk order status update for order ${order.orderId}: ${status}`);
+        }
+        
+        return { orderId: order.orderId, success: true };
+      }
+      console.log(`🔍 Order not found for orderId: ${orderId}`);
+      return { orderId, success: false, error: 'Order not found' };
+    });
+    
+    const results = await Promise.all(updatePromises);
+    const successful = results.filter(r => r.success);
+    const failed = results.filter(r => !r.success);
+    
+    console.log(`🔍 Bulk update completed: ${successful.length} successful, ${failed.length} failed`);
+    
+    res.json({
+      success: true,
+      message: `Updated ${successful.length} orders successfully`,
+      results: {
+        successful: successful.length,
+        failed: failed.length,
+        details: results
+      }
+    });
+  } catch (error) {
+    console.error('Bulk update order status error:', error);
+    res.status(500).json({ success: false, message: 'Failed to bulk update order status' });
+  }
+};
+
+// Get order analytics (Admin only)
+const getOrderAnalytics = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    let dateFilter = {};
+    if (startDate && endDate) {
+      dateFilter = {
+        createdAt: {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate)
+        }
+      };
+    }
+    
+    const [
+      totalOrders,
+      totalRevenue,
+      ordersByStatus,
+      ordersByPaymentMethod,
+      ordersByWeight,
+      topPincodes
+    ] = await Promise.all([
+      Order.countDocuments(dateFilter),
+      Order.aggregate([
+        { $match: dateFilter },
+        { $group: { _id: null, total: { $sum: '$totalAmount' } } }
+      ]),
+      Order.aggregate([
+        { $match: dateFilter },
+        { $group: { _id: '$status', count: { $sum: 1 } } }
+      ]),
+      Order.aggregate([
+        { $match: dateFilter },
+        { $group: { _id: '$paymentMethod', count: { $sum: 1 } } }
+      ]),
+      Order.aggregate([
+        { $match: dateFilter },
+        { $lookup: { from: 'products', localField: 'items.productId', foreignField: '_id', as: 'products' } },
+        { $unwind: '$items' },
+        { $group: { _id: null, totalWeight: { $sum: { $multiply: ['$items.quantity', '$items.product.weight'] } } } }
+      ]),
+      Order.aggregate([
+        { $match: dateFilter },
+        { $group: { _id: '$shippingAddress.zipCode', count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 10 }
+      ])
+    ]);
+    
+    res.json({
+      success: true,
+      analytics: {
+        totalOrders,
+        totalRevenue: totalRevenue[0]?.total || 0,
+        ordersByStatus,
+        ordersByPaymentMethod,
+        totalWeight: ordersByWeight[0]?.totalWeight || 0,
+        topPincodes
+      }
+    });
+  } catch (error) {
+    console.error('Get order analytics error:', error);
+    res.status(500).json({ success: false, message: 'Failed to get order analytics' });
+  }
+};
+
+// Export orders to CSV (Admin only)
+const exportOrders = async (req, res) => {
+  try {
+    const { format = 'csv', filters = {} } = req.query;
+    
+    let query = {};
+    
+    // Apply filters
+    if (filters.status) query.status = filters.status;
+    if (filters.pincode) query['shippingAddress.zipCode'] = filters.pincode;
+    if (filters.startDate && filters.endDate) {
+      query.createdAt = {
+        $gte: new Date(filters.startDate),
+        $lte: new Date(filters.endDate)
+      };
+    }
+    
+    const orders = await Order.find(query)
+      .populate('userId', 'name email phone')
+      .populate('items.productId', 'name weight')
+      .sort({ createdAt: -1 });
+    
+    if (format === 'csv') {
+      const csvData = orders.map(order => {
+        const totalWeight = order.items.reduce((total, item) => {
+          const productWeight = item.productId?.weight || 0;
+          return total + (productWeight * item.quantity);
+        }, 0);
+        
+        return {
+          'Order ID': order.orderId,
+          'Order Number': order.orderNumber,
+          'Customer Name': order.userId?.name || '',
+          'Customer Email': order.userId?.email || '',
+          'Customer Phone': order.userId?.phone || '',
+          'Shipping Address': `${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipCode}`,
+          'Total Amount': order.totalAmount,
+          'Total Weight (g)': totalWeight,
+          'Status': order.status,
+          'Payment Method': order.paymentMethod,
+          'Payment Status': order.paymentStatus,
+          'Order Date': order.createdAt,
+          'Items Count': order.items.length
+        };
+      });
+      
+      // Convert to CSV
+      const headers = Object.keys(csvData[0] || {});
+      const csv = [
+        headers.join(','),
+        ...csvData.map(row => headers.map(header => `"${row[header]}"`).join(','))
+      ].join('\n');
+      
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename=orders.csv');
+      res.send(csv);
+    } else {
+      res.json({
+        success: true,
+        orders: orders
+      });
+    }
+  } catch (error) {
+    console.error('Export orders error:', error);
+    res.status(500).json({ success: false, message: 'Failed to export orders' });
+  }
+};
+
 module.exports = {
   getUserAddresses,
   addAddress,
@@ -688,5 +993,10 @@ module.exports = {
   downloadInvoice,
   fixExistingOrders,
   listAllOrders,
-  testOrderIdGeneration
+  testOrderIdGeneration,
+  getOrdersByPincode,
+  getOrdersByWeight,
+  bulkUpdateOrderStatus,
+  getOrderAnalytics,
+  exportOrders
 }; 

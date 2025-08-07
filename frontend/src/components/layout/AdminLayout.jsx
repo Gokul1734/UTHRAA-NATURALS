@@ -17,7 +17,8 @@ import {
   X,
   Folder,
   Home,
-  ChevronRight
+  ChevronRight,
+  BarChart3
 } from 'lucide-react';
 import Logo from '../common/Logo';
 import toast from 'react-hot-toast';
@@ -60,6 +61,13 @@ const AdminLayout = ({ children }) => {
       bgColor: 'bg-purple-50'
     },
     {
+      title: 'Analytics',
+      icon: BarChart3,
+      href: '/admin/analytics',
+      color: 'text-pink-600',
+      bgColor: 'bg-pink-50'
+    },
+    {
       title: 'Users',
       icon: Users,
       href: '/admin/users',
@@ -98,8 +106,8 @@ const AdminLayout = ({ children }) => {
       title: 'Reports',
       icon: FileText,
       href: '/admin/reports',
-      color: 'text-pink-600',
-      bgColor: 'bg-pink-50'
+      color: 'text-gray-600',
+      bgColor: 'bg-gray-50'
     },
     {
       title: 'Settings',
@@ -220,7 +228,7 @@ const AdminLayout = ({ children }) => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top Bar */}
-        <div className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
+        {/* <div className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-6">
             <div className="flex items-center space-x-3 sm:space-x-4">
               <button
@@ -247,7 +255,7 @@ const AdminLayout = ({ children }) => {
               </Link>
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Page Content */}
         <div className="flex-1 p-3 sm:p-4 lg:p-6 xl:p-8">

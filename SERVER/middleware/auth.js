@@ -18,6 +18,19 @@ const protect = async (req, res, next) => {
       // Get token from header
       token = req.headers.authorization.split(' ')[1];
 
+      // DEVELOPMENT MODE: Allow test admin token
+      if (token === 'dev-test-token' && process.env.NODE_ENV === 'development') {
+        console.log('🔧 DEVELOPMENT MODE: Using test admin token');
+        req.user = {
+          userId: mockAdminUser._id,
+          email: mockAdminUser.email,
+          role: mockAdminUser.role,
+          name: mockAdminUser.name,
+          phone: mockAdminUser.phone
+        };
+        return next();
+      }
+
       // Verify token
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret');
 

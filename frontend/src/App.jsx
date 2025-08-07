@@ -21,6 +21,7 @@ import OrderSuccess from './pages/OrderSuccess';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import OrderTracking from './pages/OrderTracking';
+import RealTimeTest from './pages/RealTimeTest';
 import useScrollToTop from './utils/useScrollToTop';
 
 // Admin Pages
@@ -28,6 +29,7 @@ import AdminDashboard from './pages/Admin/Dashboard';
 import ProductManagement from './pages/Admin/ProductManagement';
 import CategoryManagement from './pages/Admin/CategoryManagement';
 import OrderManagement from './pages/Admin/OrderManagement';
+import OrderAnalytics from './pages/Admin/OrderAnalytics';
 import AdvertisementManagement from './pages/Admin/AdvertisementManagement';
 import FinanceManagement from './pages/Admin/FinanceManagement';
 
@@ -121,6 +123,11 @@ function AppContent() {
               <OrderTracking />
             </ProtectedRoute>
           } />
+          <Route path="/real-time-test" element={
+            <ProtectedRoute>
+              <RealTimeTest />
+            </ProtectedRoute>
+          } />
           
           {/* Admin Routes */}
           <Route path="/admin" element={
@@ -141,6 +148,11 @@ function AppContent() {
           <Route path="/admin/orders" element={
             <AdminRoute>
               <OrderManagement />
+            </AdminRoute>
+          } />
+          <Route path="/admin/analytics" element={
+            <AdminRoute>
+              <OrderAnalytics />
             </AdminRoute>
           } />
           <Route path="/admin/advertisements" element={

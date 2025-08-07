@@ -20,6 +20,6 @@
   }
  ],
  "env": {
-  "REACT_APP_API_URL": "https://uthraa-naturals.onrender.com"
+  "REACT_APP_API_URL": "http://localhost:5000"
  }
 }

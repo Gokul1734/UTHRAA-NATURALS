@@ -29,4 +29,11 @@ router.get('/admin/all', admin, orderController.getAllOrders);
 router.get('/admin/stats', admin, orderController.getOrderStats);
 router.put('/admin/:orderId/status', admin, orderController.updateOrderStatus);
 
+// Enhanced admin routes for order management
+router.get('/admin/by-pincode', admin, orderController.getOrdersByPincode);
+router.get('/admin/by-weight', admin, orderController.getOrdersByWeight);
+router.post('/admin/bulk-update-status', admin, orderController.bulkUpdateOrderStatus);
+router.get('/admin/analytics', admin, orderController.getOrderAnalytics);
+router.get('/admin/export', admin, orderController.exportOrders);
+
 module.exports = router; 

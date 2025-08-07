@@ -12,11 +12,14 @@ import {
   CreditCard,
   User,
   Search,
-  Filter
+  Filter,
+  Wifi,
+  WifiOff
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../config/environment';
+import socketService from '../services/socketService';
 
 const AdminOrderManagement = () => {
   const [loading, setLoading] = useState(true);
@@ -32,6 +35,7 @@ const AdminOrderManagement = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [isConnected, setIsConnected] = useState(false);
   
   // Get user from sessionStorage
   const user = JSON.parse(sessionStorage.getItem('user') || 'null');
@@ -44,7 +48,23 @@ const AdminOrderManagement = () => {
     
     fetchOrders();
     fetchStats();
+    setupRealTimeConnection();
   }, [user]);
+
+  const setupRealTimeConnection = () => {
+    // Connect to Socket.IO for admin notifications
+    const socket = socketService.connect();
+    setIsConnected(socketService.getConnectionStatus());
+    
+    // Listen for connection status changes
+    socket.on('connect', () => {
+      setIsConnected(true);
+    });
+    
+    socket.on('disconnect', () => {
+      setIsConnected(false);
+    });
+  };
 
   const fetchOrders = async () => {
     try {
@@ -84,7 +104,10 @@ const AdminOrderManagement = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      toast.success('Order status updated successfully');
+      toast.success(`Order status updated to ${statusUpdate.status}. Customer will be notified in real-time!`, {
+        duration: 4000,
+        icon: '📦'
+      });
       setShowStatusModal(false);
       setSelectedOrder(null);
       setStatusUpdate({ status: '', trackingNumber: '', estimatedDelivery: '' });
@@ -177,8 +200,27 @@ const AdminOrderManagement = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Management</h1>
-          <p className="text-gray-600">Track and manage all customer orders</p>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Order Management</h1>
+              <p className="text-gray-600">Track and manage all customer orders</p>
+            </div>
+            {/* Real-time Status Indicator */}
+            <div className="flex items-center space-x-2">
+              <div className={`flex items-center space-x-1 px-3 py-1 rounded-full text-sm font-medium ${
+                isConnected 
+                  ? 'bg-green-100 text-green-800' 
+                  : 'bg-red-100 text-red-800'
+              }`}>
+                {isConnected ? (
+                  <Wifi className="h-4 w-4" />
+                ) : (
+                  <WifiOff className="h-4 w-4" />
+                )}
+                <span>{isConnected ? 'Real-time Active' : 'Offline'}</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}
