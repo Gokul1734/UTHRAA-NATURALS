@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = 'https://uthraa-naturals.onrender.com';
 
 async function testOrderIdHandling() {
   console.log('🧪 Testing Order ID Handling for Uthraa Naturals API\n');

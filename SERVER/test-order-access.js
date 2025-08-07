@@ -37,7 +37,7 @@ async function testOrderAccess() {
 
     console.log('Generated JWT token:', token);
     console.log('\nTest the API with:');
-    console.log(`curl -X GET "http://localhost:5000/api/orders/%23ORD00011" -H "Authorization: Bearer ${token}"`);
+    console.log(`curl -X GET "https://uthraa-naturals.onrender.com/api/orders/%23ORD00011" -H "Authorization: Bearer ${token}"`);
 
     // Test the API call
     const https = require('https');

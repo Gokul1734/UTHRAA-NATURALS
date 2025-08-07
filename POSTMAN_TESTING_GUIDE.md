@@ -2,7 +2,7 @@
 
 ## 🚀 Quick Start
 
-Your API is running on `http://localhost:5000` and is working correctly! Here's how to test it in Postman.
+Your API is running on `https://uthraa-naturals.onrender.com` and is working correctly! Here's how to test it in Postman.
 
 ## 📋 Setup Postman Collection
 
@@ -15,12 +15,12 @@ Your API is running on `http://localhost:5000` and is working correctly! Here's 
 - Click "Environments" → "New Environment"
 - Name it "Local Development"
 - Add these variables:
-  - `baseUrl`: `http://localhost:5000`
+  - `baseUrl`: `https://uthraa-naturals.onrender.com`
   - `token`: (leave empty, will be set after login)
 
 ### 3. Set Collection Variables
 - In your collection, go to "Variables" tab
-- Add: `baseUrl` = `http://localhost:5000`
+- Add: `baseUrl` = `https://uthraa-naturals.onrender.com`
 
 ## 🔐 Authentication Flow
 
@@ -269,7 +269,7 @@ You can import this collection by creating a JSON file with the following struct
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:5000"
+      "value": "https://uthraa-naturals.onrender.com"
     }
   ],
   "item": [

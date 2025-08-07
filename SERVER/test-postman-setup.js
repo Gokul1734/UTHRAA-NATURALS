@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = 'http://localhost:5000';
+const BASE_URL = 'https://uthraa-naturals.onrender.com';
 
 async function testPostmanSetup() {
   console.log('🧪 Testing Postman Setup for Uthraa Naturals API\n');
@@ -45,7 +45,7 @@ async function testPostmanSetup() {
     console.log('🎉 All tests passed! Your Postman setup should work correctly.');
     console.log('\n📋 Postman Collection Setup:');
     console.log('1. Create a new collection');
-    console.log('2. Set base URL: http://localhost:5000');
+    console.log('2. Set base URL: https://uthraa-naturals.onrender.com');
     console.log('3. Add environment variable: token');
     console.log('4. Use {{token}} in Authorization header: Bearer {{token}}');
     console.log('5. Extract token from login response and set it as environment variable');

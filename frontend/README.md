@@ -98,7 +98,7 @@ Create a `.env` file in the frontend directory:
 VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key_here
 
 # Backend API URL
-VITE_API_BASE_URL=http://localhost:5000/api
+VITE_API_BASE_URL=https://uthraa-naturals.onrender.com/api
 
 # Frontend URL
 VITE_FRONTEND_URL=http://localhost:5173
