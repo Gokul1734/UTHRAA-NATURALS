@@ -12,5 +12,6 @@ router.get('/user-analytics', dashboardController.getUserAnalytics);
 router.get('/inventory-analytics', dashboardController.getInventoryAnalytics);
 router.get('/revenue-analytics', dashboardController.getRevenueAnalytics);
 router.get('/complete', dashboardController.getCompleteDashboard);
+router.get('/stats', dashboardController.getDashboardStats);
 
 module.exports = router; 

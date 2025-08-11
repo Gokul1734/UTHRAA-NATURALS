@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, ShoppingCart, Share2, Star, Minus, Plus, Shield, Check } from 'lucide-react';
+import { ArrowLeft, Heart, ShoppingCart, Share2, Star, Minus, Plus, Shield, Check, Package } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { addToCart, updateQuantity, removeFromCart } from '../store/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
 import { getFirstImageUrl } from '../utils/imageUtils';
 import { handleAuthForCart, handleAuthForWishlist } from '../utils/authUtils';
 import { API_BASE_URL, UPLOAD_URL } from '../config/environment';
+import deliveryChargesService from '../services/deliveryChargesService';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -18,7 +19,6 @@ const ProductDetail = () => {
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [quantity, setQuantity] = useState(1);
   const [selectedBuyQuantity, setSelectedBuyQuantity] = useState(1);
   const [pincode, setPincode] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
@@ -73,6 +73,51 @@ const ProductDetail = () => {
     return text && text.length > maxLength;
   };
 
+  // Calculate delivery charge for this product
+  const getProductDeliveryCharge = () => {
+    if (!product || !product.weight) return 0;
+    
+    // Convert weight to grams
+    const weightInGrams = convertWeightToGrams(product.weight, product.unit);
+    return deliveryChargesService.calculateDeliveryCharge(weightInGrams);
+  };
+
+  // Convert weight to grams
+  const convertWeightToGrams = (weight, unit) => {
+    if (!weight) return 0;
+    
+    const weightValue = parseFloat(weight);
+    if (isNaN(weightValue)) return 0;
+    
+    switch (unit?.toLowerCase()) {
+      case 'g':
+      case 'gram':
+      case 'grams':
+        return weightValue;
+      case 'kg':
+      case 'kilo':
+      case 'kilos':
+      case 'kilogram':
+      case 'kilograms':
+        return weightValue * 1000;
+      case 'mg':
+      case 'milligram':
+      case 'milligrams':
+        return weightValue / 1000;
+      case 'lb':
+      case 'lbs':
+      case 'pound':
+      case 'pounds':
+        return weightValue * 453.592;
+      case 'oz':
+      case 'ounce':
+      case 'ounces':
+        return weightValue * 28.3495;
+      default:
+        return weightValue; // Assume grams if unit is not recognized
+    }
+  };
+
   const handleAddToWishlist = () => {
     const wishlistAction = () => {
       if (isInWishlist) {
@@ -101,7 +146,7 @@ const ProductDetail = () => {
       try {
         dispatch(addToCart({
           ...product,
-          quantity: quantity
+          quantity: 1
         }));
         // Removed toast notification for cart actions
       } catch (error) {
@@ -178,15 +223,19 @@ const ProductDetail = () => {
         // Add to cart first
         dispatch(addToCart({
           ...product,
-          quantity: quantity
+          quantity: 1
         }));
 
-        // Store buy now data in sessionStorage
+        // Store buy now data in sessionStorage with full product information
         const buyNowData = {
           type: 'buy-now',
           productId: product._id,
-          quantity: quantity,
-          totalAmount: product.price * quantity
+          quantity: 1,
+          totalAmount: product.price * 1,
+          product: {
+            ...product,
+            quantity: 1
+          }
         };
         sessionStorage.setItem('buyNowData', JSON.stringify(buyNowData));
         
@@ -316,22 +365,6 @@ const ProductDetail = () => {
 
     return (
       <div className="space-y-3">
-        <div className="flex items-center justify-center space-x-3">
-          <button
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors"
-          >
-            <Minus className="h-3 w-3 sm:h-4 sm:w-4" />
-          </button>
-          <span className="w-12 sm:w-16 text-center text-base sm:text-lg font-medium">{quantity}</span>
-          <button
-            onClick={() => setQuantity(quantity + 1)}
-            disabled={product.stock && quantity >= product.stock}
-            className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg border border-gray-200 flex items-center justify-center hover:bg-gray-50 transition-colors disabled:opacity-50"
-          >
-            <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
-          </button>
-        </div>
         <button
           onClick={handleAddToCart}
           disabled={isAddingToCart || !product.stock || product.stock === 0}
@@ -429,9 +462,9 @@ const ProductDetail = () => {
             </div>
 
             {/* Price Section */}
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
+            <div className="flex items-center justify-center space-x-4">
+              <div className="flex items-center justify-center space-x-2">
+                <span className="text-xl sm:text-2xl lg:text-3xl justify-center font-bold text-gray-900">
                   ₹{product.price?.toFixed(2)}
                 </span>
                 {product.originalPrice && product.originalPrice > product.price && (
@@ -446,47 +479,7 @@ const ProductDetail = () => {
                 )}
               </div>
             </div>
-
-            {/* Product Description */}
-            <div className="space-y-3">
-              <h3 className="font-medium text-gray-900">Description</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                {showFullDescription 
-                  ? (product.description || 'No description available')
-                  : `${getSubstring(product.description, 100)}${shouldShowReadMore(product.description, 100) ? '...' : ''}`
-                }
-                {shouldShowReadMore(product.description, 100) && (
-                  <button
-                    onClick={() => setShowFullDescription(!showFullDescription)}
-                    className="text-green-600 hover:text-green-700 ml-1"
-                  >
-                    {showFullDescription ? 'Read Less' : 'Read More'}
-                  </button>
-                )}
-              </p>
-            </div>
-
-            {/* Ingredients */}
-            {product.ingredients && (
-              <div className="space-y-3">
-                <h3 className="font-medium text-gray-900">Ingredients</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {showFullIngredients 
-                    ? (product.ingredients || 'No ingredients information available')
-                    : `${getSubstring(product.ingredients, 150)}${shouldShowReadMore(product.ingredients, 150) ? '...' : ''}`
-                  }
-                  {shouldShowReadMore(product.ingredients, 150) && (
-                    <button
-                      onClick={() => setShowFullIngredients(!showFullIngredients)}
-                      className="text-green-600 hover:text-green-700 ml-1"
-                    >
-                      {showFullIngredients ? 'Read Less' : 'Read More'}
-                    </button>
-                  )}
-                </p>
-              </div>
-            )}
-
+            
             {/* Rating */}
             {product.rating && (
               <div className="flex items-center space-x-2">
@@ -507,6 +500,25 @@ const ProductDetail = () => {
                 </span>
               </div>
             )}
+
+            {/* Product Description - Moved up for mobile prominence */}
+            <div className="space-y-3 lg:hidden">
+              <h3 className="font-bold text-lg text-gray-900">Description</h3>
+              <p className="text-gray-700 text-base leading-relaxed font-medium">
+                {showFullDescription 
+                  ? (product.description || 'No description available')
+                  : `${getSubstring(product.description, 150)}${shouldShowReadMore(product.description, 150) ? '...' : ''}`
+                }
+                {shouldShowReadMore(product.description, 150) && (
+                  <button
+                    onClick={() => setShowFullDescription(!showFullDescription)}
+                    className="text-green-600 hover:text-green-700 ml-1 font-semibold"
+                  >
+                    {showFullDescription ? 'Read Less' : 'Read More'}
+                  </button>
+                )}
+              </p>
+            </div>
 
             {/* Engagement Buttons */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4">
@@ -558,7 +570,7 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Quantity Selector */}
+            {/* Cart Controls */}
             {renderCartControls()}
 
             {/* Action Buttons */}
@@ -571,9 +583,87 @@ const ProductDetail = () => {
               </button>
             </div>
 
+            {/* Product Description - Desktop view */}
+            <div className="space-y-3 hidden lg:block">
+              <h3 className="font-medium text-gray-900">Description</h3>
+              <p className="text-gray-600 text-sm leading-relaxed">
+                {showFullDescription 
+                  ? (product.description || 'No description available')
+                  : `${getSubstring(product.description, 100)}${shouldShowReadMore(product.description, 100) ? '...' : ''}`
+                }
+                {shouldShowReadMore(product.description, 100) && (
+                  <button
+                    onClick={() => setShowFullDescription(!showFullDescription)}
+                    className="text-green-600 hover:text-green-700 ml-1"
+                  >
+                    {showFullDescription ? 'Read Less' : 'Read More'}
+                  </button>
+                )}
+              </p>
+            </div>
+
+            {/* Ingredients */}
+            {product.ingredients && (
+              <div className="space-y-3 text-left">
+                <h3 className="font-medium text-gray-900">Ingredients</h3>
+                <p className="text-gray-600 text-sm leading-relaxed">
+                  {showFullIngredients 
+                    ? (product.ingredients || 'No ingredients information available')
+                    : `${getSubstring(product.ingredients, 150)}${shouldShowReadMore(product.ingredients, 150) ? '...' : ''}`
+                  }
+                  {shouldShowReadMore(product.ingredients, 150) && (
+                    <button
+                      onClick={() => setShowFullIngredients(!showFullIngredients)}
+                      className="text-green-600 hover:text-green-700 ml-1"
+                    >
+                      {showFullIngredients ? 'Read Less' : 'Read More'}
+                    </button>
+                  )}
+                </p>
+              </div>
+            )}
+
+            {/* Product Benefits */}
+             {product.benefits && (
+               <div className="space-y-3 text-left">
+                 <h3 className="font-medium text-gray-900">Benefits</h3>
+                 <ul className="list-disc pl-5">
+                   {(typeof product.benefits === 'string'
+                     ? product.benefits.split('\n')
+                     : Array.isArray(product.benefits)
+                       ? product.benefits
+                       : []
+                   )
+                     .filter(line => typeof line === 'string' && line.trim() !== '')
+                     .map((line, idx) => (
+                       <li key={idx} className="text-green-900 font-semibold text-sm leading-relaxed mb-1">
+                         {line}
+                       </li>
+                     ))}
+                 </ul>
+               </div>
+             )}
+
             {/* Delivery Check */}
             <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <h3 className="font-medium text-gray-900">Check Delivery Charges</h3>
+              <h3 className="font-medium text-gray-900">Delivery Information</h3>
+              <div className="space-y-2">
+                {product.weight && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Product Weight:</span>
+                    <span className="text-gray-900">{product.weight} {product.unit}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Delivery Charge:</span>
+                  <span className={`font-medium ${getProductDeliveryCharge() === 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                    {getProductDeliveryCharge() === 0 ? 'Free' : `₹${getProductDeliveryCharge()}`}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  Delivery charges are calculated based on product weight. Heavier items may incur additional charges.
+                </div>
+              </div>
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                 <input
                   type="text"
@@ -583,7 +673,18 @@ const ProductDetail = () => {
                   className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   maxLength={6}
                 />
-                <button className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap">
+                <button onClick={async () => {
+                  if (pincode.length === 6) {
+                   await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${pincode}&country=India&format=json`)
+                   .then(response => response.json())
+                   .then(data => {
+                    console.log(data[0].lon, data[0].lat);
+                   })
+                   .catch(error => {
+                    console.error('Error fetching data:', error);
+                   })
+                  }
+                }} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap">
                   Check
                 </button>
               </div>
@@ -621,7 +722,10 @@ const ProductDetail = () => {
             {/* Trust Badges */}
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 pt-4 border-t border-gray-200">
               <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600">Free Delivery</span>
+                <Package className="h-4 w-4 text-green-600" />
+                <span className={`text-sm ${getProductDeliveryCharge() === 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                  {getProductDeliveryCharge() === 0 ? 'Free Delivery' : `₹${getProductDeliveryCharge()} Delivery`}
+                </span>
               </div>
               <div className="flex items-center space-x-2">
                 <Shield className="h-5 w-5 text-green-600" />

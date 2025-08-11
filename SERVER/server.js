@@ -250,6 +250,10 @@ console.log('✅ Admin routes loaded');
 app.use('/api/upload', require('./routes/upload'));
 console.log('✅ Upload routes loaded');
 
+// Public routes (no authentication required)
+app.use('/api/public', require('./routes/public'));
+console.log('✅ Public routes loaded');
+
 console.log('🎉 All API routes loaded successfully');
 
 // 404 handler for undefined routes

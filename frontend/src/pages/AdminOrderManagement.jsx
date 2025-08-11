@@ -68,8 +68,18 @@ const AdminOrderManagement = () => {
 
   const fetchOrders = async () => {
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+      
       const response = await axios.get(`${API_BASE_URL}/orders/admin/all`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
       
       setOrders(response.data.orders);
@@ -83,8 +93,18 @@ const AdminOrderManagement = () => {
 
   const fetchStats = async () => {
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+      
       const response = await axios.get(`${API_BASE_URL}/orders/admin/stats`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
       
       setStats(response.data.stats);
@@ -100,8 +120,18 @@ const AdminOrderManagement = () => {
     }
 
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+      
       await axios.put(`${API_BASE_URL}/orders/admin/${selectedOrder.orderId}/status`, statusUpdate, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
       
       toast.success(`Order status updated to ${statusUpdate.status}. Customer will be notified in real-time!`, {

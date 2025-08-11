@@ -4,6 +4,7 @@ import { UPLOAD_URL } from '../../config/environment';
 
 const ImageUpload = ({ 
   onImageUploaded, 
+  onImageRemoved,
   existingImages = [], 
   multiple = false, 
   maxFiles = 5,
@@ -44,7 +45,10 @@ const ImageUpload = ({
 
         const result = await response.json();
         console.log('Upload success:', result);
-        onImageUploaded(result.images.map(image => image.url));
+        
+        // For multiple images, pass the array of URLs
+        const imageUrls = result.images.map(image => image.url);
+        onImageUploaded(imageUrls);
       } else {
         // Upload single file
         const formData = new FormData();
@@ -135,11 +139,17 @@ const ImageUpload = ({
   };
 
   const removeImage = (indexToRemove) => {
-    if (multiple) {
-      const updatedImages = existingImages.filter((_, index) => index !== indexToRemove);
-      onImageUploaded(updatedImages);
+    if (onImageRemoved) {
+      // Use the dedicated remove handler if provided
+      onImageRemoved(indexToRemove);
     } else {
-      onImageUploaded('');
+      // Fallback to the old method - pass updated array
+      if (multiple) {
+        const updatedImages = existingImages.filter((_, index) => index !== indexToRemove);
+        onImageUploaded(updatedImages);
+      } else {
+        onImageUploaded('');
+      }
     }
   };
 
@@ -148,7 +158,7 @@ const ImageUpload = ({
   };
 
   const getImageSrc = (imageUrl) => {
-    if (!imageUrl) return '/placeholder-image.jpg';
+    if (!imageUrl) return getRandomPlaceholderImage();
     
     // If it's already a complete URL (starts with http), use as is
     if (imageUrl.startsWith('http')) {
@@ -177,6 +187,14 @@ const ImageUpload = ({
     
     // Otherwise assume it's a relative path and prepend server URL
     return `${UPLOAD_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+  };
+
+  const getRandomPlaceholderImage = () => {
+    const colors = ['f0f9ff', 'fef3c7', 'f3e8ff', 'ecfdf5', 'fef2f2', 'f0fdf4'];
+    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+    const width = multiple ? 400 : 200;
+    const height = multiple ? 300 : 200;
+    return `https://via.placeholder.com/${width}x${height}/${randomColor}/6b7280?text=Upload+Image`;
   };
 
   return (
@@ -223,40 +241,60 @@ const ImageUpload = ({
 
       {/* Image Preview */}
       {multiple ? (
-        existingImages && existingImages.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {existingImages.map((imageUrl, index) => (
-              <div key={index} className="relative group">
-                <img
-                  src={getImageSrc(imageUrl)}
-                  alt={`Product image ${index + 1}`}
-                  className="w-full h-32 object-cover rounded-lg border"
-                  onError={(e) => {
-                    e.target.src = '/placeholder-image.jpg';
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => removeImage(index)}
-                  className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                >
-                  <X className="h-4 w-4" />
-                </button>
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {/* Show existing images */}
+          {existingImages && existingImages.length > 0 && existingImages.map((imageUrl, index) => (
+            <div key={index} className="relative group">
+              <img
+                src={getImageSrc(imageUrl)}
+                alt={`Product image ${index + 1}`}
+                className="w-full h-32 object-cover rounded-lg border"
+                onError={(e) => {
+                  e.target.src = getRandomPlaceholderImage();
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => removeImage(index)}
+                className="absolute top-2 right-2 p-1 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ))}
+          
+          {/* Show placeholder if no images */}
+          {(!existingImages || existingImages.length === 0) && (
+            <div className="relative group">
+              <div className="w-full h-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                <div className="text-center">
+                  <ImageIcon className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-xs text-gray-500">No images uploaded</p>
+                </div>
               </div>
-            ))}
-          </div>
-        )
+            </div>
+          )}
+        </div>
       ) : (
-        existingImages && existingImages.length > 0 && (
-          <div className="relative inline-block">
+        <div className="relative inline-block">
+          {existingImages && existingImages.length > 0 ? (
             <img
               src={getImageSrc(existingImages)}
               alt="Category image"
               className="w-32 h-32 object-cover rounded-lg border"
               onError={(e) => {
-                e.target.src = '/placeholder-image.jpg';
+                e.target.src = getRandomPlaceholderImage();
               }}
             />
+          ) : (
+            <div className="w-32 h-32 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+              <div className="text-center">
+                <ImageIcon className="h-6 w-6 text-gray-400 mx-auto mb-1" />
+                <p className="text-xs text-gray-500">No image</p>
+              </div>
+            </div>
+          )}
+          {existingImages && existingImages.length > 0 && (
             <button
               type="button"
               onClick={() => removeImage(0)}
@@ -264,8 +302,8 @@ const ImageUpload = ({
             >
               <X className="h-4 w-4" />
             </button>
-          </div>
-        )
+          )}
+        </div>
       )}
     </div>
   );

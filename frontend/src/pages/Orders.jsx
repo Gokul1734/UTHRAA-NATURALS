@@ -41,8 +41,18 @@ const Orders = () => {
 
   const fetchOrders = async () => {
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+      
       const response = await axios.get(`${API_BASE_URL}/orders/my-orders`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
       
       setOrders(response.data.orders);
@@ -163,8 +173,18 @@ const Orders = () => {
       setLoadingOrderDetails(true);
       setShowOrderDetails(true);
       
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+      
       const response = await axios.get(`${API_BASE_URL}/orders/${orderId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
       
       console.log('🔍 Order details received:', response.data.order);
@@ -325,11 +345,21 @@ const Orders = () => {
                           try {
                             // Clean orderId to remove any leading '#' (if present)
                             const cleanOrderId = order.orderId?.replace(/^#/, '');
+                            
+                            const headers = {
+                              'Content-Type': 'application/json',
+                            };
+                            
+                            // Add authorization header if token exists
+                            const token = sessionStorage.getItem('token');
+                            if (token) {
+                              headers['Authorization'] = `Bearer ${token}`;
+                              console.log('🔍 Added Authorization header');
+                            }
+                            
                             // Fetch order details via API
                             const response = await fetch(`${API_BASE_URL}/orders/${cleanOrderId}`, {
-                              headers: {
-                                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-                              }
+                              headers: headers
                             });
                             
                             if (response.ok) {
@@ -389,10 +419,20 @@ const Orders = () => {
                             // Fetch order details via API
                             const orderId = selectedOrder.orderId?.replace(/^#/, '');
                             console.log('🔍 Order ID:', orderId);
+                            
+                            const headers = {
+                              'Content-Type': 'application/json',
+                            };
+                            
+                            // Add authorization header if token exists
+                            const token = sessionStorage.getItem('token');
+                            if (token) {
+                              headers['Authorization'] = `Bearer ${token}`;
+                              console.log('🔍 Added Authorization header');
+                            }
+                            
                             const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
-                              headers: {
-                                'Authorization': `Bearer ${sessionStorage.getItem('token')}`
-                              }
+                              headers: headers
                             });
                             
                             if (response.ok) {

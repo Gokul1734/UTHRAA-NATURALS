@@ -72,8 +72,18 @@ const Profile = () => {
 
   const fetchUserProfile = async () => {
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+      
       const response = await axios.get(`${API_BASE_URL}/auth/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
       
       const userData = response.data.user;
@@ -154,8 +164,18 @@ const Profile = () => {
         address: formData.address
       };
 
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+
       const response = await axios.put(`${API_BASE_URL}/auth/profile`, updateData, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
 
       // Update sessionStorage and user state with new user data

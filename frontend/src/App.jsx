@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { Toaster } from 'react-hot-toast';
 import { store } from './store';
@@ -6,6 +6,8 @@ import ConditionalNavbar from './components/layout/ConditionalNavbar';
 import ConditionalFooter from './components/layout/ConditionalFooter';
 import UserDataLoader from './components/common/UserDataLoader';
 import StorageDebugger from './components/debug/StorageDebugger';
+import FloatingCart from './components/common/FloatingCart';
+import DeliveryChargesLoader from './components/common/DeliveryChargesLoader';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
@@ -32,6 +34,7 @@ import OrderManagement from './pages/Admin/OrderManagement';
 import OrderAnalytics from './pages/Admin/OrderAnalytics';
 import AdvertisementManagement from './pages/Admin/AdvertisementManagement';
 import FinanceManagement from './pages/Admin/FinanceManagement';
+import UserManagement from './pages/Admin/UserManagement';
 
 import './App.css';
 
@@ -65,12 +68,17 @@ const AdminRoute = ({ children }) => {
 function AppContent() {
   // Hook to automatically scroll to top on route changes
   useScrollToTop();
+  
+  // Check if current path is admin
+  const location = useLocation();
+  const isAdminPage = location.pathname.startsWith('/admin');
 
   return (
     <div className="App">
       <UserDataLoader />
-      <ConditionalNavbar />
-      <main className="min-h-screen">
+      <DeliveryChargesLoader />
+      {!isAdminPage && <ConditionalNavbar />}
+      <main className="min-h-screen pb-20 sm:pb-24">
         <Routes>
           {/* Public Routes (No Authentication Required) */}
           <Route path="/" element={<Home />} />
@@ -165,13 +173,19 @@ function AppContent() {
               <FinanceManagement />
             </AdminRoute>
           } />
+          <Route path="/admin/users" element={
+            <AdminRoute>
+              <UserManagement />
+            </AdminRoute>
+          } />
           
           {/* Catch all route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <ConditionalFooter />
+      {!isAdminPage && <ConditionalFooter />}
       <StorageDebugger />
+      <FloatingCart />
       <Toaster 
         position="top-right"
         toastOptions={{

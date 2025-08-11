@@ -69,8 +69,18 @@ const OrderTracking = () => {
       // Clean the orderId - remove # if present
       const cleanOrderId = orderId?.replace('#', '');
       
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+      
       const response = await axios.get(`${API_BASE_URL}/orders/${cleanOrderId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
 
       console.log('Order Details:', response.data);

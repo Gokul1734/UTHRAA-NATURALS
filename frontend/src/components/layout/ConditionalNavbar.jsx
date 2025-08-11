@@ -58,9 +58,13 @@ const ConditionalNavbar = () => {
   const handleProfileAction = (action) => {
     setIsProfileDropdownOpen(false);
     if (action === 'logout') {
+      console.log('🔍 Main navbar logout initiated');
       sessionStorage.removeItem('user');
       sessionStorage.removeItem('token');
-      window.location.reload();
+      // Use React Router navigation instead of page reload
+      navigate('/phone-login', { replace: true });
+    } else if (action === 'admin') {
+      console.log('🔍 Navigating from store to admin dashboard');
     }
   };
 

@@ -1,20 +1,26 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, CreditCard, MapPin, User } from 'lucide-react';
+import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, CreditCard, MapPin, User, Package, Receipt } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { removeFromCart, updateQuantity, clearCart } from '../store/slices/cartSlice';
+import { removeFromCart, updateQuantity, clearCart, updateDeliveryCharges } from '../store/slices/cartSlice';
 import { getFirstImageUrl } from '../utils/imageUtils';
+import AdvertisementPopup from '../components/advertisements/AdvertisementPopup';
+import deliveryChargesService from '../services/deliveryChargesService';
+import taxService from '../services/taxService';
 
 const Cart = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { cartItems, total, tax, shipping, grandTotal } = useSelector((state) => state.cart);
+  const { cartItems, total, tax, shipping, grandTotal, cartWeight } = useSelector((state) => state.cart);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [checkoutData, setCheckoutData] = useState(null);
+  const [deliveryChargeBreakdown, setDeliveryChargeBreakdown] = useState(null);
+  const [taxBreakdown, setTaxBreakdown] = useState(null);
+  const [pricingDataLoaded, setPricingDataLoaded] = useState(false);
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     email: '',
@@ -32,13 +38,71 @@ const Cart = () => {
   const user = JSON.parse(sessionStorage.getItem('user') || 'null');
   const token = sessionStorage.getItem('token');
 
+  // Memoize loadPricingData to prevent infinite loops
+  const loadPricingData = useCallback(async () => {
+    if (pricingDataLoaded) return; // Prevent multiple loads
+    
+    try {
+      console.log('🔍 Loading pricing data in Cart component...');
+      
+      // Check if services are already loaded
+      const deliveryChargesLoaded = deliveryChargesService.isLoaded;
+      const taxSettingsLoaded = taxService.isLoaded;
+      
+      if (deliveryChargesLoaded && taxSettingsLoaded) {
+        console.log('🔍 Pricing data already loaded by global loader, skipping...');
+        setPricingDataLoaded(true);
+        return;
+      }
+      
+      // Load both delivery charges and tax settings
+      await Promise.all([
+        deliveryChargesService.loadDeliveryCharges(),
+        taxService.loadTaxSettings()
+      ]);
+      
+      dispatch(updateDeliveryCharges());
+      setPricingDataLoaded(true);
+      
+      console.log('✅ Pricing data loaded successfully');
+    } catch (error) {
+      console.error('Error loading pricing data:', error);
+    }
+  }, [dispatch, pricingDataLoaded]);
+
+  // Initial load effect - only run once
   useEffect(() => {
     if (!user) {
       navigate('/phone-login');
       return;
     }
-    setLoading(false);
-  }, [user, navigate]);
+    
+    // Prevent multiple initializations
+    if (loading === false) return;
+    
+    const initializeCart = async () => {
+      await loadPricingData();
+      setLoading(false);
+    };
+    
+    initializeCart();
+  }, [user]); // Remove loadPricingData from dependencies to prevent infinite loops
+
+  // Update delivery charge breakdown when cart weight changes (only after pricing data is loaded)
+  useEffect(() => {
+    if (pricingDataLoaded && cartWeight !== undefined && !loading) {
+      const breakdown = deliveryChargesService.getDeliveryChargeBreakdown(cartWeight);
+      setDeliveryChargeBreakdown(breakdown);
+    }
+  }, [cartWeight, pricingDataLoaded, loading]);
+
+  // Update tax breakdown when cart total changes (only after pricing data is loaded)
+  useEffect(() => {
+    if (pricingDataLoaded && total !== undefined && !loading) {
+      const taxData = taxService.getTaxBreakdown(total);
+      setTaxBreakdown(taxData);
+    }
+  }, [total, pricingDataLoaded, loading]);
 
   const handleUpdateQuantity = (productId, newQuantity) => {
     if (newQuantity < 1) {
@@ -187,7 +251,7 @@ const Cart = () => {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
                         transition={{ delay: index * 0.1 }}
-                        className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 p-3 sm:p-4 border border-gray-200 rounded-lg"
+                        className="flex flex-col sm:flex-row sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 pt-3 sm:pt-4 pr-3 sm:pr-4 pb-3 sm:pb-4 border border-gray-200 rounded-lg"
                       >
                         <div className="flex items-center space-x-3 sm:space-x-4">
                           <img
@@ -239,7 +303,7 @@ const Cart = () => {
                             </button>
                           </div>
                           
-                          <div className="text-right">
+                          <div className="flex items-center justify-end gap-3 sm:gap-5">
                             <p className="font-semibold text-gray-900 text-sm sm:text-base">₹{item.price * item.quantity}</p>
                             <button
                               onClick={() => {
@@ -271,16 +335,71 @@ const Cart = () => {
               <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
                 <div className="flex justify-between text-sm sm:text-base">
                   <span className="text-gray-600">Subtotal</span>
-                  <span className="font-medium">₹{total}</span>
+                  <span className="font-medium">₹{total?.toFixed(2) || '0.00'}</span>
                 </div>
+                
+                {/* Cart Weight Information */}
                 <div className="flex justify-between text-sm sm:text-base">
-                  <span className="text-gray-600">Shipping</span>
-                  <span className="font-medium text-green-600">Free</span>
+                  <span className="text-gray-600 flex items-center gap-1">
+                    <Package className="h-3 w-3" />
+                    Cart Weight
+                  </span>
+                  <span className="font-medium">{(cartWeight || 0).toFixed(1)}g</span>
                 </div>
+                
+                {/* Tax */}
+                <div className="flex justify-between text-sm sm:text-base">
+                  <span className="text-gray-600">Tax (18% GST)</span>
+                  <span className="font-medium">₹{(tax || 0).toFixed(2)}</span>
+                </div>
+                
+                {/* Tax Breakdown */}
+                {taxBreakdown && taxBreakdown.isActive && (
+                  <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
+                    <div className="flex justify-between">
+                      <span>GST Rate:</span>
+                      <span>{taxBreakdown.rate}%</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>CGST ({taxBreakdown.rate / 2}%):</span>
+                      <span>₹{taxBreakdown.cgst?.toFixed(2) || '0.00'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>SGST ({taxBreakdown.rate / 2}%):</span>
+                      <span>₹{taxBreakdown.sgst?.toFixed(2) || '0.00'}</span>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Delivery Charges */}
+                <div className="flex justify-between text-sm sm:text-base">
+                  <span className="text-gray-600">Delivery Charges</span>
+                  <span className={`font-medium ${shipping === 0 ? 'text-green-600' : 'text-gray-900'}`}>
+                    {shipping === 0 ? 'Free' : `₹${shipping?.toFixed(2) || '0.00'}`}
+                  </span>
+                </div>
+                
+                {/* Delivery Charge Breakdown */}
+                {deliveryChargeBreakdown && deliveryChargeBreakdown.rule && (
+                  <div className="text-xs text-gray-500 bg-gray-50 p-2 rounded-lg">
+                    <div className="flex justify-between">
+                      <span>Weight Range:</span>
+                      <span>
+                        {deliveryChargeBreakdown.rule.minWeight}g - 
+                        {deliveryChargeBreakdown.rule.maxWeight ? `${deliveryChargeBreakdown.rule.maxWeight}g` : 'No limit'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Rate:</span>
+                      <span>₹{deliveryChargeBreakdown.rule.charge} per order</span>
+                    </div>
+                  </div>
+                )}
+                
                 <div className="border-t pt-3 sm:pt-4">
                   <div className="flex justify-between text-base sm:text-lg font-semibold">
                     <span>Total</span>
-                    <span>₹{grandTotal}</span>
+                    <span>₹{grandTotal?.toFixed(2) || '0.00'}</span>
                   </div>
                 </div>
               </div>
@@ -428,6 +547,9 @@ const Cart = () => {
           )}
         </AnimatePresence>
       </div>
+
+      {/* Advertisement Popup */}
+      <AdvertisementPopup page="cart" />
     </div>
   );
 };

@@ -17,7 +17,15 @@ import {
   Eye,
   Edit,
   Plus,
-  ArrowRight
+  ArrowRight,
+  TrendingDown,
+  CheckCircle,
+  Clock,
+  XCircle,
+  RefreshCw,
+  BarChart3,
+  PieChart,
+  Activity
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AdminLayout from '../../components/layout/AdminLayout';
@@ -25,49 +33,21 @@ import { API_BASE_URL, UPLOAD_URL } from '../../config/environment';
 import { getFirstImageUrl } from '../../utils/imageUtils';
 
 const Dashboard = () => {
-  const [stats, setStats] = useState({
-    totalProducts: 0,
-    totalOrders: 0,
-    totalUsers: 0,
-    totalRevenue: 0,
-    pendingOrders: 0,
-    lowStockItems: 0
+  const [dashboardStats, setDashboardStats] = useState({
+    overview: {},
+    analytics: {},
+    recentOrders: [],
+    topProducts: [],
+    salesData: [],
+    orderStatusBreakdown: {},
+    userGrowth: [],
+    revenueGrowth: []
   });
-  const [recentProducts, setRecentProducts] = useState([]);
-  const [productsByCategory, setProductsByCategory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const { user } = useSelector((state) => state.auth);
   const navigate = useNavigate();
-
-  // Helper function to get proper image URL for categories
-  const getCategoryImageSrc = (imageUrl) => {
-    if (!imageUrl) return '/placeholder-category.jpg';
-    
-    // If it's already a complete URL (starts with http), use as is
-    if (imageUrl.startsWith('http')) {
-      return imageUrl;
-    }
-    
-    // If it starts with /uploads, it's our uploaded file - prepend server URL
-    if (imageUrl.startsWith('/uploads')) {
-      return `${UPLOAD_URL}${imageUrl}`;
-    }
-    
-    // If it's just a filename, assume it's in the uploads folder
-    if (!imageUrl.includes('/') && !imageUrl.includes('\\')) {
-      return `${UPLOAD_URL}/uploads/${imageUrl}`;
-    }
-    
-    // For category images, try the categories subfolder
-    if (!imageUrl.startsWith('/uploads/categories')) {
-      return `${UPLOAD_URL}/uploads/categories/${imageUrl}`;
-    }
-    
-    // Otherwise assume it's a relative path and prepend server URL
-    return `${UPLOAD_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
-  };
 
   useEffect(() => {
     // DEVELOPMENT MODE: Allow direct access without authentication
@@ -101,36 +81,53 @@ const Dashboard = () => {
       }
 
       const data = await response.json();
-      setStats({
-        totalProducts: data.totalProducts || 0,
-        totalOrders: data.totalOrders || 0,
-        totalUsers: data.totalUsers || 0,
-        totalRevenue: data.totalRevenue || 0,
-        pendingOrders: data.pendingOrders || 0,
-        lowStockItems: data.lowStockItems || 0
-      });
-
-      // Set recent products and products by category
-      setRecentProducts(data.recentProducts || []);
-      setProductsByCategory(data.productsByCategory || []);
+      setDashboardStats(data);
     } catch (error) {
       console.error('Error fetching dashboard stats:', error);
       setError('Failed to load dashboard statistics. Please try again.');
-      
-      // Fallback to empty data if API fails
-      setStats({
-        totalProducts: 0,
-        totalOrders: 0,
-        totalUsers: 0,
-        totalRevenue: 0,
-        pendingOrders: 0,
-        lowStockItems: 0
-      });
-      setRecentProducts([]);
-      setProductsByCategory([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'delivered':
+        return 'bg-green-100 text-green-800';
+      case 'shipped':
+        return 'bg-blue-100 text-blue-800';
+      case 'processing':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'confirmed':
+        return 'bg-purple-100 text-purple-800';
+      case 'pending':
+        return 'bg-orange-100 text-orange-800';
+      case 'cancelled':
+        return 'bg-red-100 text-red-800';
+      case 'refunded':
+        return 'bg-gray-100 text-gray-800';
+      default:
+        return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStockStatus = (stock) => {
+    if (stock === 0) return { color: 'text-red-600', text: 'Out of Stock' };
+    if (stock <= 10) return { color: 'text-orange-600', text: 'Low Stock' };
+    return { color: 'text-green-600', text: 'In Stock' };
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
+  const formatNumber = (number) => {
+    return new Intl.NumberFormat('en-IN').format(number);
   };
 
   const adminModules = [
@@ -163,7 +160,7 @@ const Dashboard = () => {
       href: '/admin/users'
     },
     {
-      title: 'Finance',
+      title: 'Tax and Offers',
       description: 'Track revenue and financial reports',
       icon: DollarSign,
       color: 'bg-yellow-500',
@@ -199,26 +196,40 @@ const Dashboard = () => {
     },
     {
       title: 'Settings',
-      description: 'Configure website settings',
+      description: 'Configure system settings',
       icon: Settings,
       color: 'bg-gray-500',
       href: '/admin/settings'
     }
   ];
 
-  const getStockStatus = (stock) => {
-    if (stock === 0) return { text: 'Out of Stock', color: 'text-red-600 bg-red-100' };
-    if (stock < 10) return { text: 'Low Stock', color: 'text-orange-600 bg-orange-100' };
-    return { text: 'In Stock', color: 'text-green-600 bg-green-100' };
-  };
-
   if (loading) {
     return (
       <AdminLayout>
-        <div className="flex items-start justify-start min-h-[60vh] p-6">
-          <div className="text-left">
-            <Loader2 className="h-8 w-8 animate-spin mb-4 text-blue-600" />
-            <p className="text-gray-600">Loading dashboard...</p>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
+            <p className="text-gray-600">Loading dashboard statistics...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (error) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <AlertCircle className="h-12 w-12 text-red-600 mx-auto mb-4" />
+            <p className="text-red-600 mb-4">{error}</p>
+            <button
+              onClick={fetchDashboardStats}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors mx-auto"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Retry
+            </button>
           </div>
         </div>
       </AdminLayout>
@@ -227,294 +238,358 @@ const Dashboard = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="mb-4 sm:mb-6 lg:mb-8"
-        >
-          <h1 className="text-xl sm:text-2xl lg:text-3xl xl:text-4xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">Welcome back, {user?.name || 'Admin'}</p>
-        </motion.div>
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
+          <p className="text-gray-600 mt-2">Welcome back! Here's what's happening with your store.</p>
+        </div>
 
-        {/* Error Message */}
-        {error && (
-          <motion.div 
+        {/* Overview Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.1 }}
-            className="mb-4 sm:mb-6 bg-red-50 border border-red-200 rounded-xl p-3 sm:p-4"
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
           >
             <div className="flex items-center">
-              <AlertCircle className="h-5 w-5 text-red-600 mr-2 flex-shrink-0" />
-              <p className="text-red-800 text-sm sm:text-base">{error}</p>
+              <div className="p-3 bg-blue-100 rounded-lg">
+                <ShoppingCart className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Orders</p>
+                <p className="text-2xl font-bold text-gray-900">{formatNumber(dashboardStats.overview.totalOrders || 0)}</p>
+              </div>
             </div>
           </motion.div>
-        )}
 
-        {/* Stats Cards */}
-        <motion.div 
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+          >
+            <div className="flex items-center">
+              <div className="p-3 bg-green-100 rounded-lg">
+                <DollarSign className="h-6 w-6 text-green-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Revenue</p>
+                <p className="text-2xl font-bold text-gray-900">{formatCurrency(dashboardStats.overview.totalRevenue || 0)}</p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+          >
+            <div className="flex items-center">
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <Users className="h-6 w-6 text-purple-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Users</p>
+                <p className="text-2xl font-bold text-gray-900">{formatNumber(dashboardStats.overview.totalUsers || 0)}</p>
+              </div>
+            </div>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+          >
+            <div className="flex items-center">
+              <div className="p-3 bg-orange-100 rounded-lg">
+                <Package className="h-6 w-6 text-orange-600" />
+              </div>
+              <div className="ml-4">
+                <p className="text-sm font-medium text-gray-600">Total Products</p>
+                <p className="text-2xl font-bold text-gray-900">{formatNumber(dashboardStats.overview.totalProducts || 0)}</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Analytics Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          {/* User Analytics */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">User Analytics</h3>
+              <Users className="h-5 w-5 text-gray-400" />
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Active Users</span>
+                <span className="text-sm font-medium text-gray-900">{formatNumber(dashboardStats.overview.activeUsers || 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Verified Users</span>
+                <span className="text-sm font-medium text-gray-900">{formatNumber(dashboardStats.overview.verifiedUsers || 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Categories</span>
+                <span className="text-sm font-medium text-gray-900">{formatNumber(dashboardStats.overview.totalCategories || 0)}</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Order Analytics */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Order Analytics</h3>
+              <ShoppingCart className="h-5 w-5 text-gray-400" />
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Pending Orders</span>
+                <span className="text-sm font-medium text-orange-600">{formatNumber(dashboardStats.overview.pendingOrders || 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Delivered Orders</span>
+                <span className="text-sm font-medium text-green-600">{formatNumber(dashboardStats.overview.deliveredOrders || 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Avg Order Value</span>
+                <span className="text-sm font-medium text-gray-900">{formatCurrency(dashboardStats.analytics.revenueAnalytics?.averageOrderValue || 0)}</span>
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Inventory Analytics */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7 }}
+            className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Inventory Analytics</h3>
+              <Package className="h-5 w-5 text-gray-400" />
+            </div>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Low Stock Items</span>
+                <span className="text-sm font-medium text-orange-600">{formatNumber(dashboardStats.overview.lowStockProducts || 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Out of Stock</span>
+                <span className="text-sm font-medium text-red-600">{formatNumber(dashboardStats.analytics.inventoryAnalytics?.outOfStockProducts || 0)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-sm text-gray-600">Avg Stock Level</span>
+                <span className="text-sm font-medium text-gray-900">{Math.round(dashboardStats.analytics.inventoryAnalytics?.averageStock || 0)}</span>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Order Status Breakdown */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8 lg:mb-10"
+          transition={{ delay: 0.8 }}
+          className="bg-white rounded-lg shadow-md p-6 border border-gray-200 mb-8"
         >
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 lg:p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 sm:p-3 bg-blue-100 rounded-lg flex-shrink-0">
-                <Package className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
-              </div>
-              <div className="ml-3 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Products</p>
-                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{stats.totalProducts}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 lg:p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 sm:p-3 bg-green-100 rounded-lg flex-shrink-0">
-                <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
-              </div>
-              <div className="ml-3 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Orders</p>
-                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{stats.totalOrders}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 lg:p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 sm:p-3 bg-purple-100 rounded-lg flex-shrink-0">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5 text-purple-600" />
-              </div>
-              <div className="ml-3 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Users</p>
-                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{stats.totalUsers}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 lg:p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 sm:p-3 bg-yellow-100 rounded-lg flex-shrink-0">
-                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-600" />
-              </div>
-              <div className="ml-3 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Revenue</p>
-                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">₹{stats.totalRevenue.toLocaleString()}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 lg:p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 sm:p-3 bg-orange-100 rounded-lg flex-shrink-0">
-                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600" />
-              </div>
-              <div className="ml-3 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Pending Orders</p>
-                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{stats.pendingOrders}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sm:p-4 lg:p-6 hover:shadow-md transition-shadow">
-            <div className="flex items-center">
-              <div className="p-2 sm:p-3 bg-red-100 rounded-lg flex-shrink-0">
-                <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-red-600" />
-              </div>
-              <div className="ml-3 min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Low Stock Items</p>
-                <p className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">{stats.lowStockItems}</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* Admin Modules */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="mb-8 sm:mb-10"
-        >
-          <div className="flex items-center justify-between mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">Quick Actions</h2>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
-            {adminModules.map((module, index) => (
-              <motion.div
-                key={module.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 * (index + 1) }}
-                className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-lg transition-all duration-300 cursor-pointer group transform hover:scale-105 touch-manipulation"
-                onClick={() => navigate(module.href)}
-              >
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <div className={`p-2 sm:p-3 ${module.color} rounded-lg group-hover:scale-110 transition-transform duration-300 flex-shrink-0`}>
-                    <module.icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
-                  </div>
-                  <h3 className="ml-3 text-sm sm:text-base lg:text-lg font-semibold text-gray-900 truncate">{module.title}</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Order Status Breakdown</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            {Object.entries(dashboardStats.orderStatusBreakdown || {}).map(([status, count]) => (
+              <div key={status} className="text-center">
+                <div className={`inline-flex items-center justify-center w-12 h-12 rounded-full mb-2 ${
+                  status === 'delivered' ? 'bg-green-100' :
+                  status === 'shipped' ? 'bg-blue-100' :
+                  status === 'processing' ? 'bg-yellow-100' :
+                  status === 'confirmed' ? 'bg-purple-100' :
+                  status === 'pending' ? 'bg-orange-100' :
+                  status === 'cancelled' ? 'bg-red-100' :
+                  'bg-gray-100'
+                }`}>
+                  {status === 'delivered' ? <CheckCircle className="h-6 w-6 text-green-600" /> :
+                   status === 'shipped' ? <Truck className="h-6 w-6 text-blue-600" /> :
+                   status === 'processing' ? <RefreshCw className="h-6 w-6 text-yellow-600" /> :
+                   status === 'confirmed' ? <CheckCircle className="h-6 w-6 text-purple-600" /> :
+                   status === 'pending' ? <Clock className="h-6 w-6 text-orange-600" /> :
+                   status === 'cancelled' ? <XCircle className="h-6 w-6 text-red-600" /> :
+                   <FileText className="h-6 w-6 text-gray-600" />}
                 </div>
-                <p className="text-xs sm:text-sm text-gray-600 leading-relaxed mb-3">{module.description}</p>
-                <div className="flex items-center text-blue-600 text-xs sm:text-sm font-medium group-hover:text-blue-700">
-                  <span>Access Module</span>
-                  <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4 ml-1 group-hover:translate-x-1 transition-transform" />
-                </div>
-              </motion.div>
+                <p className="text-sm font-medium text-gray-900">{formatNumber(count)}</p>
+                <p className="text-xs text-gray-500 capitalize">{status}</p>
+              </div>
             ))}
           </div>
         </motion.div>
 
-        {/* Recent Products Section */}
-        {recentProducts.length > 0 && (
-          <motion.div 
+        {/* Recent Orders and Top Products */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* Recent Orders */}
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="mb-8 sm:mb-10"
+            transition={{ delay: 0.9 }}
+            className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
           >
-            <div className="flex items-center justify-between mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900">Recent Products</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Recent Orders</h3>
               <button
-                onClick={() => navigate('/admin/products')}
-                className="flex items-center text-blue-600 hover:text-blue-700 text-sm sm:text-base font-medium touch-manipulation"
+                onClick={() => navigate('/admin/orders')}
+                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
               >
-                View All Products
-                <Plus className="h-4 w-4 ml-1" />
+                View All
+                <ArrowRight className="h-4 w-4" />
               </button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-              {recentProducts && recentProducts.length > 0 ? (
-                recentProducts.map((product, index) => (
-                  <motion.div
-                    key={product._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * index }}
-                    className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg transition-shadow"
-                  >
-                    <div className="aspect-w-16 aspect-h-9 bg-gray-200">
-                      <img
-                        src={getFirstImageUrl(product.images)}
-                        alt={product.name}
-                        className="w-full h-32 sm:h-40 lg:h-48 object-cover"
-                      />
-                    </div>
-                    <div className="p-3 sm:p-4">
-                      <h3 className="font-semibold text-gray-900 truncate text-sm sm:text-base">{product.name}</h3>
-                      <p className="text-xs sm:text-sm text-gray-600 mb-2">{product.category?.name}</p>
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm sm:text-lg font-bold text-gray-900">₹{product.price}</span>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStockStatus(product.stock).color}`}>
-                          {getStockStatus(product.stock).text}
-                        </span>
-                      </div>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => navigate(`/admin/products/${product._id}`)}
-                          className="flex-1 flex items-center justify-center px-2 sm:px-3 py-2 bg-blue-600 text-white text-xs sm:text-sm rounded-lg hover:bg-blue-700 transition-colors touch-manipulation"
-                        >
-                          <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                          View
-                        </button>
-                        <button
-                          onClick={() => navigate(`/admin/products/${product._id}/edit`)}
-                          className="flex-1 flex items-center justify-center px-2 sm:px-3 py-2 bg-gray-600 text-white text-xs sm:text-sm rounded-lg hover:bg-gray-700 transition-colors touch-manipulation"
-                        >
-                          <Edit className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                          Edit
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))
-              ) : (
-                <div className="col-span-full text-left py-8 text-gray-500">
-                  <Package className="h-12 w-12 mb-4 text-gray-400" />
-                  <p className="text-lg font-medium">No recent products</p>
-                  <p className="text-sm">Products will appear here once added.</p>
+            <div className="space-y-3">
+              {dashboardStats.recentOrders?.slice(0, 5).map((order) => (
+                <div key={order._id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{order.customerName}</p>
+                    <p className="text-xs text-gray-500">{order.orderId}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">{formatCurrency(order.totalAmount)}</p>
+                    <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.status)}`}>
+                      {order.status}
+                    </span>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           </motion.div>
-        )}
 
-        {/* Products by Category Section */}
-        {productsByCategory.length > 0 && (
-          <motion.div 
+          {/* Top Products */}
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.5 }}
-            className="mb-8 sm:mb-10"
+            transition={{ delay: 1.0 }}
+            className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
           >
-            <h2 className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900 mb-4 sm:mb-6">Products by Category</h2>
-            <div className="space-y-4 sm:space-y-6">
-              {productsByCategory && productsByCategory.length > 0 ? (
-                productsByCategory.map((category, categoryIndex) => (
-                  <motion.div
-                    key={category._id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.1 * categoryIndex }}
-                    className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6"
-                  >
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center">
-                        <img
-                          src={getCategoryImageSrc(category.image)}
-                          alt={category.name}
-                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover mr-3"
-                        />
-                        <div>
-                          <h3 className="font-semibold text-gray-900 text-sm sm:text-base">{category.name}</h3>
-                          <p className="text-xs sm:text-sm text-gray-600">{category.productCount} products</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => navigate(`/admin/categories/${category._id}`)}
-                        className="text-blue-600 hover:text-blue-700 text-xs sm:text-sm font-medium touch-manipulation"
-                      >
-                        View Category
-                      </button>
-                    </div>
-                    {category.products && category.products.length > 0 && (
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-                        {category.products.map((product, productIndex) => (
-                          <div
-                            key={product._id}
-                            className="border border-gray-200 rounded-lg p-2 sm:p-3 hover:shadow-md transition-shadow"
-                          >
-                            <img
-                              src={getFirstImageUrl(product.images)}
-                              alt={product.name}
-                              className="w-full h-16 sm:h-20 lg:h-24 object-cover rounded-md mb-2"
-                            />
-                            <h4 className="font-medium text-gray-900 text-xs sm:text-sm truncate">{product.name}</h4>
-                            <p className="text-xs sm:text-sm text-gray-600">₹{product.price}</p>
-                            <span className={`inline-block px-2 py-1 rounded-full text-xs font-medium mt-1 ${getStockStatus(product.stock).color}`}>
-                              {getStockStatus(product.stock).text}
-                            </span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </motion.div>
-                ))
-              ) : (
-                <div className="text-left py-8 text-gray-500">
-                  <Folder className="h-12 w-12 mb-4 text-gray-400" />
-                  <p className="text-lg font-medium">No categories with products</p>
-                  <p className="text-sm">Categories with products will appear here.</p>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Top Products</h3>
+              <button
+                onClick={() => navigate('/admin/products')}
+                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              >
+                View All
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </div>
+            <div className="space-y-3">
+              {dashboardStats.topProducts?.slice(0, 5).map((product, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{product.name}</p>
+                    <p className="text-xs text-gray-500">Sales: {formatNumber(product.sales)}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">{formatCurrency(product.price)}</p>
+                    <p className={`text-xs font-medium ${getStockStatus(product.stock).color}`}>
+                      {getStockStatus(product.stock).text}
+                    </p>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           </motion.div>
-        )}
+        </div>
+
+        {/* Growth Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          {/* User Growth */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.1 }}
+            className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">User Growth (Last 6 Months)</h3>
+            <div className="space-y-2">
+              {dashboardStats.userGrowth?.map((item, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">{item.month}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-blue-600 h-2 rounded-full" 
+                        style={{ width: `${(item.users / Math.max(...dashboardStats.userGrowth.map(u => u.users))) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">{formatNumber(item.users)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Revenue Growth */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 1.2 }}
+            className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+          >
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Growth (Last 6 Months)</h3>
+            <div className="space-y-2">
+              {dashboardStats.revenueGrowth?.map((item, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">{item.month}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-24 bg-gray-200 rounded-full h-2">
+                      <div 
+                        className="bg-green-600 h-2 rounded-full" 
+                        style={{ width: `${(item.revenue / Math.max(...dashboardStats.revenueGrowth.map(r => r.revenue))) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-sm font-medium text-gray-900">{formatCurrency(item.revenue)}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Admin Modules */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 1.3 }}
+          className="bg-white rounded-lg shadow-md p-6 border border-gray-200"
+        >
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Quick Actions</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {adminModules.map((module, index) => (
+              <motion.button
+                key={module.title}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 1.4 + index * 0.1 }}
+                onClick={() => navigate(module.href)}
+                className="group p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 text-left"
+              >
+                <div className={`w-12 h-12 ${module.color} rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-200`}>
+                  <module.icon className="h-6 w-6 text-white" />
+                </div>
+                <h4 className="font-medium text-gray-900 mb-1">{module.title}</h4>
+                <p className="text-xs text-gray-500">{module.description}</p>
+              </motion.button>
+            ))}
+          </div>
+        </motion.div>
       </div>
     </AdminLayout>
   );

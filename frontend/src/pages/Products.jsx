@@ -6,6 +6,7 @@ import { Filter, Grid, List, Search, Star, X, SlidersHorizontal, ChevronDown } f
 import { getProducts } from '../store/slices/productSlice';
 import { getCategories } from '../store/slices/categorySlice';
 import ProductCard from '../components/products/ProductCard';
+import AdvertisementPopup from '../components/advertisements/AdvertisementPopup';
 
 const Products = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -522,6 +523,9 @@ const Products = () => {
           )}
         </motion.div>
       </div>
+
+      {/* Advertisement Popup */}
+      <AdvertisementPopup page="products" />
     </div>
   );
 };

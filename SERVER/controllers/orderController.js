@@ -242,7 +242,8 @@ const createOrder = async (req, res) => {
     customerInfo, 
     paymentMethod = 'cod',
     shippingMethod = 'standard',
-    notes 
+    notes,
+    orderWeight = 0 // Extract orderWeight from request body
   } = req.body;
   try {
     
@@ -349,6 +350,8 @@ const createOrder = async (req, res) => {
     const orderId = await Order.generateNextOrderId();
     console.log('🔍 Generated order ID:', orderId);
     
+    console.log('🔍 Order weight from frontend:', orderWeight, 'grams');
+    
     // Create order
     console.log('🔍 Creating order object...');
     const order = new Order({
@@ -363,6 +366,7 @@ const createOrder = async (req, res) => {
       paymentMethod,
       shippingMethod,
       shippingCost,
+      orderWeight, // Use the weight from frontend
       notes
     });
     
@@ -704,7 +708,7 @@ const getOrdersByPincode = async (req, res) => {
     
     const orders = await Order.find(query)
       .populate('userId', 'name email phone')
-      .populate('items.productId', 'name images weight')
+      .populate('items.productId', 'name images')
       .sort({ createdAt: -1 });
     
     // Group by pincode
@@ -744,7 +748,8 @@ const getOrdersByWeight = async (req, res) => {
     };
     
     orders.forEach(order => {
-      const totalWeight = order.items.reduce((total, item) => {
+      // Use stored orderWeight if available, otherwise calculate from product data
+      const totalWeight = order.orderWeight || order.items.reduce((total, item) => {
         const productWeight = item.productId?.weight || 0;
         return total + (productWeight * item.quantity);
       }, 0);
@@ -882,9 +887,7 @@ const getOrderAnalytics = async (req, res) => {
       ]),
       Order.aggregate([
         { $match: dateFilter },
-        { $lookup: { from: 'products', localField: 'items.productId', foreignField: '_id', as: 'products' } },
-        { $unwind: '$items' },
-        { $group: { _id: null, totalWeight: { $sum: { $multiply: ['$items.quantity', '$items.product.weight'] } } } }
+        { $group: { _id: null, totalWeight: { $sum: '$orderWeight' } } }
       ]),
       Order.aggregate([
         { $match: dateFilter },
@@ -935,7 +938,8 @@ const exportOrders = async (req, res) => {
     
     if (format === 'csv') {
       const csvData = orders.map(order => {
-        const totalWeight = order.items.reduce((total, item) => {
+        // Use stored orderWeight if available, otherwise calculate from product data
+        const totalWeight = order.orderWeight || order.items.reduce((total, item) => {
           const productWeight = item.productId?.weight || 0;
           return total + (productWeight * item.quantity);
         }, 0);
@@ -949,6 +953,7 @@ const exportOrders = async (req, res) => {
           'Shipping Address': `${order.shippingAddress.street}, ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipCode}`,
           'Total Amount': order.totalAmount,
           'Total Weight (g)': totalWeight,
+          'Weight Source': order.orderWeight ? 'Stored' : 'Calculated',
           'Status': order.status,
           'Payment Method': order.paymentMethod,
           'Payment Status': order.paymentStatus,

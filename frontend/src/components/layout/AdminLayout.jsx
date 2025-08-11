@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../store/slices/authSlice';
@@ -18,18 +18,32 @@ import {
   Folder,
   Home,
   ChevronRight,
-  BarChart3
+  BarChart3,
+  User
 } from 'lucide-react';
 import Logo from '../common/Logo';
 import toast from 'react-hot-toast';
 
 const AdminLayout = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
   const { user } = useSelector((state) => state.auth);
+
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileDropdownOpen && !event.target.closest('.profile-dropdown')) {
+        setProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [profileDropdownOpen]);
 
   const adminMenuItems = [
     {
@@ -61,6 +75,13 @@ const AdminLayout = ({ children }) => {
       bgColor: 'bg-purple-50'
     },
     {
+     title: 'Tax and Offers',
+     icon: DollarSign,
+     href: '/admin/finance',
+     color: 'text-yellow-600',
+     bgColor: 'bg-yellow-50'
+   },
+    {
       title: 'Analytics',
       icon: BarChart3,
       href: '/admin/analytics',
@@ -73,13 +94,6 @@ const AdminLayout = ({ children }) => {
       href: '/admin/users',
       color: 'text-orange-600',
       bgColor: 'bg-orange-50'
-    },
-    {
-      title: 'Finance',
-      icon: DollarSign,
-      href: '/admin/finance',
-      color: 'text-yellow-600',
-      bgColor: 'bg-yellow-50'
     },
     {
       title: 'Stock',
@@ -119,10 +133,22 @@ const AdminLayout = ({ children }) => {
   ];
 
   const handleLogout = () => {
-    dispatch(logout());
-    toast.success('Logged out successfully');
-    navigate('/');
+    console.log('🔍 Admin logout initiated');
+    
+    // Clear session storage directly (same as main navbar)
+    sessionStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    
+    console.log('🔍 Session storage cleared, navigating to phone-login');
+    
+    // Use React Router navigation instead of Redux logout
+    navigate('/phone-login', { replace: true });
+    
+    // Close sidebar
     setSidebarOpen(false);
+    
+    // Show success message
+    toast.success('Logged out successfully');
   };
 
   const isActive = (href) => {
@@ -208,8 +234,12 @@ const AdminLayout = ({ children }) => {
           <div className="p-4 sm:p-6 border-t border-gray-200 space-y-3">
             <Link
               to="/"
-              onClick={() => setSidebarOpen(false)}
+              onClick={() => {
+                console.log('🔍 Navigating from admin to store');
+                setSidebarOpen(false);
+              }}
               className="flex items-center px-3 py-3 sm:px-4 sm:py-3 rounded-xl text-sm sm:text-base font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900 transition-all duration-200 touch-manipulation"
+              replace={true}
             >
               <Home className="h-5 w-5 sm:h-6 sm:w-6 mr-3 text-gray-400" />
               <span>Back to Store</span>
@@ -227,8 +257,8 @@ const AdminLayout = ({ children }) => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Top Bar */}
-        {/* <div className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
+        {/* Top Bar with Profile Icon */}
+        <div className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between h-14 sm:h-16 px-3 sm:px-4 lg:px-6">
             <div className="flex items-center space-x-3 sm:space-x-4">
               <button
@@ -245,17 +275,54 @@ const AdminLayout = ({ children }) => {
               </div>
             </div>
             
-            <div className="flex items-center space-x-2 sm:space-x-4">
-              <Link
-                to="/"
-                className="flex items-center px-3 py-2 text-sm sm:text-base text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors touch-manipulation"
+            {/* Profile Icon */}
+            <div className="relative profile-dropdown">
+              <button
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
               >
-                <Home className="h-4 w-4 sm:h-5 sm:w-5 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Store</span>
-              </Link>
+                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                  <User className="h-4 w-4 text-green-600" />
+                </div>
+                <span className="hidden sm:block text-sm font-medium text-gray-700">
+                  {user?.name || 'Admin'}
+                </span>
+              </button>
+
+              {/* Profile Dropdown */}
+              {profileDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-900">{user?.name || 'Admin User'}</p>
+                    <p className="text-xs text-gray-500">{user?.email || 'admin@uthraanaturals.com'}</p>
+                  </div>
+                  <Link
+                    to="/"
+                    onClick={() => {
+                      console.log('🔍 Navigating from admin to store (profile dropdown)');
+                      setProfileDropdownOpen(false);
+                    }}
+                    className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    replace={true}
+                  >
+                    <Home className="h-4 w-4 mr-2" />
+                    Back to Store
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setProfileDropdownOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           </div>
-        </div> */}
+        </div>
 
         {/* Page Content */}
         <div className="flex-1 p-3 sm:p-4 lg:p-6 xl:p-8">

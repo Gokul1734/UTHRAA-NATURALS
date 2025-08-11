@@ -5,6 +5,8 @@ import {
   removeUserStorageData, 
   migrateToUserStorage 
 } from '../../utils/storageUtils';
+import deliveryChargesService from '../../services/deliveryChargesService';
+import taxService from '../../services/taxService';
 
 // Get cart from user-specific localStorage with migration support
 const getInitialCartItems = () => {
@@ -20,13 +22,50 @@ const getInitialCartItems = () => {
 
 const cartItems = getInitialCartItems();
 
+// Helper function to calculate cart weight
+const calculateCartWeight = (items) => {
+  return items.reduce((totalWeight, item) => {
+    const itemWeight = parseFloat(item.weight) || 0;
+    return totalWeight + (itemWeight * (item.quantity || 1));
+  }, 0);
+};
+
 // Helper function to calculate totals
 const calculateCartTotals = (items) => {
   const total = items.reduce((sum, item) => sum + (item.price || 0) * (item.quantity || 1), 0);
-  const tax = total * 0.18; // 18% GST
-  const shipping = total > 500 ? 0 : 50; // Free shipping above ₹500
-  const grandTotal = total + tax + shipping;
-  return { total, tax, shipping, grandTotal };
+  
+  // Calculate cart weight
+  const cartWeight = calculateCartWeight(items);
+  
+  // Calculate tax using tax service (with fallback)
+  let tax = 0;
+  try {
+    tax = taxService.calculateTax(total);
+  } catch (error) {
+    console.warn('Tax service not loaded yet, using default 18%');
+    tax = total * 0.18;
+  }
+  
+  // Calculate delivery charge based on weight (with fallback)
+  let deliveryCharge = 0;
+  try {
+    deliveryCharge = deliveryChargesService.calculateDeliveryCharge(cartWeight);
+  } catch (error) {
+    console.warn('Delivery charges service not loaded yet, using default calculation');
+    // Default delivery charge calculation
+    if (cartWeight <= 1000) {
+      deliveryCharge = 0;
+    } else if (cartWeight <= 5000) {
+      deliveryCharge = 100;
+    } else if (cartWeight <= 10000) {
+      deliveryCharge = 200;
+    } else {
+      deliveryCharge = 300;
+    }
+  }
+  
+  const grandTotal = total + tax + deliveryCharge;
+  return { total, tax, shipping: deliveryCharge, grandTotal, cartWeight };
 };
 
 const initialState = {
@@ -113,6 +152,11 @@ export const cartSlice = createSlice({
       const totals = calculateCartTotals([]);
       Object.assign(state, totals);
     },
+    // Update delivery charges (called when delivery charges are loaded)
+    updateDeliveryCharges: (state) => {
+      const totals = calculateCartTotals(state.cartItems);
+      Object.assign(state, totals);
+    },
   },
 });
 
@@ -124,6 +168,7 @@ export const {
   calculateTotals,
   loadUserCart,
   clearUserCart,
+  updateDeliveryCharges,
 } = cartSlice.actions;
 
 export default cartSlice.reducer; 

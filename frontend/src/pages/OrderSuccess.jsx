@@ -16,14 +16,17 @@ import {
 } from 'lucide-react';
 import axios from 'axios';
 import { toast } from 'react-hot-toast';
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+import { API_BASE_URL } from '../config/environment';
 
 const OrderSuccess = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [orderDetails, setOrderDetails] = useState(location.state?.orderDetails || null);
   const [loading, setLoading] = useState(false);
+
+  // Safety check for API_BASE_URL
+  const apiBaseUrl = API_BASE_URL || 'http://localhost:5000/api';
+  console.log('🔍 API_BASE_URL:', apiBaseUrl);
 
   console.log('🔍 OrderSuccess component mounted');
   console.log('🔍 Location state:', location.state);
@@ -86,18 +89,49 @@ const OrderSuccess = () => {
   };
 
   const downloadInvoice = async () => {
-    if (!orderDetails?.orderId) return;
+    if (!orderDetails?.orderId) {
+      toast.error('Order details not available');
+      return;
+    }
     
     setLoading(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
+      
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header for invoice download');
+      }
+      
+      console.log('🔍 Downloading invoice for order:', orderDetails.orderId);
+      console.log('🔍 Invoice API URL:', `${apiBaseUrl}/orders/${orderDetails.orderId}/invoice`);
+      
+      // First, test if the API is available
+      const healthCheck = await fetch(`${apiBaseUrl.replace('/api', '')}/api/health`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (!healthCheck.ok) {
+        console.log('🔍 API health check failed, showing fallback message');
+        toast.error('Invoice service temporarily unavailable. Please try again later.');
+        return;
+      }
+      
       const response = await axios.get(
-        `${API_BASE_URL}/orders/${orderDetails.orderId}/invoice`,
+        `${apiBaseUrl}/orders/${orderDetails.orderId}/invoice`,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: headers,
           responseType: 'blob'
         }
       );
+      
+      console.log('🔍 Invoice download successful');
       
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement('a');
@@ -106,8 +140,17 @@ const OrderSuccess = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      
+      toast.success('Invoice downloaded successfully');
     } catch (error) {
-      console.error('Error downloading invoice:', error);
+      console.error('🔍 Error downloading invoice:', error);
+      if (error.response?.status === 404) {
+        toast.error('Invoice not available for this order');
+      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        toast.error('Invoice service temporarily unavailable. Please try again later.');
+      } else {
+        toast.error('Failed to download invoice');
+      }
     } finally {
       setLoading(false);
     }
@@ -295,26 +338,164 @@ const OrderSuccess = () => {
               <div className="space-y-3">
                 <button
                   onClick={async () => {
+                    if (!orderDetails?.orderId) {
+                      toast.error('Order details not available');
+                      return;
+                    }
+                    
                     try {
-                      // Fetch order details via API
-                      const response = await fetch(`${API_BASE_URL}/orders/${orderDetails.orderId}`, {
-                        headers: {
-                          'Authorization': `Bearer ${sessionStorage.getItem('token')}`
+                      const token = sessionStorage.getItem('token');
+                      console.log('🔍 Token available:', !!token);
+                      
+                      const headers = {
+                        'Content-Type': 'application/json',
+                      };
+                      
+                      if (token) {
+                        headers['Authorization'] = `Bearer ${token}`;
+                        console.log('🔍 Added Authorization header');
+                        
+                        // Validate token by checking user profile
+                        try {
+                          const profileResponse = await fetch(`${apiBaseUrl}/auth/profile`, {
+                            headers: headers
+                          });
+                          
+                          if (!profileResponse.ok) {
+                            console.log('🔍 Token validation failed, using fallback navigation');
+                            // Fallback: Navigate to order tracking with current order data
+                            const cleanOrderId = orderDetails.orderId?.replace(/^#/, '') || orderDetails.orderId;
+                            navigate(`/order-tracking/${cleanOrderId}`, { 
+                              state: { orderData: orderDetails } 
+                            });
+                            return;
+                          }
+                          
+                          console.log('🔍 Token validation successful');
+                        } catch (profileError) {
+                          console.log('🔍 Token validation error, using fallback navigation');
+                          // Fallback: Navigate to order tracking with current order data
+                          const cleanOrderId = orderDetails.orderId?.replace(/^#/, '') || orderDetails.orderId;
+                          navigate(`/order-tracking/${cleanOrderId}`, { 
+                            state: { orderData: orderDetails } 
+                          });
+                          return;
                         }
+                      } else {
+                        console.log('🔍 No token available, will use fallback navigation');
+                        // Fallback: Navigate to order tracking with current order data
+                        const cleanOrderId = orderDetails.orderId?.replace(/^#/, '') || orderDetails.orderId;
+                        navigate(`/order-tracking/${cleanOrderId}`, { 
+                          state: { orderData: orderDetails } 
+                        });
+                        return;
+                      }
+                      
+                      // Clean orderId to remove any leading '#' (if present)
+                      // Defensive: If orderId is missing or not a string, fallback to empty string
+                      let cleanOrderId = '';
+                      if (orderDetails.orderId && typeof orderDetails.orderId === 'string') {
+                        cleanOrderId = orderDetails.orderId.replace(/^#/, '');
+                      } else if (orderDetails.orderId) {
+                        cleanOrderId = String(orderDetails.orderId).replace(/^#/, '');
+                      }
+
+                      console.log('🔍 Clean orderId:', cleanOrderId);
+                      console.log('🔍 API URL:', `${apiBaseUrl}/orders/${cleanOrderId}`);
+                      
+                      // First, test if the API is available
+                      const healthCheck = await fetch(`${apiBaseUrl.replace('/api', '')}/api/health`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
                       });
+                      
+                      if (!healthCheck.ok) {
+                        console.log('🔍 API health check failed, using fallback navigation');
+                        // Fallback: Navigate to order tracking with current order data
+                        navigate(`/order-tracking/${cleanOrderId}`, { 
+                          state: { orderData: orderDetails } 
+                        });
+                        return;
+                      }
+                      
+                      const response = await fetch(`${apiBaseUrl}/orders/${cleanOrderId}`, {
+                        headers: headers
+                      });
+                      
+                      console.log('🔍 Response status:', response.status);
+                      console.log('🔍 Response headers:', response.headers);
+                      
+                      // Check if response is JSON
+                      const contentType = response.headers.get('content-type');
+                      if (!contentType || !contentType.includes('application/json')) {
+                        console.error('🔍 API returned non-JSON response:', contentType);
+                        console.log('🔍 Using fallback navigation with current order data');
+                        // Fallback: Navigate to order tracking with current order data
+                        navigate(`/order-tracking/${cleanOrderId}`, { 
+                          state: { orderData: orderDetails } 
+                        });
+                        return;
+                      }
                       
                       if (response.ok) {
                         const data = await response.json();
-                        // Navigate with order data
-                        navigate(`/order-tracking/${orderDetails.orderId}`, { 
+                        console.log('🔍 Order data received:', data);
+                        // Navigate with order data, use cleanOrderId in URL
+                        navigate(`/order-tracking/${cleanOrderId}`, { 
                           state: { orderData: data.order } 
+                        });
+                      } else {
+                        console.error('🔍 API error response:', response.status, response.statusText);
+                        
+                        // Try to get error details
+                        try {
+                          const errorData = await response.json();
+                          console.log('🔍 Error details:', errorData);
+                        } catch (parseError) {
+                          console.log('🔍 Could not parse error response');
+                        }
+                        
+                        if (response.status === 401) {
+                          console.log('🔍 Unauthorized - token might be expired, using fallback navigation');
+                          // Fallback: Navigate to order tracking with current order data
+                          navigate(`/order-tracking/${cleanOrderId}`, { 
+                            state: { orderData: orderDetails } 
+                          });
+                        } else if (response.status === 403) {
+                          console.log('🔍 Forbidden - order might not belong to user, using fallback navigation');
+                          // Fallback: Navigate to order tracking with current order data
+                          navigate(`/order-tracking/${cleanOrderId}`, { 
+                            state: { orderData: orderDetails } 
+                          });
+                        } else if (response.status === 404) {
+                          console.log('🔍 Order not found in API, using fallback navigation');
+                          // Fallback: Navigate to order tracking with current order data
+                          navigate(`/order-tracking/${cleanOrderId}`, { 
+                            state: { orderData: orderDetails } 
+                          });
+                        } else {
+                          toast.error('Failed to load order details');
+                        }
+                      }
+                    } catch (error) {
+                      console.error('🔍 Error fetching order:', error);
+                      if (error.name === 'SyntaxError') {
+                        console.log('🔍 JSON parsing error, using fallback navigation');
+                        // Fallback: Navigate to order tracking with current order data
+                        const cleanOrderId = orderDetails.orderId?.replace(/^#/, '') || orderDetails.orderId;
+                        navigate(`/order-tracking/${cleanOrderId}`, { 
+                          state: { orderData: orderDetails } 
+                        });
+                      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                        console.log('🔍 Network error, using fallback navigation');
+                        // Fallback: Navigate to order tracking with current order data
+                        const cleanOrderId = orderDetails.orderId?.replace(/^#/, '') || orderDetails.orderId;
+                        navigate(`/order-tracking/${cleanOrderId}`, { 
+                          state: { orderData: orderDetails } 
                         });
                       } else {
                         toast.error('Failed to load order details');
                       }
-                    } catch (error) {
-                      console.error('Error fetching order:', error);
-                      toast.error('Failed to load order details');
                     }
                   }}
                   className="w-full flex items-center justify-between p-3 text-left bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"

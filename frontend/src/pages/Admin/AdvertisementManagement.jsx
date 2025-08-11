@@ -12,11 +12,14 @@ import {
   Calendar,
   Clock,
   Target,
-  BarChart3
+  BarChart3,
+  Palette,
+  Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import AdminLayout from '../../components/layout/AdminLayout';
+import advertisementService from '../../services/advertisementService';
 
 const AdvertisementManagement = () => {
   const [advertisements, setAdvertisements] = useState([]);
@@ -44,7 +47,11 @@ const AdvertisementManagement = () => {
     maxImpressions: 0,
     currentImpressions: 0,
     maxClicks: 0,
-    currentClicks: 0
+    currentClicks: 0,
+    backgroundColor: '#10B981',
+    textColor: '#FFFFFF',
+    buttonColor: '#059669',
+    buttonTextColor: '#FFFFFF'
   });
 
   useEffect(() => {
@@ -64,48 +71,8 @@ const AdvertisementManagement = () => {
   const fetchAdvertisements = async () => {
     setLoading(true);
     try {
-      // Mock data - replace with actual API call
-      const mockAds = [
-        {
-          _id: '1',
-          title: 'Summer Sale - 50% Off!',
-          description: 'Get amazing discounts on all organic products',
-          type: 'popup',
-          image: 'https://via.placeholder.com/400x300?text=Summer+Sale',
-          link: '/products?sale=summer',
-          startDate: '2024-06-01',
-          endDate: '2024-08-31',
-          isActive: true,
-          showOnPages: ['home', 'products'],
-          targetAudience: 'all',
-          priority: 1,
-          maxImpressions: 10000,
-          currentImpressions: 3456,
-          maxClicks: 500,
-          currentClicks: 123,
-          createdAt: '2024-05-15T10:30:00Z'
-        },
-        {
-          _id: '2',
-          title: 'New Product Launch',
-          description: 'Discover our latest organic honey collection',
-          type: 'banner',
-          image: 'https://via.placeholder.com/800x200?text=New+Honey+Collection',
-          link: '/products/category/honey',
-          startDate: '2024-07-01',
-          endDate: '2024-09-30',
-          isActive: true,
-          showOnPages: ['home'],
-          targetAudience: 'new',
-          priority: 2,
-          maxImpressions: 5000,
-          currentImpressions: 1234,
-          maxClicks: 200,
-          currentClicks: 45,
-          createdAt: '2024-06-20T14:20:00Z'
-        }
-      ];
-      setAdvertisements(mockAds);
+      const ads = await advertisementService.getAllAdvertisements();
+      setAdvertisements(ads);
     } catch (error) {
       toast.error('Error fetching advertisements');
     } finally {
@@ -145,25 +112,17 @@ const AdvertisementManagement = () => {
     try {
       if (editingAd) {
         // Update advertisement
-        setAdvertisements(prev => prev.map(ad => 
-          ad._id === editingAd._id 
-            ? { ...ad, ...formData }
-            : ad
-        ));
+        await advertisementService.updateAdvertisement(editingAd._id, formData);
         toast.success('Advertisement updated successfully');
       } else {
         // Create new advertisement
-        const newAd = {
-          _id: Date.now().toString(),
-          ...formData,
-          createdAt: new Date().toISOString()
-        };
-        setAdvertisements(prev => [newAd, ...prev]);
+        await advertisementService.createAdvertisement(formData);
         toast.success('Advertisement created successfully');
       }
       
       resetForm();
       setShowModal(false);
+      fetchAdvertisements(); // Refresh the list
     } catch (error) {
       toast.error('Error saving advertisement');
     }
@@ -186,7 +145,11 @@ const AdvertisementManagement = () => {
       maxImpressions: ad.maxImpressions,
       currentImpressions: ad.currentImpressions,
       maxClicks: ad.maxClicks,
-      currentClicks: ad.currentClicks
+      currentClicks: ad.currentClicks,
+      backgroundColor: ad.backgroundColor || '#10B981',
+      textColor: ad.textColor || '#FFFFFF',
+      buttonColor: ad.buttonColor || '#059669',
+      buttonTextColor: ad.buttonTextColor || '#FFFFFF'
     });
     setImagePreview(ad.image);
     setShowModal(true);
@@ -195,8 +158,9 @@ const AdvertisementManagement = () => {
   const handleDelete = async (adId) => {
     if (window.confirm('Are you sure you want to delete this advertisement?')) {
       try {
-        setAdvertisements(prev => prev.filter(ad => ad._id !== adId));
+        await advertisementService.deleteAdvertisement(adId);
         toast.success('Advertisement deleted successfully');
+        fetchAdvertisements(); // Refresh the list
       } catch (error) {
         toast.error('Error deleting advertisement');
       }
@@ -205,12 +169,9 @@ const AdvertisementManagement = () => {
 
   const toggleActive = async (adId) => {
     try {
-      setAdvertisements(prev => prev.map(ad => 
-        ad._id === adId 
-          ? { ...ad, isActive: !ad.isActive }
-          : ad
-      ));
+      await advertisementService.toggleAdvertisementStatus(adId);
       toast.success('Advertisement status updated');
+      fetchAdvertisements(); // Refresh the list
     } catch (error) {
       toast.error('Error updating advertisement status');
     }
@@ -232,7 +193,11 @@ const AdvertisementManagement = () => {
       maxImpressions: 0,
       currentImpressions: 0,
       maxClicks: 0,
-      currentClicks: 0
+      currentClicks: 0,
+      backgroundColor: '#10B981',
+      textColor: '#FFFFFF',
+      buttonColor: '#059669',
+      buttonTextColor: '#FFFFFF'
     });
     setImageFile(null);
     setImagePreview('');
@@ -270,6 +235,32 @@ const AdvertisementManagement = () => {
     return 'Active';
   };
 
+  const getStatistics = () => {
+    return advertisementService.getStatistics();
+  };
+
+  const stats = getStatistics();
+
+  // Color presets for quick selection
+  const colorPresets = [
+    { name: 'Green', backgroundColor: '#10B981', textColor: '#FFFFFF', buttonColor: '#059669', buttonTextColor: '#FFFFFF' },
+    { name: 'Blue', backgroundColor: '#3B82F6', textColor: '#FFFFFF', buttonColor: '#2563EB', buttonTextColor: '#FFFFFF' },
+    { name: 'Orange', backgroundColor: '#F59E0B', textColor: '#FFFFFF', buttonColor: '#D97706', buttonTextColor: '#FFFFFF' },
+    { name: 'Purple', backgroundColor: '#8B5CF6', textColor: '#FFFFFF', buttonColor: '#7C3AED', buttonTextColor: '#FFFFFF' },
+    { name: 'Pink', backgroundColor: '#EC4899', textColor: '#FFFFFF', buttonColor: '#DB2777', buttonTextColor: '#FFFFFF' },
+    { name: 'Teal', backgroundColor: '#14B8A6', textColor: '#FFFFFF', buttonColor: '#0D9488', buttonTextColor: '#FFFFFF' }
+  ];
+
+  const applyColorPreset = (preset) => {
+    setFormData(prev => ({
+      ...prev,
+      backgroundColor: preset.backgroundColor,
+      textColor: preset.textColor,
+      buttonColor: preset.buttonColor,
+      buttonTextColor: preset.buttonTextColor
+    }));
+  };
+
   return (
     <AdminLayout>
       <div className="max-w-7xl mx-auto">
@@ -300,7 +291,7 @@ const AdvertisementManagement = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Ads</p>
-                <p className="text-2xl font-bold text-gray-900">{advertisements.length}</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalAds}</p>
               </div>
             </div>
           </div>
@@ -311,9 +302,7 @@ const AdvertisementManagement = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Active Ads</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {advertisements.filter(ad => ad.isActive).length}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{stats.activeAds}</p>
               </div>
             </div>
           </div>
@@ -324,9 +313,7 @@ const AdvertisementManagement = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Impressions</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {advertisements.reduce((sum, ad) => sum + ad.currentImpressions, 0).toLocaleString()}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalImpressions.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -337,9 +324,7 @@ const AdvertisementManagement = () => {
               </div>
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Total Clicks</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {advertisements.reduce((sum, ad) => sum + ad.currentClicks, 0).toLocaleString()}
-                </p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalClicks.toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -368,6 +353,20 @@ const AdvertisementManagement = () => {
                   <span className={`px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ad.isActive, ad.startDate, ad.endDate)}`}>
                     {getStatusText(ad.isActive, ad.startDate, ad.endDate)}
                   </span>
+                </div>
+                
+                {/* Color Preview */}
+                <div className="absolute bottom-2 left-2 flex gap-1">
+                  <div 
+                    className="w-6 h-6 rounded-full border-2 border-white shadow-lg"
+                    style={{ backgroundColor: ad.backgroundColor }}
+                    title="Background Color"
+                  />
+                  <div 
+                    className="w-6 h-6 rounded-full border-2 border-white shadow-lg"
+                    style={{ backgroundColor: ad.buttonColor }}
+                    title="Button Color"
+                  />
                 </div>
               </div>
 
@@ -465,7 +464,7 @@ const AdvertisementManagement = () => {
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+                className="bg-white rounded-lg shadow-xl max-w-5xl w-full max-h-[90vh] overflow-y-auto"
               >
                 <div className="p-6 border-b border-gray-200">
                   <div className="flex justify-between items-center">
@@ -482,10 +481,13 @@ const AdvertisementManagement = () => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Basic Information */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Basic Information</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Sparkles className="h-5 w-5" />
+                        Basic Information
+                      </h3>
                       
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -564,7 +566,10 @@ const AdvertisementManagement = () => {
 
                     {/* Scheduling & Targeting */}
                     <div className="space-y-4">
-                      <h3 className="text-lg font-semibold text-gray-900">Scheduling & Targeting</h3>
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Calendar className="h-5 w-5" />
+                        Scheduling & Targeting
+                      </h3>
                       
                       <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -671,6 +676,170 @@ const AdvertisementManagement = () => {
                             min="0"
                             className="input-field"
                           />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Design & Colors */}
+                    <div className="space-y-4">
+                      <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                        <Palette className="h-5 w-5" />
+                        Design & Colors
+                      </h3>
+
+                      {/* Color Presets */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Color Presets
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {colorPresets.map((preset, index) => (
+                            <button
+                              key={index}
+                              type="button"
+                              onClick={() => applyColorPreset(preset)}
+                              className="p-2 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+                              title={preset.name}
+                            >
+                              <div className="flex gap-1 mb-1">
+                                <div 
+                                  className="w-4 h-4 rounded border border-gray-300"
+                                  style={{ backgroundColor: preset.backgroundColor }}
+                                />
+                                <div 
+                                  className="w-4 h-4 rounded border border-gray-300"
+                                  style={{ backgroundColor: preset.buttonColor }}
+                                />
+                              </div>
+                              <span className="text-xs text-gray-600">{preset.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Custom Colors */}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Background Color
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              name="backgroundColor"
+                              value={formData.backgroundColor}
+                              onChange={handleInputChange}
+                              className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              name="backgroundColor"
+                              value={formData.backgroundColor}
+                              onChange={handleInputChange}
+                              className="flex-1 input-field text-sm"
+                              placeholder="#10B981"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Text Color
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              name="textColor"
+                              value={formData.textColor}
+                              onChange={handleInputChange}
+                              className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              name="textColor"
+                              value={formData.textColor}
+                              onChange={handleInputChange}
+                              className="flex-1 input-field text-sm"
+                              placeholder="#FFFFFF"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Button Color
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              name="buttonColor"
+                              value={formData.buttonColor}
+                              onChange={handleInputChange}
+                              className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              name="buttonColor"
+                              value={formData.buttonColor}
+                              onChange={handleInputChange}
+                              className="flex-1 input-field text-sm"
+                              placeholder="#059669"
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Button Text Color
+                          </label>
+                          <div className="flex gap-2">
+                            <input
+                              type="color"
+                              name="buttonTextColor"
+                              value={formData.buttonTextColor}
+                              onChange={handleInputChange}
+                              className="w-12 h-10 border border-gray-300 rounded cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              name="buttonTextColor"
+                              value={formData.buttonTextColor}
+                              onChange={handleInputChange}
+                              className="flex-1 input-field text-sm"
+                              placeholder="#FFFFFF"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Preview */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Color Preview
+                        </label>
+                        <div 
+                          className="p-4 rounded-lg border border-gray-200"
+                          style={{ backgroundColor: formData.backgroundColor }}
+                        >
+                          <div 
+                            className="text-sm font-medium mb-2"
+                            style={{ color: formData.textColor }}
+                          >
+                            Sample Title
+                          </div>
+                          <div 
+                            className="text-xs mb-3"
+                            style={{ color: formData.textColor + 'CC' }}
+                          >
+                            Sample description text
+                          </div>
+                          <button
+                            type="button"
+                            className="px-3 py-1 rounded text-xs font-medium"
+                            style={{
+                              backgroundColor: formData.buttonColor,
+                              color: formData.buttonTextColor
+                            }}
+                          >
+                            Sample Button
+                          </button>
                         </div>
                       </div>
                     </div>

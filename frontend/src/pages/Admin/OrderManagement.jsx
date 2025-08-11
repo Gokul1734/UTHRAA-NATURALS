@@ -162,6 +162,12 @@ const OrderManagement = () => {
   };
 
   const calculateOrderWeight = (order) => {
+    // Use stored orderWeight if available, otherwise calculate from product data
+    if (order.orderWeight && order.orderWeight > 0) {
+      return order.orderWeight;
+    }
+    
+    // Fallback to calculating from product data
     return order.items.reduce((total, item) => {
       const productWeight = item.productId?.weight || 0;
       return total + (productWeight * item.quantity);
@@ -658,9 +664,16 @@ const OrderManagement = () => {
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getWeightCategoryColor(order.weightCategory)}`}>
                           {order.weightCategory}
                         </span>
-                        <span className="text-sm text-gray-500">
-                          {(order.totalWeight / 1000).toFixed(1)}kg
-                        </span>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-gray-900">
+                            {(order.totalWeight / 1000).toFixed(1)}kg
+                          </span>
+                          {order.orderWeight ? (
+                            <span className="text-xs text-green-600">Stored weight</span>
+                          ) : (
+                            <span className="text-xs text-gray-500">Calculated</span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -786,9 +799,16 @@ const OrderManagement = () => {
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Total Weight:</span>
-                            <span className="font-medium">
-                              {(selectedOrder.totalWeight / 1000).toFixed(1)}kg ({selectedOrder.weightCategory})
-                            </span>
+                            <div className="text-right">
+                              <span className="font-medium">
+                                {(selectedOrder.totalWeight / 1000).toFixed(1)}kg ({selectedOrder.weightCategory})
+                              </span>
+                              {selectedOrder.orderWeight ? (
+                                <div className="text-xs text-green-600">Stored in database</div>
+                              ) : (
+                                <div className="text-xs text-gray-500">Calculated from products</div>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>

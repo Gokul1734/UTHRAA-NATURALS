@@ -16,13 +16,15 @@ import {
   ArrowLeft,
   Home,
   Building,
-  Star
+  Star,
+  Package
 } from 'lucide-react';
 import axios from 'axios';
 import toast from 'react-hot-toast';
 import { API_BASE_URL } from '../config/environment';
 import { clearCart } from '../store/slices/cartSlice';
 import { getFirstImageUrl } from '../utils/imageUtils';
+import deliveryChargesService from '../services/deliveryChargesService';
 
 const Checkout = () => {
   const navigate = useNavigate();
@@ -67,6 +69,94 @@ const Checkout = () => {
   const [paymentMethod, setPaymentMethod] = useState('cod');
   const [shippingMethod, setShippingMethod] = useState('standard');
   const [notes, setNotes] = useState('');
+
+  // Weight conversion function
+  const convertToGrams = (weight, unit) => {
+    if (!weight) return 0;
+    
+    const weightValue = parseFloat(weight);
+    if (isNaN(weightValue)) return 0;
+    
+    switch (unit?.toLowerCase()) {
+      case 'g':
+      case 'gram':
+      case 'grams':
+        return weightValue;
+      case 'kg':
+      case 'kilo':
+      case 'kilos':
+      case 'kilogram':
+      case 'kilograms':
+        return weightValue * 1000;
+      case 'mg':
+      case 'milligram':
+      case 'milligrams':
+        return weightValue / 1000;
+      case 'lb':
+      case 'lbs':
+      case 'pound':
+      case 'pounds':
+        return weightValue * 453.592;
+      case 'oz':
+      case 'ounce':
+      case 'ounces':
+        return weightValue * 28.3495;
+      default:
+        return weightValue; // Assume grams if unit is not recognized
+    }
+  };
+
+  // Calculate total weight
+  const calculateTotalWeight = () => {
+    const type = searchParams.get('type');
+    
+    if (type === 'buy-now') {
+      const buyNowData = JSON.parse(sessionStorage.getItem('buyNowData') || 'null');
+      if (buyNowData && buyNowData.product) {
+        const weightInGrams = convertToGrams(buyNowData.product.weight, buyNowData.product.unit);
+        return weightInGrams * buyNowData.quantity;
+      }
+      return 0;
+    } else {
+      return cartItems.reduce((total, item) => {
+        const weightInGrams = convertToGrams(item.weight, item.unit);
+        return total + (weightInGrams * item.quantity);
+      }, 0);
+    }
+  };
+
+  // Format weight for display
+  const formatWeight = (weightInGrams) => {
+    if (weightInGrams === 0) return 'Weight not available';
+    
+    if (weightInGrams >= 1000) {
+      const kg = weightInGrams / 1000;
+      return `${kg.toFixed(2)} kg`;
+    } else {
+      return `${weightInGrams.toFixed(0)} g`;
+    }
+  };
+
+  // Get total weight for display
+  const totalWeight = calculateTotalWeight();
+  const formattedWeight = formatWeight(totalWeight);
+
+  // Get current order items for display
+  const getCurrentOrderItems = () => {
+    const type = searchParams.get('type');
+    
+    if (type === 'buy-now') {
+      const buyNowData = JSON.parse(sessionStorage.getItem('buyNowData') || 'null');
+      if (buyNowData && buyNowData.product) {
+        return [buyNowData.product];
+      }
+      return [];
+    } else {
+      return cartItems;
+    }
+  };
+
+  const currentOrderItems = getCurrentOrderItems();
 
   // Initialize checkout on component mount
   useEffect(() => {
@@ -120,8 +210,18 @@ const Checkout = () => {
       console.log('🔍 Token:', token ? 'Present' : 'Missing');
       console.log('🔍 User:', user);
       
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+      
       const response = await axios.get(`${API_BASE_URL}/orders/addresses`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
       
       console.log('🔍 Addresses response:', response.data);
@@ -189,8 +289,18 @@ const Checkout = () => {
     try {
       console.log('🔍 Adding new address:', newAddress);
       
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+      
       const response = await axios.post(`${API_BASE_URL}/orders/addresses`, newAddress, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
       
       console.log('🔍 Add address response:', response.data);
@@ -241,8 +351,18 @@ const Checkout = () => {
     }
     
     try {
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+      
       await axios.delete(`${API_BASE_URL}/orders/addresses/${addressId}`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
       
       setAddresses(prev => prev.filter(addr => addr._id !== addressId));
@@ -295,7 +415,8 @@ const Checkout = () => {
           customerInfo,
           paymentMethod,
           shippingMethod,
-          notes
+          notes,
+          orderWeight: totalWeight // Add total weight
         };
       } else {
         // Cart order
@@ -315,14 +436,25 @@ const Checkout = () => {
           totalAmount: grandTotal,
           subtotal: total,
           tax: tax,
-          shipping: shipping
+          shipping: shipping,
+          orderWeight: totalWeight // Add total weight
         };
       }
       
       console.log('🔍 Sending order data to backend:', orderData);
       
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      
+      // Add authorization header if token exists
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 Added Authorization header');
+      }
+      
       const response = await axios.post(`${API_BASE_URL}/orders/create`, orderData, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: headers
       });
       
       console.log('🔍 Order created successfully:', response.data);
@@ -351,14 +483,6 @@ const Checkout = () => {
       
       console.log('🔍 Navigation completed');
       
-      // Fallback navigation if React Router fails
-      setTimeout(() => {
-        if (window.location.pathname !== '/order-success') {
-          console.log('🔍 React Router navigation failed, using fallback');
-          window.location.href = '/order-success';
-        }
-      }, 2000);
-
       // Clear cart after successful order
       dispatch(clearCart());
     } catch (error) {
@@ -373,14 +497,8 @@ const Checkout = () => {
   };
 
   const getShippingCost = () => {
-    switch (shippingMethod) {
-      case 'express':
-        return 100;
-      case 'same-day':
-        return 200;
-      default:
-        return 0;
-    }
+    // Use the delivery charges from the cart (already calculated based on weight)
+    return shipping || 0;
   };
 
   const getTotalAmount = () => {
@@ -692,7 +810,7 @@ const Checkout = () => {
               
               {/* Order Items */}
               <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
-                {cartItems.map((item, index) => (
+                {currentOrderItems.map((item, index) => (
                   <div key={index} className="flex items-center space-x-3 sm:space-x-4">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                       <img
@@ -711,12 +829,33 @@ const Checkout = () => {
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-gray-900 text-xs sm:text-sm truncate">{item.name}</h3>
                       <p className="text-xs sm:text-sm text-gray-600">Qty: {item.quantity}</p>
+                      {item.weight && (
+                        <p className="text-xs text-gray-500">
+                          Weight: {item.weight} {item.unit}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="font-medium text-gray-900 text-xs sm:text-sm">₹{item.price * item.quantity}</p>
                     </div>
                   </div>
                 ))}
+              </div>
+              
+              {/* Total Weight Display */}
+              <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Package className="h-4 w-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-900">Total Package Weight</span>
+                  </div>
+                  <span className="text-lg font-bold text-gray-900">{formattedWeight}</span>
+                </div>
+                {totalWeight > 0 && (
+                  <p className="text-xs text-gray-600 mt-1">
+                    This includes the weight of all items in your order
+                  </p>
+                )}
               </div>
               
               {/* Price Breakdown */}

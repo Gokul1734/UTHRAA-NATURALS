@@ -119,6 +119,12 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
+  // Order weight information
+  orderWeight: {
+    type: Number,
+    default: 0,
+    description: 'Total weight of the order in grams'
+  },
   // Tracking information
   trackingNumber: String,
   estimatedDelivery: Date,

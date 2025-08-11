@@ -42,7 +42,7 @@ const ProductManagement = () => {
     price: '',
     originalPrice: '',
     category: '',
-    images: [''],
+    images: [],
     stock: 0,
     weight: '',
     unit: 'g',
@@ -144,18 +144,25 @@ const ProductManagement = () => {
 
   const handleImageUpload = (imageUrls) => {
     if (Array.isArray(imageUrls)) {
-      // Multiple images uploaded
+      // Multiple images uploaded - add to existing images array
       setFormData(prev => ({ 
         ...prev, 
         images: [...prev.images.filter(img => img), ...imageUrls]
       }));
     } else {
-      // Single image uploaded
+      // Single image uploaded - add to existing images
       setFormData(prev => ({
         ...prev,
         images: [...prev.images.filter(img => img), imageUrls]
       }));
     }
+  };
+
+  const handleImageRemove = (indexToRemove) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, index) => index !== indexToRemove)
+    }));
   };
 
   const handleAddProduct = async (e) => {
@@ -299,7 +306,7 @@ const ProductManagement = () => {
       price: '',
       originalPrice: '',
       category: '',
-      images: [''],
+      images: [],
       stock: 0,
       weight: '',
       unit: 'g',
@@ -324,7 +331,7 @@ const ProductManagement = () => {
       price: product.price.toString(),
       originalPrice: product.originalPrice ? product.originalPrice.toString() : '',
       category: product.category?._id || '',
-      images: product.images && product.images.length > 0 ? product.images : [''],
+      images: product.images && product.images.length > 0 ? product.images : [],
       stock: product.stock || 0,
       weight: product.weight ? product.weight.toString() : '',
       unit: product.unit || 'g',
@@ -787,7 +794,8 @@ const ProductManagement = () => {
                     <h4 className="font-medium text-gray-900 mb-4">Product Images</h4>
                     <ImageUpload
                       onImageUploaded={handleImageUpload}
-                      existingImages={formData.images.filter(img => img)}
+                      onImageRemoved={handleImageRemove}
+                      existingImages={formData.images}
                       multiple={true}
                       maxFiles={5}
                       uploadType="product"

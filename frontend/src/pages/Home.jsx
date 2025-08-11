@@ -22,6 +22,7 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import ProductCard from '../components/products/ProductCard';
 import CategoryCard from '../components/categories/CategoryCard';
+import AdvertisementPopup from '../components/advertisements/AdvertisementPopup';
 import { getCategories } from '../store/slices/categorySlice';
 import Logo from '../assets/LOGO.png';
 
@@ -508,6 +509,9 @@ const Home = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Advertisement Popup */}
+      <AdvertisementPopup page="home" />
     </div>
   );
 };
