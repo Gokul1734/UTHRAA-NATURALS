@@ -1,6 +1,6 @@
 const axios = require('axios');
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:5000';
+const BASE_URL = process.env.BASE_URL || 'https://uthraa-naturals.onrender.com';
 
 // Test delivery charges endpoint
 const testDeliveryCharges = async () => {

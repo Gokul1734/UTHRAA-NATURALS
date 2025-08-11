@@ -158,13 +158,13 @@ const response = await fetch(`${API_BASE_URL}/public/tax-settings`);
 ### Manual Testing with curl
 ```bash
 # Test delivery charges
-curl http://localhost:5000/public/delivery-charges
+curl https://uthraa-naturals.onrender.com/public/delivery-charges
 
 # Test tax settings
-curl http://localhost:5000/public/tax-settings
+curl https://uthraa-naturals.onrender.com/public/tax-settings
 
 # Test combined pricing data
-curl http://localhost:5000/public/pricing-data
+curl https://uthraa-naturals.onrender.com/public/pricing-data
 ```
 
 ### Automated Testing

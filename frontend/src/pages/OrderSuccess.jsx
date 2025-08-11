@@ -25,7 +25,7 @@ const OrderSuccess = () => {
   const [loading, setLoading] = useState(false);
 
   // Safety check for API_BASE_URL
-  const apiBaseUrl = API_BASE_URL || 'http://localhost:5000/api';
+  const apiBaseUrl = API_BASE_URL || 'https://uthraa-naturals.onrender.com/api';
   console.log('🔍 API_BASE_URL:', apiBaseUrl);
 
   console.log('🔍 OrderSuccess component mounted');

@@ -1,7 +1,7 @@
 // Advertisement Service
 class AdvertisementService {
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    this.baseURL = import.meta.env.VITE_API_URL || 'https://uthraa-naturals.onrender.com/api';
     this.advertisements = this.loadFromStorage();
   }
 
