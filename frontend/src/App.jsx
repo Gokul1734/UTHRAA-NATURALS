@@ -13,9 +13,7 @@ import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
 import Cart from './pages/Cart';
 import Wishlist from './pages/Wishlist';
-import Login from './pages/Login';
 import PhoneLogin from './pages/PhoneLogin';
-import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
@@ -35,6 +33,7 @@ import OrderAnalytics from './pages/Admin/OrderAnalytics';
 import AdvertisementManagement from './pages/Admin/AdvertisementManagement';
 import FinanceManagement from './pages/Admin/FinanceManagement';
 import UserManagement from './pages/Admin/UserManagement';
+import StockManagement from './pages/Admin/StockManagement';
 
 import './App.css';
 
@@ -83,8 +82,6 @@ function AppContent() {
           {/* Public Routes (No Authentication Required) */}
           <Route path="/" element={<Home />} />
           <Route path="/phone-login" element={<PhoneLogin />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/products" element={<Products />} />
@@ -123,17 +120,7 @@ function AppContent() {
           } />
           <Route path="/order-tracking" element={
             <ProtectedRoute>
-              <Navigate to="/orders" replace />
-            </ProtectedRoute>
-          } />
-          <Route path="/order-tracking/:orderId" element={
-            <ProtectedRoute>
               <OrderTracking />
-            </ProtectedRoute>
-          } />
-          <Route path="/real-time-test" element={
-            <ProtectedRoute>
-              <RealTimeTest />
             </ProtectedRoute>
           } />
           
@@ -158,7 +145,7 @@ function AppContent() {
               <OrderManagement />
             </AdminRoute>
           } />
-          <Route path="/admin/analytics" element={
+          <Route path="/admin/order-analytics" element={
             <AdminRoute>
               <OrderAnalytics />
             </AdminRoute>
@@ -178,24 +165,22 @@ function AppContent() {
               <UserManagement />
             </AdminRoute>
           } />
+          <Route path="/admin/stock" element={
+            <AdminRoute>
+              <StockManagement />
+            </AdminRoute>
+          } />
           
-          {/* Catch all route */}
+          {/* Development/Testing Routes */}
+          <Route path="/real-time-test" element={<RealTimeTest />} />
+          
+          {/* Catch all route - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       {!isAdminPage && <ConditionalFooter />}
-      <StorageDebugger />
       <FloatingCart />
-      <Toaster 
-        position="top-right"
-        toastOptions={{
-          duration: 1500,
-          style: {
-            background: '#363636',
-            color: '#fff',
-          },
-        }}
-      />
+      <StorageDebugger />
     </div>
   );
 }
@@ -205,6 +190,30 @@ function App() {
     <Provider store={store}>
       <Router>
         <AppContent />
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 4000,
+            style: {
+              background: '#363636',
+              color: '#fff',
+            },
+            success: {
+              duration: 3000,
+              iconTheme: {
+                primary: '#10b981',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              duration: 5000,
+              iconTheme: {
+                primary: '#ef4444',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
       </Router>
     </Provider>
   );

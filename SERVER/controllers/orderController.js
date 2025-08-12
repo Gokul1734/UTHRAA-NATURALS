@@ -300,6 +300,14 @@ const createOrder = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Product not found' });
       }
       
+      // Check stock availability
+      if (product.stock < quantity) {
+        return res.status(400).json({ 
+          success: false, 
+          message: `Insufficient stock. Available: ${product.stock}, Requested: ${quantity}` 
+        });
+      }
+      
       const itemTotal = product.price * quantity;
       orderItems.push({
         productId: product._id,
@@ -315,6 +323,24 @@ const createOrder = async (req, res) => {
       // Cart purchase - use items sent from frontend
       if (!req.body.items || req.body.items.length === 0) {
         return res.status(400).json({ success: false, message: 'Cart items are required' });
+      }
+      
+      // Validate stock for all items
+      for (const item of req.body.items) {
+        const product = await Product.findById(item.productId);
+        if (!product) {
+          return res.status(404).json({ 
+            success: false, 
+            message: `Product not found: ${item.name}` 
+          });
+        }
+        
+        if (product.stock < item.quantity) {
+          return res.status(400).json({ 
+            success: false, 
+            message: `Insufficient stock for ${item.name}. Available: ${product.stock}, Requested: ${item.quantity}` 
+          });
+        }
       }
       
       orderItems = req.body.items.map(item => ({
@@ -373,6 +399,17 @@ const createOrder = async (req, res) => {
     console.log('🔍 Order object created, saving to database...');
     await order.save();
     console.log('🔍 Order saved successfully with ID:', order.orderId);
+    
+    // Reduce stock for all ordered items
+    console.log('🔍 Reducing stock for ordered items...');
+    for (const item of orderItems) {
+      const product = await Product.findById(item.productId);
+      if (product) {
+        product.stock = Math.max(0, product.stock - item.quantity);
+        await product.save();
+        console.log(`🔍 Reduced stock for ${product.name}: ${item.quantity} units`);
+      }
+    }
     
     console.log('🔍 Sending order response:', {
       orderId: order.orderId,
@@ -502,8 +539,24 @@ const updateOrderStatus = async (req, res) => {
     
     console.log('🔍 Order found, updating status to:', status);
     
+    // Store previous status for stock restoration
+    const previousStatus = order.status;
+    
     // Update order status
     await order.updateStatus(status);
+    
+    // Handle stock restoration for cancelled orders
+    if (status === 'cancelled' && previousStatus !== 'cancelled') {
+      console.log('🔍 Order cancelled, restoring stock...');
+      for (const item of order.items) {
+        const product = await Product.findById(item.productId);
+        if (product) {
+          product.stock += item.quantity;
+          await product.save();
+          console.log(`🔍 Restored stock for ${product.name}: ${item.quantity} units`);
+        }
+      }
+    }
     
     // Update tracking information if provided
     if (trackingNumber) {
@@ -801,6 +854,10 @@ const bulkUpdateOrderStatus = async (req, res) => {
       const order = await Order.getByOrderId(orderId);
       if (order) {
         console.log(`🔍 Updating order ${order.orderId} to status: ${status}`);
+        
+        // Store previous status for stock restoration
+        const previousStatus = order.status;
+        
         await order.updateStatus(status);
         if (trackingNumber) {
           order.trackingNumber = trackingNumber;
@@ -809,6 +866,19 @@ const bulkUpdateOrderStatus = async (req, res) => {
           order.estimatedDelivery = new Date(estimatedDelivery);
         }
         await order.save();
+        
+        // Handle stock restoration for cancelled orders
+        if (status === 'cancelled' && previousStatus !== 'cancelled') {
+          console.log(`🔍 Order ${order.orderId} cancelled, restoring stock...`);
+          for (const item of order.items) {
+            const product = await Product.findById(item.productId);
+            if (product) {
+              product.stock += item.quantity;
+              await product.save();
+              console.log(`🔍 Restored stock for ${product.name}: ${item.quantity} units`);
+            }
+          }
+        }
         
         // Emit Socket.IO event for real-time updates
         if (io) {

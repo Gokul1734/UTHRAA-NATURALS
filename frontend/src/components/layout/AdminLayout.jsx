@@ -96,7 +96,7 @@ const AdminLayout = ({ children }) => {
       bgColor: 'bg-orange-50'
     },
     {
-      title: 'Stock',
+      title: 'Stock Management',
       icon: TrendingUp,
       href: '/admin/stock',
       color: 'text-red-600',
@@ -108,27 +108,6 @@ const AdminLayout = ({ children }) => {
       href: '/admin/advertisements',
       color: 'text-indigo-600',
       bgColor: 'bg-indigo-50'
-    },
-    {
-      title: 'Delivery',
-      icon: Truck,
-      href: '/admin/delivery',
-      color: 'text-teal-600',
-      bgColor: 'bg-teal-50'
-    },
-    {
-      title: 'Reports',
-      icon: FileText,
-      href: '/admin/reports',
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-50'
-    },
-    {
-      title: 'Settings',
-      icon: Settings,
-      href: '/admin/settings',
-      color: 'text-gray-600',
-      bgColor: 'bg-gray-50'
     }
   ];
 

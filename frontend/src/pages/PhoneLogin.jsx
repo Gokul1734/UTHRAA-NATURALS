@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { motion } from 'framer-motion';
-import { Phone, Shield, Mail, Crown } from 'lucide-react';
+import { Phone, Shield, Crown } from 'lucide-react';
 import toast from 'react-hot-toast';
 import axios from 'axios';
 import { directLogin } from '../store/slices/authSlice';
@@ -151,7 +151,7 @@ const PhoneLogin = () => {
                 : 'bg-gradient-to-r from-green-600 to-emerald-600'
             }`}
           >
-            {isAdminPhone ? 'Admin Login' : 'Quick Login'}
+            {isAdminPhone ? 'Admin Login' : 'Welcome to Uthraa Naturals'}
           </motion.h1>
           
           <motion.p 
@@ -252,39 +252,18 @@ const PhoneLogin = () => {
           </motion.div>
         )}
 
-        {/* Alternative Login Options */}
-        <motion.div 
-          variants={itemVariants}
-          className="mt-8 pt-6 border-t border-gray-200"
-        >
-          <p className="text-center text-sm text-gray-600 mb-4">
-            Or continue with
+        {/* Security Notice */}
+        <motion.div variants={itemVariants} className="mt-6 text-center">
+          <p className="text-xs text-gray-500 leading-relaxed">
+            By logging in, you agree to our{' '}
+            <Link to="/terms" className="text-green-600 hover:underline">
+              Terms of Service
+            </Link>{' '}
+            and{' '}
+            <Link to="/privacy" className="text-green-600 hover:underline">
+              Privacy Policy
+            </Link>
           </p>
-          <div className="space-y-3">
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Link
-                to="/login"
-                className="block w-full text-center py-3 px-4 border-2 border-gray-200 rounded-xl text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 font-medium"
-              >
-                <Mail className="w-4 h-4 inline mr-2" />
-                Email & Password Login
-              </Link>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <Link
-                to="/register"
-                className="block w-full text-center py-3 px-4 border-2 border-gray-200 rounded-xl text-gray-700 hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 font-medium"
-              >
-                Create New Account
-              </Link>
-            </motion.div>
-          </div>
         </motion.div>
       </motion.div>
     </div>

@@ -5,7 +5,7 @@ const validator = require('validator');
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'Please provide your name'],
+    required: false, // Made optional for phone-only login
     trim: true,
     maxlength: [50, 'Name cannot be more than 50 characters']
   },
@@ -101,7 +101,7 @@ const userSchema = new mongoose.Schema({
   // Phone verification fields
   isPhoneVerified: {
     type: Boolean,
-    default: false
+    default: true // Set to true by default since we're bypassing OTP
   },
   phoneVerificationOTP: {
     type: String,
@@ -114,8 +114,8 @@ const userSchema = new mongoose.Schema({
   // Login method preference
   loginMethod: {
     type: String,
-    enum: ['email', 'phone'],
-    default: 'phone' // Changed default to phone
+    enum: ['phone'],
+    default: 'phone' // Only phone method available
   },
   // Profile completion status
   isProfileComplete: {
@@ -154,50 +154,6 @@ userSchema.pre('save', async function(next) {
 userSchema.methods.comparePassword = async function(candidatePassword) {
   if (!this.password) return false;
   return await bcrypt.compare(candidatePassword, this.password);
-};
-
-// Generate OTP method
-userSchema.methods.generateOTP = function() {
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  this.phoneVerificationOTP = otp;
-  this.phoneVerificationExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
-  return otp;
-};
-
-// Verify OTP method
-userSchema.methods.verifyOTP = function(otp) {
-  if (!this.phoneVerificationOTP || !this.phoneVerificationExpires) {
-    return false;
-  }
-  
-  if (this.phoneVerificationExpires < new Date()) {
-    return false;
-  }
-  
-  return this.phoneVerificationOTP === otp;
-};
-
-// Clear OTP after verification
-userSchema.methods.clearOTP = function() {
-  this.phoneVerificationOTP = undefined;
-  this.phoneVerificationExpires = undefined;
-};
-
-// Wishlist methods
-userSchema.methods.addToWishlist = function(productId) {
-  if (!this.wishlist.some(item => item.productId.toString() === productId.toString())) {
-    this.wishlist.push({ productId });
-  }
-  return this.save();
-};
-
-userSchema.methods.removeFromWishlist = function(productId) {
-  this.wishlist = this.wishlist.filter(item => item.productId.toString() !== productId.toString());
-  return this.save();
-};
-
-userSchema.methods.isInWishlist = function(productId) {
-  return this.wishlist.some(item => item.productId.toString() === productId.toString());
 };
 
 module.exports = mongoose.model('User', userSchema); 

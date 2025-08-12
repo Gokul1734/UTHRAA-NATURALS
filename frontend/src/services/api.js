@@ -3,9 +3,14 @@ import { API_BASE_URL } from '../config/environment';
 // Generic API call function
 const apiCall = async (endpoint, options = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
+  
+  // Get token from localStorage
+  const token = localStorage.getItem('token');
+  
   const config = {
     headers: {
       'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` }),
       ...options.headers,
     },
     ...options,
@@ -86,6 +91,21 @@ export const productAPI = {
     headers: {}, // Let browser set Content-Type for FormData
     body: formData,
   }),
+  
+  // Update stock
+  updateStock: (id, stockData) => apiCall(`/products/${id}/stock`, {
+    method: 'PATCH',
+    body: JSON.stringify(stockData),
+  }),
+  
+  // Get low stock products
+  getLowStock: (threshold = 10) => apiCall(`/products/admin/low-stock?threshold=${threshold}`),
+  
+  // Get all products (Admin)
+  getAllAdmin: (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    return apiCall(`/admin/products?${queryString}`);
+  },
 };
 
 // Order API calls

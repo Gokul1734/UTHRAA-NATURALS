@@ -24,36 +24,36 @@ const { admin, protect } = require('../middleware/auth');
 // ==================== CATEGORY ROUTES ====================
 
 // Get all categories (Admin)
-router.get('/categories', getAllCategories);
+router.get('/categories', protect, admin, getAllCategories);
 
 // Get category by ID (Admin)
-router.get('/categories/:id', getCategoryById);
+router.get('/categories/:id', protect, admin, getCategoryById);
 
 // Create new category (Admin)
-router.post('/categories', createCategory);
+router.post('/categories', protect, admin, createCategory);
 
 // Update category (Admin)
-router.put('/categories/:id', updateCategory);
+router.put('/categories/:id', protect, admin, updateCategory);
 
 // Delete category (Admin)
-router.delete('/categories/:id', deleteCategory);
+router.delete('/categories/:id', protect, admin, deleteCategory);
 
 // ==================== PRODUCT ROUTES ====================
 
 // Get all products (Admin)
-router.get('/products', getAllProducts);
+router.get('/products', protect, admin, getAllProducts);
 
 // Get product by ID (Admin)
-router.get('/products/:id', getProductById);
+router.get('/products/:id', protect, admin, getProductById);
 
 // Create new product (Admin)
-router.post('/products', createProduct);
+router.post('/products', protect, admin, createProduct);
 
 // Update product (Admin)
-router.put('/products/:id', updateProduct);
+router.put('/products/:id', protect, admin, updateProduct);
 
 // Delete product (Admin)
-router.delete('/products/:id', deleteProduct);
+router.delete('/products/:id', protect, admin, deleteProduct);
 
 // Get products by category (Admin)
 router.get('/categories/:categoryId/products', getProductsByCategory);

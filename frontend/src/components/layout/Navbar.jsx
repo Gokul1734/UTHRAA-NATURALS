@@ -274,7 +274,7 @@ const Navbar = () => {
                     whileTap={{ scale: 0.95 }}
                   >
                     <Link
-                      to="/login"
+                      to="/phone-login"
                       className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 lg:px-4 py-2 lg:py-2.5 rounded-xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-medium shadow-lg hover:shadow-xl text-sm lg:text-base"
                     >
                       Login
@@ -427,11 +427,11 @@ const Navbar = () => {
                       </motion.div>
                       <motion.div variants={menuItemVariants}>
                         <Link
-                          to="/login"
+                          to="/phone-login"
                           className="block w-full text-center px-4 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-2xl hover:from-green-600 hover:to-emerald-700 transition-all duration-300 font-medium shadow-lg text-base touch-manipulation"
                           onClick={() => setIsMenuOpen(false)}
                         >
-                          Login / Register
+                          Login
                         </Link>
                       </motion.div>
                     </>
