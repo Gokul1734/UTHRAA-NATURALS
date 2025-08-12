@@ -21,7 +21,7 @@ import {
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import AdminLayout from '../../components/layout/AdminLayout';
-import { API_BASE_URL } from '../../config/environment';
+import { orderAPI } from '../../services/api';
 
 const OrderAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);
@@ -122,19 +122,15 @@ const OrderAnalytics = () => {
 
   const exportAnalytics = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/orders/admin/export?format=csv`);
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `order-analytics-${new Date().toISOString().split('T')[0]}.csv`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-        toast.success('Analytics exported successfully');
-      } else {
-        toast.error('Failed to export analytics');
-      }
+      const response = await orderAPI.exportOrders('csv');
+      const blob = new Blob([response], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `order-analytics-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Analytics exported successfully');
     } catch (error) {
       console.error('Error exporting analytics:', error);
       toast.error('Failed to export analytics');

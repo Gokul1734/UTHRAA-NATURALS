@@ -13,7 +13,6 @@ const FloatingCart = () => {
 
   // Don't show on admin pages
   const isAdminPage = location.pathname.startsWith('/admin');
-  if (isAdminPage) return null;
 
   // Calculate total weight
   const totalWeight = cartItems.reduce((sum, item) => {
@@ -28,6 +27,9 @@ const FloatingCart = () => {
   useEffect(() => {
     setIsVisible(cartItems.length > 0);
   }, [cartItems.length]);
+
+  // Don't show on admin pages
+  if (isAdminPage) return null;
 
   const handleCheckout = () => {
     navigate('/checkout');

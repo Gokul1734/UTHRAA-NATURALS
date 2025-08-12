@@ -21,7 +21,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import AdminLayout from '../../components/layout/AdminLayout';
-import { API_BASE_URL } from '../../config/environment';
+import { userAPI } from '../../services/api';
 
 const UserManagement = () => {
   const navigate = useNavigate();
@@ -96,24 +96,18 @@ const UserManagement = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const params = new URLSearchParams({
+      const params = {
         page: pagination.page || 1,
         limit: 20,
         search: searchTerm,
         category: selectedCategory,
         sortBy,
         sortOrder
-      });
+      };
 
-      const response = await fetch(`${API_BASE_URL}/admin/users?${params}`, {
-        headers: headers
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data.data.users);
-        setPagination(data.data.pagination);
-      }
+      const data = await userAPI.getAllAdmin(params);
+      setUsers(data.data.users);
+      setPagination(data.data.pagination);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast.error('Failed to fetch users');
@@ -130,14 +124,8 @@ const UserManagement = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${API_BASE_URL}/admin/users/analytics/overview`, {
-        headers: headers
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setAnalytics(data.data);
-      }
+      const data = await userAPI.getAnalytics();
+      setAnalytics(data.data);
     } catch (error) {
       console.error('Error fetching analytics:', error);
       toast.error('Failed to fetch analytics');
@@ -154,14 +142,8 @@ const UserManagement = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${API_BASE_URL}/admin/users/${userId}`, {
-        headers: headers
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setUserDetails(data.data);
-      }
+      const data = await userAPI.getUserDetails(userId);
+      setUserDetails(data.data);
     } catch (error) {
       console.error('Error fetching user details:', error);
       toast.error('Failed to fetch user details');
@@ -178,18 +160,9 @@ const UserManagement = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${API_BASE_URL}/admin/users/${userId}/status`, {
-        method: 'PATCH',
-        headers: headers,
-        body: JSON.stringify({ isActive })
-      });
-
-      if (response.ok) {
-        toast.success(`User ${isActive ? 'activated' : 'deactivated'} successfully`);
-        fetchUsers();
-      } else {
-        toast.error('Failed to update user status');
-      }
+      await userAPI.updateUserStatus(userId, isActive);
+      toast.success(`User ${isActive ? 'activated' : 'deactivated'} successfully`);
+      fetchUsers();
     } catch (error) {
       console.error('Error updating user status:', error);
       toast.error('Failed to update user status');
@@ -207,29 +180,18 @@ const UserManagement = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${API_BASE_URL}/admin/email/send-bulk`, {
-        method: 'POST',
-        headers: headers,
-        body: JSON.stringify(emailData)
+      const data = await userAPI.sendBulkEmail(emailData);
+      toast.success(`Email sent successfully to ${data.data.successCount} recipients`);
+      setShowEmailModal(false);
+      setEmailData({
+        subject: '',
+        content: '',
+        emailType: 'custom',
+        recipients: 'all',
+        category: '',
+        minOrders: 0,
+        minSpent: 0
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        toast.success(`Email sent successfully to ${data.data.successCount} recipients`);
-        setShowEmailModal(false);
-        setEmailData({
-          subject: '',
-          content: '',
-          emailType: 'custom',
-          recipients: 'all',
-          category: '',
-          minOrders: 0,
-          minSpent: 0
-        });
-      } else {
-        const errorData = await response.json();
-        toast.error(errorData.message || 'Failed to send email');
-      }
     } catch (error) {
       console.error('Error sending bulk email:', error);
       toast.error('Failed to send email');

@@ -57,6 +57,23 @@ const StockManagement = () => {
       setLoading(true);
       setError(null);
 
+      // Check if user is authenticated
+      const token = sessionStorage.getItem('token');
+      const user = JSON.parse(sessionStorage.getItem('user') || 'null');
+      
+      if (!token || !user) {
+        setError('Authentication required. Please login again.');
+        setProducts([]);
+        return;
+      }
+
+      // Check if user is admin
+      if (user.role !== 'admin') {
+        setError('Admin access required.');
+        setProducts([]);
+        return;
+      }
+
       const params = {
         page: currentPage,
         limit: 10,
@@ -80,7 +97,11 @@ const StockManagement = () => {
       calculateStats(data.products || []);
     } catch (error) {
       console.error('Error fetching products:', error);
-      setError('Failed to load products. Please try again.');
+      if (error.message.includes('Not authorized') || error.message.includes('no token')) {
+        setError('Authentication required. Please login again.');
+      } else {
+        setError('Failed to load products. Please try again.');
+      }
       setProducts([]);
     } finally {
       setLoading(false);
@@ -89,6 +110,12 @@ const StockManagement = () => {
 
   const fetchLowStockProducts = async () => {
     try {
+      // Check if user is authenticated
+      const token = sessionStorage.getItem('token');
+      if (!token) {
+        return;
+      }
+
       const data = await productAPI.getLowStock(10);
       setLowStockProducts(data || []);
     } catch (error) {
@@ -131,6 +158,13 @@ const StockManagement = () => {
       return;
     }
 
+    // Check if user is authenticated
+    const token = sessionStorage.getItem('token');
+    if (!token) {
+      toast.error('Authentication required. Please login again.');
+      return;
+    }
+
     try {
       setUpdatingStock(true);
       
@@ -147,7 +181,11 @@ const StockManagement = () => {
       fetchLowStockProducts();
     } catch (error) {
       console.error('Error updating stock:', error);
-      toast.error(error.message || 'Failed to update stock');
+      if (error.message.includes('Not authorized') || error.message.includes('no token')) {
+        toast.error('Authentication required. Please login again.');
+      } else {
+        toast.error(error.message || 'Failed to update stock');
+      }
     } finally {
       setUpdatingStock(false);
     }

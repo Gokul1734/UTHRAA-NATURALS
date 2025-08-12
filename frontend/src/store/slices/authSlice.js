@@ -38,6 +38,14 @@ export const directLogin = createAsyncThunk(
   'auth/directLogin',
   async (userData, thunkAPI) => {
     try {
+      // Ensure user data is properly stored in sessionStorage
+      if (userData.user) {
+        sessionStorage.setItem('user', JSON.stringify(userData.user));
+      }
+      if (userData.token) {
+        sessionStorage.setItem('token', userData.token);
+      }
+      
       // Load user-specific cart and wishlist after login
       thunkAPI.dispatch(loadUserData());
       return userData;
@@ -131,6 +139,14 @@ export const authSlice = createSlice({
     setUser: (state, action) => {
       state.user = action.payload;
     },
+    directLogout: (state) => {
+      state.user = null;
+      state.isSuccess = false;
+      state.isError = false;
+      state.message = '';
+      sessionStorage.removeItem('user');
+      sessionStorage.removeItem('token');
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -201,5 +217,5 @@ export const authSlice = createSlice({
   },
 });
 
-export const { reset, setUser } = authSlice.actions;
+export const { reset, setUser, directLogout } = authSlice.actions;
 export default authSlice.reducer; 

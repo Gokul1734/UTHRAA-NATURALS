@@ -13,7 +13,8 @@ import {
 import { motion } from 'framer-motion';
 import AdminLayout from '../../components/layout/AdminLayout';
 import ImageUpload from '../../components/common/ImageUpload';
-import { API_BASE_URL, UPLOAD_URL } from '../../config/environment';
+import { categoryAPI } from '../../services/api';
+import { UPLOAD_URL } from '../../config/environment';
 
 const CategoryManagement = () => {
   const [categories, setCategories] = useState([]);
@@ -76,29 +77,18 @@ const CategoryManagement = () => {
       setLoading(true);
       setError(null);
 
-      const params = new URLSearchParams({
+      const params = {
         page: currentPage,
         limit: 10,
         sort: 'order',
         order: 'asc'
-      });
+      };
 
       if (searchTerm) {
-        params.append('search', searchTerm);
+        params.search = searchTerm;
       }
 
-      const response = await fetch(`${API_BASE_URL}/admin/categories?${params}`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await categoryAPI.getAll(params);
       setCategories(data.categories);
       setTotalPages(data.totalPages);
       setTotalCategories(data.total);
@@ -121,20 +111,7 @@ const CategoryManagement = () => {
       setFormLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/admin/categories`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to create category');
-      }
-
-      const result = await response.json();
+      await categoryAPI.create(formData);
       setSuccessMessage('Category created successfully!');
       setShowAddModal(false);
       resetForm();
@@ -153,20 +130,7 @@ const CategoryManagement = () => {
       setFormLoading(true);
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/admin/categories/${selectedCategory._id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to update category');
-      }
-
-      const result = await response.json();
+      await categoryAPI.update(selectedCategory._id, formData);
       setSuccessMessage('Category updated successfully!');
       setShowEditModal(false);
       resetForm();
@@ -187,18 +151,7 @@ const CategoryManagement = () => {
     try {
       setError(null);
 
-      const response = await fetch(`${API_BASE_URL}/admin/categories/${categoryId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to delete category');
-      }
-
+      await categoryAPI.delete(categoryId);
       setSuccessMessage('Category deleted successfully!');
       fetchCategories();
     } catch (error) {

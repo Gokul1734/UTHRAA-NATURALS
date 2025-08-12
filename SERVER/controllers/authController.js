@@ -217,8 +217,8 @@ const verifyToken = async (req, res) => {
 // Logout
 const logout = async (req, res) => {
   try {
-    res.clearCookie('refreshToken');
-    res.json({ message: 'Logged out successfully' });
+  res.clearCookie('refreshToken');
+  res.json({ message: 'Logged out successfully' });
   } catch (error) {
     console.error('Logout error:', error);
     res.status(500).json({ message: 'Server error' });

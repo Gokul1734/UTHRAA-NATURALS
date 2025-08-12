@@ -37,8 +37,10 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import AdminLayout from '../../components/layout/AdminLayout';
-import { UPLOAD_URL, API_BASE_URL } from '../../config/environment';
+import { orderAPI } from '../../services/api';
+import { UPLOAD_URL } from '../../config/environment';
 import { getFirstImageUrl } from '../../utils/imageUtils';
+import {API_BASE_URL} from '../../config/environment';
 
 const OrderManagement = () => {
   // State management
@@ -120,38 +122,16 @@ const OrderManagement = () => {
       console.log('🔍 Making request to:', `${API_BASE_URL}/orders/admin/all`);
       console.log('🔍 Headers:', headers);
       
-      const response = await fetch(`${API_BASE_URL}/orders/admin/all`, {
-        method: 'GET',
-        headers: headers,
-        credentials: 'include' // Include cookies for session-based auth
-      });
+      const data = await orderAPI.getAllAdmin();
       
-      console.log('🔍 Response status:', response.status);
-      console.log('🔍 Response ok:', response.ok);
-      
-      if (response.ok) {
-        const data = await response.json();
-        console.log('🔍 Response data:', data);
-        const ordersWithCalculations = data.orders?.map(order => ({
-          ...order,
-          totalWeight: calculateOrderWeight(order),
-          weightCategory: getWeightCategory(calculateOrderWeight(order))
-        })) || [];
-        setOrders(ordersWithCalculations);
-        console.log('📊 Fetched orders from MongoDB:', ordersWithCalculations.length);
-      } else if (response.status === 401) {
-        console.error('❌ Authentication failed - redirecting to login');
-        setError('Authentication required. Please log in again.');
-        toast.error('Please log in to access order management');
-        // Redirect to login after a short delay
-        setTimeout(() => {
-          navigate('/phone-login');
-        }, 2000);
-      } else {
-        console.error('❌ Failed to fetch orders from API:', response.status, response.statusText);
-        setError(`Failed to load orders: ${response.status} ${response.statusText}`);
-        toast.error('Failed to load orders from database');
-      }
+      console.log('🔍 Response data:', data);
+      const ordersWithCalculations = data.orders?.map(order => ({
+        ...order,
+        totalWeight: calculateOrderWeight(order),
+        weightCategory: getWeightCategory(calculateOrderWeight(order))
+      })) || [];
+      setOrders(ordersWithCalculations);
+      console.log('📊 Fetched orders from MongoDB:', ordersWithCalculations.length);
     } catch (error) {
       console.error('Error fetching orders:', error);
       setError('Failed to load orders - network error');
@@ -303,30 +283,15 @@ const OrderManagement = () => {
         headers['Authorization'] = `Bearer ${token}`;
       }
       
-      const response = await fetch(`${API_BASE_URL}/orders/admin/${orderId}/status`, {
-        method: 'PUT',
-        headers: headers,
-        credentials: 'include',
-        body: JSON.stringify({ status: newStatus })
+      await orderAPI.updateStatusAdmin(orderId, newStatus);
+      setOrders(prev => prev.map(order => 
+        order._id === orderId 
+          ? { ...order, status: newStatus }
+          : order
+      ));
+      toast.success(`Order status updated to ${newStatus}`, {
+        duration: 2000
       });
-
-      if (response.ok) {
-        setOrders(prev => prev.map(order => 
-          order._id === orderId 
-            ? { ...order, status: newStatus }
-            : order
-        ));
-        toast.success(`Order status updated to ${newStatus}`, {
-          duration: 2000
-        });
-      } else if (response.status === 401) {
-        toast.error('Authentication required. Please log in again.');
-        setTimeout(() => {
-          navigate('/phone-login');
-        }, 2000);
-      } else {
-        toast.error('Failed to update order status');
-      }
     } catch (error) {
       console.error('Error updating order status:', error);
       toast.error('Failed to update order status');
