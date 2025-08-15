@@ -11,6 +11,8 @@ import DeliveryChargesLoader from './components/common/DeliveryChargesLoader';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetail from './pages/ProductDetail';
+import CombinedProductDetail from './pages/CombinedProductDetail';
+import CombinedProducts from './pages/CombinedProducts';
 import Cart from './pages/Cart';
 import Wishlist from './pages/Wishlist';
 import PhoneLogin from './pages/PhoneLogin';
@@ -86,6 +88,8 @@ function AppContent() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/products" element={<Products />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/combined-products" element={<CombinedProducts />} />
+          <Route path="/combined-product/:id" element={<CombinedProductDetail />} />
           
           {/* Protected Routes (Require Authentication) */}
           <Route path="/cart" element={

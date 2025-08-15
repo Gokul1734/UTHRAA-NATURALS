@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trash2, Plus, Minus, ShoppingBag, ArrowLeft, CreditCard, MapPin, User, Package, Receipt } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { removeFromCart, updateQuantity, clearCart, updateDeliveryCharges } from '../store/slices/cartSlice';
+import { removeFromCart, updateQuantity, clearCart, updateDeliveryCharges, updateTaxCalculations } from '../store/slices/cartSlice';
 import { getFirstImageUrl } from '../utils/imageUtils';
 import AdvertisementPopup from '../components/advertisements/AdvertisementPopup';
 import deliveryChargesService from '../services/deliveryChargesService';
@@ -60,8 +60,15 @@ const Cart = () => {
         deliveryChargesService.loadDeliveryCharges(),
         taxService.loadTaxSettings()
       ]);
+
+      // Force enable tax if it's disabled (temporary fix)
+      if (!taxService.taxSettings.isActive) {
+        console.log('🔍 Tax is disabled, forcing enable...');
+        await taxService.forceEnableTax();
+      }
       
       dispatch(updateDeliveryCharges());
+      dispatch(updateTaxCalculations());
       setPricingDataLoaded(true);
       
       console.log('✅ Pricing data loaded successfully');

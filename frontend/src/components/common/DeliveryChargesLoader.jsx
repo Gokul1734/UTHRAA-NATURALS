@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
-import { updateDeliveryCharges } from '../../store/slices/cartSlice';
+import { updateDeliveryCharges, updateTaxCalculations } from '../../store/slices/cartSlice';
 import deliveryChargesService from '../../services/deliveryChargesService';
 import taxService from '../../services/taxService';
 import mongoDBDataService from '../../services/mongoDBDataService';
@@ -33,9 +33,16 @@ const DeliveryChargesLoader = () => {
           deliveryChargesService.loadDeliveryCharges(),
           taxService.loadTaxSettings()
         ]);
+
+        // Force enable tax if it's disabled (temporary fix)
+        if (!taxService.taxSettings.isActive) {
+          console.log('🔍 Tax is disabled, forcing enable...');
+          await taxService.forceEnableTax();
+        }
         
         // Update cart totals with new pricing data
         dispatch(updateDeliveryCharges());
+        dispatch(updateTaxCalculations());
 
         // Mark as loaded to prevent future executions
         hasLoadedRef.current = true;

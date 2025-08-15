@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const DeliveryCharges = require('../models/DeliveryCharges');
 const TaxSettings = require('../models/TaxSettings');
+const CombinedProduct = require('../models/CombinedProduct');
 
 // GET /public/delivery-charges - Get delivery charges (no auth required)
 router.get('/delivery-charges', async (req, res) => {
@@ -171,6 +172,68 @@ router.get('/pricing-data', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to fetch pricing data',
+      error: error.message
+    });
+  }
+});
+
+// GET /public/combined-products - Get combined products (no auth required)
+router.get('/combined-products', async (req, res) => {
+  try {
+    console.log('🔍 Public combined products request received');
+    
+    const combinedProducts = await CombinedProduct.find({ isActive: true })
+      .populate('products.productId', 'name price images description stock weight unit')
+      .populate('category', 'name')
+      .sort({ createdAt: -1 })
+      .lean();
+
+    console.log('🔍 Returning combined products:', combinedProducts.length);
+    
+    res.json({
+      success: true,
+      combinedProducts: combinedProducts
+    });
+
+  } catch (error) {
+    console.error('🔍 Error fetching combined products:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch combined products',
+      error: error.message
+    });
+  }
+});
+
+// GET /public/combined-products/:id - Get single combined product (no auth required)
+router.get('/combined-products/:id', async (req, res) => {
+  try {
+    console.log('🔍 Public combined product request received for ID:', req.params.id);
+    
+    const combinedProduct = await CombinedProduct.findById(req.params.id)
+      .populate('products.productId', 'name price images description stock weight unit ingredients benefits')
+      .populate('category', 'name')
+      .lean();
+
+    if (!combinedProduct) {
+      return res.status(404).json({
+        success: false,
+        message: 'Combined product not found'
+      });
+    }
+
+    console.log('🔍 Returning combined product:', combinedProduct.name);
+    
+    res.json({
+      success: true,
+      combinedProduct: combinedProduct
+    });
+
+  } catch (error) {
+    console.error('🔍 Error fetching combined product:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch combined product',
       error: error.message
     });
   }

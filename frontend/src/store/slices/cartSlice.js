@@ -40,18 +40,38 @@ const calculateCartTotals = (items) => {
   // Calculate tax using tax service (with fallback)
   let tax = 0;
   try {
-    tax = taxService.calculateTax(total);
+    if (taxService.isLoaded) {
+      tax = taxService.calculateTax(total);
+    } else {
+      // If tax service is not loaded yet, use default 18%
+      console.warn('Tax service not loaded yet, using default 18%');
+      tax = total * 0.18;
+    }
   } catch (error) {
-    console.warn('Tax service not loaded yet, using default 18%');
+    console.warn('Tax service error, using default 18%:', error);
     tax = total * 0.18;
   }
   
   // Calculate delivery charge based on weight (with fallback)
   let deliveryCharge = 0;
   try {
-    deliveryCharge = deliveryChargesService.calculateDeliveryCharge(cartWeight);
+    if (deliveryChargesService.isLoaded) {
+      deliveryCharge = deliveryChargesService.calculateDeliveryCharge(cartWeight);
+    } else {
+      // If delivery charges service is not loaded yet, use default calculation
+      console.warn('Delivery charges service not loaded yet, using default calculation');
+      if (cartWeight <= 1000) {
+        deliveryCharge = 0;
+      } else if (cartWeight <= 5000) {
+        deliveryCharge = 100;
+      } else if (cartWeight <= 10000) {
+        deliveryCharge = 200;
+      } else {
+        deliveryCharge = 300;
+      }
+    }
   } catch (error) {
-    console.warn('Delivery charges service not loaded yet, using default calculation');
+    console.warn('Delivery charges service error, using default calculation:', error);
     // Default delivery charge calculation
     if (cartWeight <= 1000) {
       deliveryCharge = 0;
@@ -157,6 +177,11 @@ export const cartSlice = createSlice({
       const totals = calculateCartTotals(state.cartItems);
       Object.assign(state, totals);
     },
+    // Update tax calculations (called when tax settings are loaded)
+    updateTaxCalculations: (state) => {
+      const totals = calculateCartTotals(state.cartItems);
+      Object.assign(state, totals);
+    },
   },
 });
 
@@ -169,6 +194,7 @@ export const {
   loadUserCart,
   clearUserCart,
   updateDeliveryCharges,
+  updateTaxCalculations,
 } = cartSlice.actions;
 
 export default cartSlice.reducer; 

@@ -704,8 +704,8 @@ const Checkout = () => {
               </h2>
               
               <div className="space-y-4 sm:space-y-6">
-                {/* Shipping Method */}
-                <div>
+                {/* Shipping Method - Commented out for now */}
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2 sm:mb-3">
                     Shipping Method
                   </label>
@@ -745,7 +745,7 @@ const Checkout = () => {
                       </label>
                     ))}
                   </div>
-                </div>
+                </div> */}
 
                 {/* Payment Method */}
                 <div>
@@ -865,7 +865,7 @@ const Checkout = () => {
                   <span className="font-medium">₹{total}</span>
                 </div>
                 <div className="flex justify-between text-xs sm:text-sm">
-                  <span className="text-gray-600">Tax (18% GST)</span>
+                  <span className="text-gray-600">Tax</span>
                   <span className="font-medium">₹{tax}</span>
                 </div>
                 <div className="flex justify-between text-xs sm:text-sm">

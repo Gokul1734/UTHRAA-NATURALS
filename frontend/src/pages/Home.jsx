@@ -22,8 +22,10 @@ import {
 import { useSelector, useDispatch } from 'react-redux';
 import ProductCard from '../components/products/ProductCard';
 import CategoryCard from '../components/categories/CategoryCard';
+import CombinedProductCard from '../components/products/CombinedProductCard';
 import AdvertisementPopup from '../components/advertisements/AdvertisementPopup';
 import { getCategories } from '../store/slices/categorySlice';
+import { getCombinedProducts } from '../store/slices/combinedProductSlice';
 import Logo from '../assets/LOGO.png';
 
 const Home = () => {
@@ -31,6 +33,7 @@ const Home = () => {
   const dispatch = useDispatch();
   const { products } = useSelector((state) => state.products);
   const { categories, loading: categoriesLoading } = useSelector((state) => state.categories);
+  const { combinedProducts, loading: combinedProductsLoading } = useSelector((state) => state.combinedProducts);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
@@ -96,9 +99,10 @@ const Home = () => {
     }
   }, [categories, categoriesLoading]);
 
-  // Fetch categories when component mounts
+  // Fetch categories and combined products when component mounts
   useEffect(() => {
     dispatch(getCategories());
+    dispatch(getCombinedProducts());
   }, [dispatch]);
 
   useEffect(() => {
@@ -399,6 +403,63 @@ const Home = () => {
           </motion.div>
         </div>
       </section>
+
+      {/* Combined Products Section */}
+      {combinedProducts && combinedProducts.length > 0 && (
+        <section className="py-20 bg-gradient-light">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <span className="text-primary font-semibold text-sm uppercase tracking-wider mb-4 block">
+                Special Offers
+              </span>
+              <h2 className="heading-2 text-gray-900 mb-6">
+                Combo Offers & Bundles
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              Get more value with our carefully curated combo offers. Save money while enjoying multiple products together.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {combinedProducts.slice(0, 6).map((combinedProduct, index) => (
+                <motion.div
+                  key={combinedProduct._id}
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <CombinedProductCard combinedProduct={combinedProduct} />
+                </motion.div>
+              ))}
+            </div>
+
+            {combinedProducts.length > 6 && (
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.4 }}
+                viewport={{ once: true }}
+                className="text-center mt-12"
+              >
+                <button
+                  onClick={() => navigate('/combined-products')}
+                  className="btn-primary group"
+                >
+                  View All Combo Offers
+                  <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              </motion.div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Testimonials Section */}
       <section className="py-20 bg-gradient-light">

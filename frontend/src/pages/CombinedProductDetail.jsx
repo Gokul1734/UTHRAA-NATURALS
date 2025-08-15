@@ -2,33 +2,29 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Heart, ShoppingCart, Share2, Star, Minus, Plus, Shield, Check, Package } from 'lucide-react';
+import { ArrowLeft, Heart, ShoppingCart, Share2, Star, Minus, Plus, Shield, Check, Package, Tag } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { addToCart, updateQuantity, removeFromCart } from '../store/slices/cartSlice';
 import { addToWishlist, removeFromWishlist } from '../store/slices/wishlistSlice';
-import { getFirstImageUrl } from '../utils/imageUtils';
-import { handleAuthForCart, handleAuthForWishlist } from '../utils/authUtils';
-import { API_BASE_URL, UPLOAD_URL } from '../config/environment';
+import { getCombinedProduct } from '../store/slices/combinedProductSlice';
+import { UPLOAD_URL } from '../config/environment';
 import deliveryChargesService from '../services/deliveryChargesService';
 
-const ProductDetail = () => {
+const CombinedProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedBuyQuantity, setSelectedBuyQuantity] = useState(1);
-  const [pincode, setPincode] = useState('');
   const [showFullDescription, setShowFullDescription] = useState(false);
-  const [showFullIngredients, setShowFullIngredients] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
 
   // Get cart and wishlist state from Redux
   const { cartItems } = useSelector((state) => state.cart);
   const { wishlistItems } = useSelector((state) => state.wishlist);
+  const { combinedProduct, loading } = useSelector((state) => state.combinedProducts);
   
   // Check if product is in cart and get its quantity
   const cartItem = cartItems.find(item => item._id === id);
@@ -37,33 +33,10 @@ const ProductDetail = () => {
   const isInWishlist = wishlistItems.some(item => item._id === id);
 
   useEffect(() => {
-    fetchProduct();
-  }, [id]);
-
-  // Check if this is a combined product and redirect if needed
-  useEffect(() => {
-    if (product && product.isCombinedProduct) {
-      navigate(`/combined-product/${id}`);
+    if (id) {
+      dispatch(getCombinedProduct(id));
     }
-  }, [product, id, navigate]);
-
-  const fetchProduct = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(`${API_BASE_URL}/products/${id}`);
-      if (response.ok) {
-        const data = await response.json();
-        setProduct(data);
-      } else {
-        setProduct(null);
-      }
-    } catch (error) {
-      console.error('Error fetching product:', error);
-      setProduct(null);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [id, dispatch]);
 
   const getImageSrc = (imageUrl) => {
     if (!imageUrl) return '/placeholder-product.jpg';
@@ -80,58 +53,13 @@ const ProductDetail = () => {
     return text && text.length > maxLength;
   };
 
-  // Calculate delivery charge for this product
-  const getProductDeliveryCharge = () => {
-    if (!product || !product.weight) return 0;
-    
-    // Convert weight to grams
-    const weightInGrams = convertWeightToGrams(product.weight, product.unit);
-    return deliveryChargesService.calculateDeliveryCharge(weightInGrams);
-  };
-
-  // Convert weight to grams
-  const convertWeightToGrams = (weight, unit) => {
-    if (!weight) return 0;
-    
-    const weightValue = parseFloat(weight);
-    if (isNaN(weightValue)) return 0;
-    
-    switch (unit?.toLowerCase()) {
-      case 'g':
-      case 'gram':
-      case 'grams':
-        return weightValue;
-      case 'kg':
-      case 'kilo':
-      case 'kilos':
-      case 'kilogram':
-      case 'kilograms':
-        return weightValue * 1000;
-      case 'mg':
-      case 'milligram':
-      case 'milligrams':
-        return weightValue / 1000;
-      case 'lb':
-      case 'lbs':
-      case 'pound':
-      case 'pounds':
-        return weightValue * 453.592;
-      case 'oz':
-      case 'ounce':
-      case 'ounces':
-        return weightValue * 28.3495;
-      default:
-        return weightValue; // Assume grams if unit is not recognized
-    }
-  };
-
   const handleAddToWishlist = () => {
     const wishlistAction = () => {
       if (isInWishlist) {
-        dispatch(removeFromWishlist(product._id));
+        dispatch(removeFromWishlist(combinedProduct._id));
         toast.success('Removed from wishlist');
       } else {
-        dispatch(addToWishlist(product));
+        dispatch(addToWishlist(combinedProduct));
         toast.success('Added to wishlist');
       }
     };
@@ -152,10 +80,11 @@ const ProductDetail = () => {
       setIsAddingToCart(true);
       try {
         dispatch(addToCart({
-          ...product,
-          quantity: 1
+          ...combinedProduct,
+          quantity: 1,
+          isCombinedProduct: true
         }));
-        // Removed toast notification for cart actions
+        toast.success('Added to cart');
       } catch (error) {
         console.error('Error adding to cart:', error);
         toast.error('Failed to add to cart');
@@ -178,8 +107,8 @@ const ProductDetail = () => {
   const handleRemoveFromCart = () => {
     const removeAction = () => {
       try {
-        dispatch(removeFromCart(product._id));
-        // Removed toast notification for cart actions
+        dispatch(removeFromCart(combinedProduct._id));
+        toast.success('Removed from cart');
       } catch (error) {
         console.error('Error removing from cart:', error);
         toast.error('Failed to remove from cart');
@@ -201,11 +130,10 @@ const ProductDetail = () => {
     const updateAction = () => {
       try {
         if (newQuantity <= 0) {
-          dispatch(removeFromCart(product._id));
-          // Removed toast notification for cart actions
+          dispatch(removeFromCart(combinedProduct._id));
+          toast.success('Removed from cart');
         } else {
-          dispatch(updateQuantity({ id: product._id, quantity: newQuantity }));
-          // Removed toast notification for cart actions
+          dispatch(updateQuantity({ id: combinedProduct._id, quantity: newQuantity }));
         }
       } catch (error) {
         console.error('Error updating quantity:', error);
@@ -229,19 +157,21 @@ const ProductDetail = () => {
       try {
         // Add to cart first
         dispatch(addToCart({
-          ...product,
-          quantity: 1
+          ...combinedProduct,
+          quantity: 1,
+          isCombinedProduct: true
         }));
 
-        // Store buy now data in sessionStorage with full product information
+        // Store buy now data in sessionStorage
         const buyNowData = {
           type: 'buy-now',
-          productId: product._id,
+          productId: combinedProduct._id,
           quantity: 1,
-          totalAmount: product.price * 1,
+          totalAmount: combinedProduct.combinedPrice * 1,
           product: {
-            ...product,
-            quantity: 1
+            ...combinedProduct,
+            quantity: 1,
+            isCombinedProduct: true
           }
         };
         sessionStorage.setItem('buyNowData', JSON.stringify(buyNowData));
@@ -270,11 +200,12 @@ const ProductDetail = () => {
       setIsAddingToCart(true);
       try {
         dispatch(addToCart({
-          ...product,
-          quantity: buyQuantity
+          ...combinedProduct,
+          quantity: buyQuantity,
+          isCombinedProduct: true
         }));
         setSelectedBuyQuantity(buyQuantity);
-        // Removed toast notification for cart actions
+        toast.success('Added to cart');
       } catch (error) {
         console.error('Error adding to cart:', error);
         toast.error('Failed to add to cart');
@@ -297,8 +228,8 @@ const ProductDetail = () => {
   const handleShare = () => {
     if (navigator.share) {
       navigator.share({
-        title: product.name,
-        text: product.description,
+        title: combinedProduct.name,
+        text: combinedProduct.description,
         url: window.location.href,
       });
     } else {
@@ -308,10 +239,27 @@ const ProductDetail = () => {
   };
 
   const calculateDiscount = () => {
-    if (product.originalPrice && product.originalPrice > product.price) {
-      return Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100);
+    if (combinedProduct.originalPrice && combinedProduct.originalPrice > combinedProduct.combinedPrice) {
+      return Math.round(((combinedProduct.originalPrice - combinedProduct.combinedPrice) / combinedProduct.originalPrice) * 100);
     }
     return 0;
+  };
+
+  // Get the main image for display
+  const getMainImage = () => {
+    if (combinedProduct?.images && combinedProduct.images.length > 0) {
+      return getImageSrc(combinedProduct.images[selectedImage]);
+    }
+    
+    // Fallback to first product's image
+    if (combinedProduct?.products && combinedProduct.products.length > 0) {
+      const firstProduct = combinedProduct.products[0].productId;
+      if (firstProduct && firstProduct.images && firstProduct.images.length > 0) {
+        return getImageSrc(firstProduct.images[0]);
+      }
+    }
+    
+    return '/placeholder-product.jpg';
   };
 
   if (loading) {
@@ -319,18 +267,18 @@ const ProductDetail = () => {
       <div className="pt-16 min-h-screen bg-gray-50 flex items-start justify-start p-6">
         <div className="text-left">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mb-4"></div>
-          <p className="text-gray-600">Loading product...</p>
+          <p className="text-gray-600">Loading combo offer...</p>
         </div>
       </div>
     );
   }
 
-  if (!product) {
+  if (!combinedProduct) {
     return (
       <div className="pt-16 min-h-screen bg-gray-50 flex items-start justify-start p-6">
         <div className="text-left">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h2>
-          <p className="text-gray-600">The product you're looking for doesn't exist.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Combo offer not found</h2>
+          <p className="text-gray-600">The combo offer you're looking for doesn't exist.</p>
         </div>
       </div>
     );
@@ -354,7 +302,7 @@ const ProductDetail = () => {
             </span>
             <button
               onClick={() => handleUpdateQuantity(cartQuantity + 1)}
-              disabled={isAddingToCart || (product.stock && cartQuantity >= product.stock)}
+              disabled={isAddingToCart || (combinedProduct.stock && cartQuantity >= combinedProduct.stock)}
               className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors disabled:opacity-50 flex items-center justify-center"
             >
               <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -374,7 +322,7 @@ const ProductDetail = () => {
       <div className="space-y-3">
         <button
           onClick={handleAddToCart}
-          disabled={isAddingToCart || !product.stock || product.stock === 0}
+          disabled={isAddingToCart || !combinedProduct.stock || combinedProduct.stock === 0}
           className="w-full border border-gray-300 text-gray-700 py-2 sm:py-3 px-4 sm:px-6 rounded-lg font-medium hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 text-sm sm:text-base"
         >
           <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -398,7 +346,7 @@ const ProductDetail = () => {
             className="flex items-center text-gray-600 hover:text-gray-900 transition-colors text-sm sm:text-base"
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Products
+            Back to Combo Offers
           </button>
         </motion.div>
 
@@ -414,8 +362,8 @@ const ProductDetail = () => {
             <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
               <div className="aspect-w-1 aspect-h-1">
                 <img
-                  src={getImageSrc(product.images?.[selectedImage])}
-                  alt={product.name || 'Product Image'}
+                  src={getMainImage()}
+                  alt={combinedProduct.name || 'Combo Offer Image'}
                   className="w-full h-64 sm:h-80 md:h-96 lg:h-[500px] object-cover"
                   onError={(e) => {
                     e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==';
@@ -424,31 +372,13 @@ const ProductDetail = () => {
               </div>
             </div>
 
-            {/* Thumbnail Images */}
-            {product.images && product.images.length > 1 && (
-              <div className="flex space-x-2 sm:space-x-3 overflow-x-auto pb-2">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden border-2 transition-all flex-shrink-0 ${
-                      selectedImage === index 
-                        ? 'border-green-500 shadow-md' 
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <img
-                      src={getImageSrc(image)}
-                      alt={`${product.name || 'Product'} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==';
-                      }}
-                    />
-                  </button>
-                ))}
-              </div>
-            )}
+            {/* Combo Badge */}
+            <div className="flex justify-center">
+              <span className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm font-bold px-4 py-2 rounded-full flex items-center">
+                <Package className="w-4 h-4 mr-2" />
+                COMBO OFFER
+              </span>
+            </div>
           </motion.div>
 
           {/* Right Section - Product Details */}
@@ -461,23 +391,21 @@ const ProductDetail = () => {
             {/* Product Title */}
             <div>
               <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2">
-                {product.name}
+                {combinedProduct.name}
               </h1>
-              {product.brand && (
-                <p className="text-sm text-gray-600">Brand: {product.brand}</p>
-              )}
+              <p className="text-sm text-gray-600">Combo Package</p>
             </div>
 
             {/* Price Section */}
             <div className="flex items-center justify-center space-x-4">
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-xl sm:text-2xl lg:text-3xl justify-center font-bold text-gray-900">
-                  ₹{product.price?.toFixed(2)}
+                  ₹{combinedProduct.combinedPrice?.toFixed(2)}
                 </span>
-                {product.originalPrice && product.originalPrice > product.price && (
+                {combinedProduct.originalPrice && combinedProduct.originalPrice > combinedProduct.combinedPrice && (
                   <>
                     <span className="text-lg text-gray-500 line-through">
-                      ₹{product.originalPrice?.toFixed(2)}
+                      ₹{combinedProduct.originalPrice?.toFixed(2)}
                     </span>
                     <span className="bg-green-100 text-green-800 text-sm font-medium px-2 py-1 rounded-full">
                       {calculateDiscount()}% OFF
@@ -486,16 +414,25 @@ const ProductDetail = () => {
                 )}
               </div>
             </div>
-            
+
+            {/* Savings */}
+            {combinedProduct.savings > 0 && (
+              <div className="text-center">
+                <span className="text-green-600 font-semibold">
+                  You Save: ₹{combinedProduct.savings?.toFixed(2)}
+                </span>
+              </div>
+            )}
+
             {/* Rating */}
-            {product.rating && (
+            {combinedProduct.rating && (
               <div className="flex items-center space-x-2">
                 <div className="flex items-center">
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
                       className={`h-4 w-4 ${
-                        i < Math.floor(product.rating)
+                        i < Math.floor(combinedProduct.rating)
                           ? 'text-yellow-400 fill-current'
                           : 'text-gray-300'
                       }`}
@@ -503,20 +440,20 @@ const ProductDetail = () => {
                   ))}
                 </div>
                 <span className="text-sm text-gray-600">
-                  {product.rating} ({product.reviewCount || 0} reviews)
+                  {combinedProduct.rating} ({combinedProduct.reviewCount || 0} reviews)
                 </span>
               </div>
             )}
 
-            {/* Product Description - Moved up for mobile prominence */}
+            {/* Product Description */}
             <div className="space-y-3 lg:hidden">
               <h3 className="font-bold text-lg text-gray-900">Description</h3>
               <p className="text-gray-700 text-base leading-relaxed font-medium">
                 {showFullDescription 
-                  ? (product.description || 'No description available')
-                  : `${getSubstring(product.description, 150)}${shouldShowReadMore(product.description, 150) ? '...' : ''}`
+                  ? (combinedProduct.description || 'No description available')
+                  : `${getSubstring(combinedProduct.description, 150)}${shouldShowReadMore(combinedProduct.description, 150) ? '...' : ''}`
                 }
-                {shouldShowReadMore(product.description, 150) && (
+                {shouldShowReadMore(combinedProduct.description, 150) && (
                   <button
                     onClick={() => setShowFullDescription(!showFullDescription)}
                     className="text-green-600 hover:text-green-700 ml-1 font-semibold"
@@ -558,13 +495,13 @@ const ProductDetail = () => {
               <div className="grid grid-cols-3 gap-2 sm:gap-3">
                 {[
                   { label: 'Buy 1', quantity: 1 },
-                  { label: 'Buy 4', quantity: 4 },
-                  { label: 'Buy 7', quantity: 7 }
+                  { label: 'Buy 2', quantity: 2 },
+                  { label: 'Buy 3', quantity: 3 }
                 ].map((option) => (
                   <button
                     key={option.quantity}
                     onClick={() => handleBuyQuantity(option.quantity)}
-                    disabled={isAddingToCart || !product.stock || product.stock === 0}
+                    disabled={isAddingToCart || !combinedProduct.stock || combinedProduct.stock === 0}
                     className={`px-3 sm:px-4 py-2 rounded-lg border text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
                       selectedBuyQuantity === option.quantity
                         ? 'border-green-500 bg-green-50 text-green-700'
@@ -595,10 +532,10 @@ const ProductDetail = () => {
               <h3 className="font-medium text-gray-900">Description</h3>
               <p className="text-gray-600 text-sm leading-relaxed">
                 {showFullDescription 
-                  ? (product.description || 'No description available')
-                  : `${getSubstring(product.description, 100)}${shouldShowReadMore(product.description, 100) ? '...' : ''}`
+                  ? (combinedProduct.description || 'No description available')
+                  : `${getSubstring(combinedProduct.description, 100)}${shouldShowReadMore(combinedProduct.description, 100) ? '...' : ''}`
                 }
-                {shouldShowReadMore(product.description, 100) && (
+                {shouldShowReadMore(combinedProduct.description, 100) && (
                   <button
                     onClick={() => setShowFullDescription(!showFullDescription)}
                     className="text-green-600 hover:text-green-700 ml-1"
@@ -609,120 +546,69 @@ const ProductDetail = () => {
               </p>
             </div>
 
-            {/* Ingredients */}
-            {product.ingredients && (
-              <div className="space-y-3 text-left">
-                <h3 className="font-medium text-gray-900">Ingredients</h3>
-                <p className="text-gray-600 text-sm leading-relaxed">
-                  {showFullIngredients 
-                    ? (product.ingredients || 'No ingredients information available')
-                    : `${getSubstring(product.ingredients, 150)}${shouldShowReadMore(product.ingredients, 150) ? '...' : ''}`
-                  }
-                  {shouldShowReadMore(product.ingredients, 150) && (
-                    <button
-                      onClick={() => setShowFullIngredients(!showFullIngredients)}
-                      className="text-green-600 hover:text-green-700 ml-1"
-                    >
-                      {showFullIngredients ? 'Read Less' : 'Read More'}
-                    </button>
-                  )}
-                </p>
-              </div>
-            )}
-
-            {/* Product Benefits */}
-             {product.benefits && (
-               <div className="space-y-3 text-left">
-                 <h3 className="font-medium text-gray-900">Benefits</h3>
-                 <ul className="list-disc pl-5">
-                   {(typeof product.benefits === 'string'
-                     ? product.benefits.split('\n')
-                     : Array.isArray(product.benefits)
-                       ? product.benefits
-                       : []
-                   )
-                     .filter(line => typeof line === 'string' && line.trim() !== '')
-                     .map((line, idx) => (
-                       <li key={idx} className="text-green-900 font-semibold text-sm leading-relaxed mb-1">
-                         {line}
-                       </li>
-                     ))}
-                 </ul>
-               </div>
-             )}
-
-            {/* Delivery Check */}
-            <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-              <h3 className="font-medium text-gray-900">Delivery Information</h3>
-              <div className="space-y-2">
-                {product.weight && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Product Weight:</span>
-                    <span className="text-gray-900">{product.weight} {product.unit}</span>
+            {/* Included Products */}
+            <div className="space-y-3">
+              <h3 className="font-medium text-gray-900">Included Products</h3>
+              <div className="space-y-3">
+                {combinedProduct.products?.map((item, index) => (
+                  <div key={index} className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                        <img
+                          src={getImageSrc(item.productId?.images?.[0])}
+                          alt={item.productId?.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzY2NzM4NyIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlPC90ZXh0Pjwvc3ZnPg==';
+                          }}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900 text-sm">
+                          {item.productId?.name}
+                        </h4>
+                        <p className="text-xs text-gray-600">
+                          Quantity: {item.quantity} | Price: ₹{item.price?.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {item.productId?.weight} {item.productId?.unit}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-sm font-medium text-gray-900">
+                          ₹{(item.price * item.quantity)?.toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                )}
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Delivery Charge:</span>
-                  <span className={`font-medium ${getProductDeliveryCharge() === 0 ? 'text-green-600' : 'text-gray-900'}`}>
-                    {getProductDeliveryCharge() === 0 ? 'Free' : `₹${getProductDeliveryCharge()}`}
-                  </span>
-                </div>
-                <div className="text-xs text-gray-500">
-                  Delivery charges are calculated based on product weight. Heavier items may incur additional charges.
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
-                <input
-                  type="text"
-                  placeholder="Enter Pincode"
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  maxLength={6}
-                />
-                <button onClick={async () => {
-                  if (pincode.length === 6) {
-                   await fetch(`https://nominatim.openstreetmap.org/search?postalcode=${pincode}&country=India&format=json`)
-                   .then(response => response.json())
-                   .then(data => {
-                    console.log(data[0].lon, data[0].lat);
-                   })
-                   .catch(error => {
-                    console.error('Error fetching data:', error);
-                   })
-                  }
-                }} className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors whitespace-nowrap">
-                  Check
-                </button>
+                ))}
               </div>
             </div>
 
             {/* Product Details */}
             <div className="space-y-3">
-              <h3 className="font-medium text-gray-900">Product Details</h3>
+              <h3 className="font-medium text-gray-900">Package Details</h3>
               <div className="space-y-2 text-sm">
-                {product.weight && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Weight:</span>
-                    <span className="text-gray-900">{product.weight} {product.unit}</span>
-                  </div>
-                )}
-                {product.category && (
+                {combinedProduct.category && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Category:</span>
-                    <span className="text-gray-900">{product.category.name}</span>
+                    <span className="text-gray-900">{combinedProduct.category.name}</span>
                   </div>
                 )}
-                {product.stock !== undefined && (
+                {combinedProduct.stock !== undefined && (
                   <div className="flex justify-between">
                     <span className="text-gray-600">Availability:</span>
                     <span className={`font-medium ${
-                      product.stock > 0 ? 'text-green-600' : 'text-red-600'
+                      combinedProduct.stock > 0 ? 'text-green-600' : 'text-red-600'
                     }`}>
-                      {product.stock > 0 ? 'In Stock' : 'Out of Stock'}
+                      {combinedProduct.stock > 0 ? 'In Stock' : 'Out of Stock'}
                     </span>
                   </div>
                 )}
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Total Items:</span>
+                  <span className="text-gray-900">{combinedProduct.products?.length || 0}</span>
+                </div>
               </div>
             </div>
 
@@ -730,9 +616,7 @@ const ProductDetail = () => {
             <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-4 sm:space-y-0 sm:space-x-6 pt-4 border-t border-gray-200">
               <div className="flex items-center space-x-2">
                 <Package className="h-4 w-4 text-green-600" />
-                <span className={`text-sm ${getProductDeliveryCharge() === 0 ? 'text-green-600' : 'text-gray-600'}`}>
-                  {getProductDeliveryCharge() === 0 ? 'Free Delivery' : `₹${getProductDeliveryCharge()} Delivery`}
-                </span>
+                <span className="text-sm text-green-600">Combo Package</span>
               </div>
               <div className="flex items-center space-x-2">
                 <Shield className="h-5 w-5 text-green-600" />
@@ -750,4 +634,4 @@ const ProductDetail = () => {
   );
 };
 
-export default ProductDetail; 
+export default CombinedProductDetail;

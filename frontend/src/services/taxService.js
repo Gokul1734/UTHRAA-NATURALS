@@ -96,16 +96,25 @@ class TaxService {
   }
 
   calculateTax(amount) {
+    console.log('🔍 TaxService.calculateTax called with amount:', amount);
+    console.log('🔍 TaxService.isLoaded:', this.isLoaded);
+    console.log('🔍 TaxService.taxSettings:', this.taxSettings);
+    
     if (!this.isLoaded) {
       // If not loaded, use default settings
+      console.log('🔍 Tax service not loaded, using default settings');
       this.taxSettings = this.getDefaultTaxSettings();
     }
 
     if (!this.taxSettings.isActive) {
-      return 0;
+      console.log('🔍 Tax is disabled in settings, but forcing calculation for now');
+      // TODO: Remove this override once database settings are fixed
+      // return 0;
     }
 
-    return amount * (this.taxSettings.gst / 100);
+    const tax = amount * (this.taxSettings.gst / 100);
+    console.log('🔍 Calculated tax:', tax, 'for GST rate:', this.taxSettings.gst);
+    return tax;
   }
 
   getTaxBreakdown(amount) {
@@ -134,6 +143,14 @@ class TaxService {
     console.log('🔍 Refreshing tax settings from MongoDB...');
     this.isLoaded = false;
     return await this.fetchTaxSettings();
+  }
+
+  // Force enable tax settings (temporary fix)
+  async forceEnableTax() {
+    console.log('🔍 Force enabling tax settings...');
+    this.taxSettings.isActive = true;
+    this.isLoaded = true;
+    return this.taxSettings;
   }
 
   // Validate MongoDB tax settings data

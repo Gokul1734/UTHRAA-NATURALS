@@ -5,6 +5,7 @@ import productReducer from './slices/productSlice';
 import categoryReducer from './slices/categorySlice';
 import orderReducer from './slices/orderSlice';
 import wishlistReducer from './slices/wishlistSlice';
+import combinedProductReducer from './slices/combinedProductSlice';
 import { userDataMiddleware } from './middleware/userDataMiddleware';
 
 export const store = configureStore({
@@ -15,6 +16,7 @@ export const store = configureStore({
     categories: categoryReducer,
     orders: orderReducer,
     wishlist: wishlistReducer,
+    combinedProducts: combinedProductReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
