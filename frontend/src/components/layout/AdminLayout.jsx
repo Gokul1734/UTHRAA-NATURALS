@@ -82,13 +82,6 @@ const AdminLayout = ({ children }) => {
      bgColor: 'bg-yellow-50'
    },
     {
-      title: 'Analytics',
-      icon: BarChart3,
-      href: '/admin/analytics',
-      color: 'text-pink-600',
-      bgColor: 'bg-pink-50'
-    },
-    {
       title: 'Users',
       icon: Users,
       href: '/admin/users',

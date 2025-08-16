@@ -31,7 +31,7 @@ import AdminDashboard from './pages/Admin/Dashboard';
 import ProductManagement from './pages/Admin/ProductManagement';
 import CategoryManagement from './pages/Admin/CategoryManagement';
 import OrderManagement from './pages/Admin/OrderManagement';
-import OrderAnalytics from './pages/Admin/OrderAnalytics';
+
 import AdvertisementManagement from './pages/Admin/AdvertisementManagement';
 import FinanceManagement from './pages/Admin/FinanceManagement';
 import UserManagement from './pages/Admin/UserManagement';
@@ -122,7 +122,7 @@ function AppContent() {
               <OrderSuccess />
             </ProtectedRoute>
           } />
-          <Route path="/order-tracking" element={
+          <Route path="/order-tracking/:orderId" element={
             <ProtectedRoute>
               <OrderTracking />
             </ProtectedRoute>
@@ -149,11 +149,7 @@ function AppContent() {
               <OrderManagement />
             </AdminRoute>
           } />
-          <Route path="/admin/order-analytics" element={
-            <AdminRoute>
-              <OrderAnalytics />
-            </AdminRoute>
-          } />
+
           <Route path="/admin/advertisements" element={
             <AdminRoute>
               <AdvertisementManagement />

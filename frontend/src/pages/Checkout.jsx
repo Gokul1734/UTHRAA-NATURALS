@@ -502,14 +502,13 @@ const Checkout = () => {
   };
 
   const getTotalAmount = () => {
-    const shippingCost = getShippingCost();
     const type = searchParams.get('type');
     
     if (type === 'buy-now') {
       const buyNowData = JSON.parse(sessionStorage.getItem('buyNowData') || 'null');
-      return (buyNowData?.totalAmount || 0) + shippingCost;
+      return buyNowData?.totalAmount || 0;
     } else {
-      return grandTotal + shippingCost;
+      return grandTotal;
     }
   };
 

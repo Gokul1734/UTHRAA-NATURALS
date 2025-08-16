@@ -36,12 +36,19 @@ const OrderTracking = () => {
   const token = sessionStorage.getItem('token');
 
   useEffect(() => {
+    console.log('🔍 OrderTracking useEffect triggered');
+    console.log('🔍 User:', user);
+    console.log('🔍 OrderId:', orderId);
+    console.log('🔍 Location state:', location.state);
+    
     if (!user) {
+      console.log('🔍 No user found, redirecting to login');
       navigate('/phone-login');
       return;
     }
     
     if (!orderId) {
+      console.log('🔍 No orderId found, setting error');
       setError('Order ID is required');
       setLoading(false);
       return;
@@ -49,9 +56,11 @@ const OrderTracking = () => {
 
     // Check if order data was passed through navigation state
     if (location.state?.orderData) {
+      console.log('🔍 Using order data from location state');
       setOrder(location.state.orderData);
       setLoading(false);
     } else {
+      console.log('🔍 Fetching order details from API');
       fetchOrderDetails();
     }
 
@@ -59,15 +68,18 @@ const OrderTracking = () => {
     return () => {
       // No cleanup needed for socket service
     };
-  }, [user, navigate, orderId, location.state]);
+  }, [orderId, location.state]);
 
   const fetchOrderDetails = async () => {
     try {
+      console.log('🔍 Starting fetchOrderDetails');
       setLoading(true);
       setError(null);
       
       // Clean the orderId - remove # if present
       const cleanOrderId = orderId?.replace('#', '');
+      console.log('🔍 Clean orderId:', cleanOrderId);
+      console.log('🔍 API URL:', `${API_BASE_URL}/orders/${cleanOrderId}`);
       
       const headers = {
         'Content-Type': 'application/json',
@@ -83,17 +95,20 @@ const OrderTracking = () => {
         headers: headers
       });
 
-      console.log('Order Details:', response.data);
+      console.log('🔍 Order Details response:', response.data);
       
       if (response.data.success) {
         const orderData = response.data.order;
-        console.log('Order Details:', orderData);
+        console.log('🔍 Setting order data:', orderData);
         setOrder(orderData);
       } else {
+        console.log('🔍 API returned success: false');
         setError('Order not found');
       }
     } catch (error) {
-      console.error('Error fetching order details:', error);
+      console.error('🔍 Error fetching order details:', error);
+      console.error('🔍 Error response:', error.response?.data);
+      console.error('🔍 Error status:', error.response?.status);
       
       if (error.response?.status === 404) {
         setError('Order not found');

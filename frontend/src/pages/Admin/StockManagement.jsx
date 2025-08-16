@@ -88,7 +88,11 @@ const StockManagement = () => {
         params.stockStatus = stockFilter;
       }
 
+      console.log('🔍 Stock Management - Fetching products with params:', params);
+      console.log('🔍 Stock Filter:', stockFilter);
+
       const data = await productAPI.getAllAdmin(params);
+      console.log('🔍 Stock Management - Received data:', data);
       setProducts(data.products || []);
       setTotalPages(data.totalPages || 1);
       setTotalProducts(data.total || 0);
@@ -124,17 +128,51 @@ const StockManagement = () => {
   };
 
   const calculateStats = (productsList) => {
-    const total = productsList.length;
-    const lowStock = productsList.filter(p => p.stock > 0 && p.stock <= 10).length;
-    const outOfStock = productsList.filter(p => p.stock === 0).length;
-    const inStock = productsList.filter(p => p.stock > 10).length;
+    // Get all products for accurate stats (not just filtered ones)
+    const fetchAllProductsForStats = async () => {
+      try {
+        const token = sessionStorage.getItem('token');
+        if (!token) return;
 
-    setStats({
-      totalProducts: total,
-      lowStockCount: lowStock,
-      outOfStockCount: outOfStock,
-      inStockCount: inStock
-    });
+        const params = {
+          page: 1,
+          limit: 1000, // Get all products for stats
+          sort: 'stock',
+          order: 'asc'
+        };
+
+        const data = await productAPI.getAllAdmin(params);
+        const allProducts = data.products || [];
+        
+        const total = allProducts.length;
+        const lowStock = allProducts.filter(p => p.stock > 0 && p.stock <= 10).length;
+        const outOfStock = allProducts.filter(p => p.stock === 0).length;
+        const inStock = allProducts.filter(p => p.stock > 10).length;
+
+        setStats({
+          totalProducts: total,
+          lowStockCount: lowStock,
+          outOfStockCount: outOfStock,
+          inStockCount: inStock
+        });
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+        // Fallback to filtered products stats
+        const total = productsList.length;
+        const lowStock = productsList.filter(p => p.stock > 0 && p.stock <= 10).length;
+        const outOfStock = productsList.filter(p => p.stock === 0).length;
+        const inStock = productsList.filter(p => p.stock > 10).length;
+
+        setStats({
+          totalProducts: total,
+          lowStockCount: lowStock,
+          outOfStockCount: outOfStock,
+          inStockCount: inStock
+        });
+      }
+    };
+
+    fetchAllProductsForStats();
   };
 
   const openStockModal = (product) => {
@@ -257,15 +295,21 @@ const StockManagement = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-lg shadow-md p-6"
+            className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => setStockFilter('in_stock')}
           >
-            <div className="flex items-center">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <Package className="h-6 w-6 text-green-600" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <Package className="h-6 w-6 text-green-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">In Stock</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.inStockCount}</p>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">In Stock</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.inStockCount}</p>
+              <div className="text-green-600">
+                <Filter className="h-4 w-4" />
               </div>
             </div>
           </motion.div>
@@ -274,15 +318,21 @@ const StockManagement = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-lg shadow-md p-6"
+            className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => setStockFilter('low_stock')}
           >
-            <div className="flex items-center">
-              <div className="p-2 bg-orange-100 rounded-lg">
-                <TrendingDown className="h-6 w-6 text-orange-600" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-2 bg-orange-100 rounded-lg">
+                  <TrendingDown className="h-6 w-6 text-orange-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Low Stock</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.lowStockCount}</p>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Low Stock</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.lowStockCount}</p>
+              <div className="text-orange-600">
+                <Filter className="h-4 w-4" />
               </div>
             </div>
           </motion.div>
@@ -291,15 +341,21 @@ const StockManagement = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white rounded-lg shadow-md p-6"
+            className="bg-white rounded-lg shadow-md p-6 cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => setStockFilter('out_of_stock')}
           >
-            <div className="flex items-center">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <AlertTriangle className="h-6 w-6 text-red-600" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="p-2 bg-red-100 rounded-lg">
+                  <AlertTriangle className="h-6 w-6 text-red-600" />
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-600">Out of Stock</p>
+                  <p className="text-2xl font-bold text-gray-900">{stats.outOfStockCount}</p>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Out of Stock</p>
-                <p className="text-2xl font-bold text-gray-900">{stats.outOfStockCount}</p>
+              <div className="text-red-600">
+                <Filter className="h-4 w-4" />
               </div>
             </div>
           </motion.div>
@@ -348,15 +404,24 @@ const StockManagement = () => {
               </div>
             </div>
             <div className="flex gap-2">
+              {/* Active Filter Indicator */}
+              {stockFilter !== 'all' && (
+                <div className="flex items-center px-3 py-2 bg-blue-100 text-blue-800 rounded-lg text-sm font-medium">
+                  <Filter className="h-4 w-4 mr-1" />
+                  {stockFilter === 'in_stock' && 'In Stock'}
+                  {stockFilter === 'low_stock' && 'Low Stock'}
+                  {stockFilter === 'out_of_stock' && 'Out of Stock'}
+                </div>
+              )}
               <select
                 value={stockFilter}
                 onChange={(e) => setStockFilter(e.target.value)}
                 className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <option value="all">All Stock</option>
-                <option value="in_stock">In Stock</option>
-                <option value="low_stock">Low Stock</option>
-                <option value="out_of_stock">Out of Stock</option>
+                <option value="all">All Stock ({stats.totalProducts})</option>
+                <option value="in_stock">In Stock ({stats.inStockCount})</option>
+                <option value="low_stock">Low Stock ({stats.lowStockCount})</option>
+                <option value="out_of_stock">Out of Stock ({stats.outOfStockCount})</option>
               </select>
               <button
                 onClick={() => {
@@ -371,6 +436,25 @@ const StockManagement = () => {
             </div>
           </div>
         </div>
+
+        {/* Results Summary */}
+        {stockFilter !== 'all' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Filter className="h-5 w-5 text-blue-600 mr-2" />
+                <span className="text-blue-800 font-medium">
+                  Showing {products.length} of {totalProducts} products
+                </span>
+              </div>
+              <span className="text-blue-600 text-sm">
+                Filter: {stockFilter === 'in_stock' && 'In Stock'}
+                {stockFilter === 'low_stock' && 'Low Stock (≤10 units)'}
+                {stockFilter === 'out_of_stock' && 'Out of Stock (0 units)'}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Products Table */}
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
